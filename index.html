@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Block Creation</title>
+    <link rel="stylesheet" href="css/nako.css">
+    <style>
+        img { color-scheme: only light !important; }
+
+        body {
+            background: var(--bg-body);
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: var(--fs-sm);
+            line-height: var(--lh-normal);
+            margin: 0;
+            padding: var(--space-6) var(--space-5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: var(--space-5) var(--space-3); }
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 1120px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-6);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: var(--space-4);
+        }
+
+        .title-block {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        h1 {
+            font-size: var(--fs-xl);
+            font-weight: var(--fw-semibold);
+            color: var(--text-primary);
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .search-container {
+            width: 100%;
+            position: relative;
+        }
+
+        .search-box {
+            width: 100%;
+            background: var(--bg-inset);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            padding: var(--space-3) var(--space-4);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: var(--fs-sm);
+            box-shadow: var(--shadow-sm);
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: var(--brand-accent-2);
+            box-shadow: 0 0 0 3px var(--brand-focus-ring);
+        }
+
+        .creation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .creation-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            transition: box-shadow var(--duration-fast) var(--ease-standard);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+        .creation-card:hover { box-shadow: var(--shadow-md); }
+        .creation-card:active {
+            border-color: var(--brand-accent-2);
+            background: var(--bg-inset);
+            transform: scale(0.98);
+        }
+
+        .card-title { font-size: var(--fs-base); font-weight: var(--fw-bold); color: var(--text-primary); }
+        .card-desc { font-size: var(--fs-sm); color: var(--text-secondary); flex: 1; }
+
+        .viewer-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        .viewer-action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: var(--space-4);
+        }
+
+        .render-title { font-size: var(--fs-2xl); color: var(--text-primary); font-weight: var(--fw-bold); margin: 0; }
+        .render-desc { font-size: var(--fs-sm); color: var(--text-secondary); margin: 0; }
+        
+        .tag-pill-container { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+        .tag-pill {
+            background: var(--bg-inset);
+            border: 1px solid var(--border-default);
+            color: var(--text-link);
+            padding: 2px var(--space-2);
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-semibold);
+            border-radius: var(--radius-sm);
+            text-transform: uppercase;
+        }
+        .tag-flip-pill { background: var(--color-danger-bg); border-color: var(--color-danger-border); color: var(--color-danger); }
+
+        .view-h1 { font-size: var(--fs-xl); color: var(--text-primary); font-weight: var(--fw-semibold); margin-top: var(--space-4); margin-bottom: var(--space-1); }
+        .view-h2 { font-size: var(--fs-md); color: var(--text-primary); font-weight: var(--fw-semibold); margin-top: var(--space-4); margin-bottom: var(--space-1); text-transform: uppercase; letter-spacing: var(--ls-wide); }
+        .view-text { font-size: var(--fs-sm); color: var(--text-secondary); line-height: var(--lh-normal); margin: 0; }
+        .view-note { font-style: italic; color: var(--text-muted); padding-left: var(--space-2); border-left: 2px solid var(--border-strong); margin: 0; }
+
+        .connected-chain-group {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-inset);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            margin: var(--space-2) 0;
+            padding: 0;
+        }
+
+        .view-cmd-row {
+            display: flex;
+            align-items: center;
+            padding: var(--space-1) var(--space-2);
+            gap: var(--space-2);
+            position: relative;
+            min-height: 40px;
+        }
+
+        .view-row-idx { font-family: var(--font-mono); font-weight: var(--fw-bold); width: 22px; text-align: center; color: var(--text-muted); font-size: var(--fs-xs); }
+        
+        .block-interactive-wrapper {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .block-face-texture-node {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            image-rendering: pixelated;
+            flex-shrink: 0;
+            z-index: 2;
+            transition: transform var(--duration-fast) var(--ease-standard), filter var(--duration-fast) var(--ease-standard);
+        }
+        .block-interactive-wrapper:hover .block-face-texture-node { filter: brightness(1.25); }
+
+        .block-meta-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            padding: var(--space-2) var(--space-3);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-bold);
+            line-height: var(--lh-snug);
+            white-space: pre;
+            text-align: left;
+            opacity: 0;
+            pointer-events: none;
+            z-index: var(--z-tooltip);
+            box-shadow: var(--shadow-lg);
+            transition: opacity var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+        }
+        .block-meta-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--border-strong);
+        }
+        .block-interactive-wrapper:hover .block-meta-tooltip,
+        .block-interactive-wrapper:focus-within .block-meta-tooltip {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) scale(1);
+        }
+
+        .view-cmd-payload-box {
+            flex: 1;
+            font-family: var(--font-mono);
+            background: var(--bg-body);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            padding: var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: var(--fs-xs);
+            white-space: nowrap;
+            overflow-x: auto;
+            line-height: var(--lh-snug);
+            display: block;
+            min-width: 0;
+        }
+
+        .enable-word-wrap .view-cmd-payload-box {
+            white-space: pre-wrap !important;
+            word-break: break-all !important;
+            overflow-x: hidden !important;
+        }
+
+        .enable-word-wrap-npc .npc-scroller-stack { gap: var(--space-1); }
+        .enable-word-wrap-npc .npc-line-box {
+            white-space: pre-wrap !important;
+            word-break: break-all !important;
+            margin-bottom: 0;
+        }
+
+        .toggle-wrap-container {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-semibold);
+            text-transform: uppercase;
+            color: var(--text-muted);
+            user-select: none;
+            cursor: pointer;
+        }
+        .toggle-wrap-container input { cursor: pointer; margin: 0; }
+
+        .icon-copy-action-btn {
+            width: 36px;
+            height: 36px;
+            background: var(--bg-inset);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+        }
+        .icon-copy-action-btn:hover { border-color: var(--border-strong); background: var(--bg-surface); }
+        .icon-copy-action-btn:active { transform: scale(0.9); }
+        .icon-copy-action-btn img { width: 16px; height: 16px; image-rendering: pixelated; }
+
+        .npc-compound-card {
+            background: var(--bg-inset);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            padding: var(--space-1) var(--space-2);
+            display: flex;
+            gap: var(--space-2);
+            align-items: center;
+            margin: var(--space-2) 0;
+            min-height: 40px;
+        }
+
+        .npc-scroller-stack {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+            min-width: 0;
+        }
+        .npc-line-box {
+            font-family: var(--font-mono);
+            background: var(--bg-body);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            padding: var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: var(--fs-xs);
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        .npc-router-explainer-tag {
+            font-family: var(--font-mono);
+            font-size: var(--fs-xs);
+            color: var(--text-muted);
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            display: block;
+            margin-top: -4px;
+            margin-bottom: var(--space-4);
+        }
+        .npc-router-explainer-tag:hover { color: var(--text-link); }
+
+        .structure-deck-panel {
+            background: var(--bg-inset);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-4);
+            margin-top: var(--space-4);
+        }
+        .structure-preview-meta { display: flex; align-items: center; gap: var(--space-4); }
+        .structure-img-frame {
+            width: 44px;
+            height: 44px;
+            background: var(--bg-body);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            object-fit: cover;
+            image-rendering: pixelated;
+        }
+        .structure-label-title { font-weight: var(--fw-bold); color: var(--text-primary); font-size: var(--fs-sm); }
+        .structure-label-sub { font-size: var(--fs-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); }
+
+        .btn {
+            background: var(--accent);
+            border: none;
+            color: var(--text-on-brand);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: var(--fw-semibold);
+            text-transform: uppercase;
+            letter-spacing: var(--ls-wide);
+            font-size: var(--fs-xs);
+            transition: background var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+        }
+        .btn:hover { background: var(--accent-hover); }
+        .btn:active { transform: scale(0.96); }
+        .btn-secondary { background: var(--bg-inset); border: 1px solid var(--border-default); color: var(--text-secondary); }
+        .btn-secondary:hover { border-color: var(--border-strong); color: var(--text-primary); }
+        .btn:disabled { background: var(--bg-inset); color: var(--text-disabled); border: 1px solid var(--border-subtle); cursor: not-allowed; transform: none; }
+
+        /* External Author Notice Header Banner */
+        .external-author-banner {
+            background: var(--bg-inset);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            padding: var(--space-3) var(--space-4);
+            margin-bottom: var(--space-3);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .external-author-label {
+            font-size: var(--fs-xs);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: var(--ls-wide);
+        }
+        .external-author-name {
+            font-size: var(--fs-md);
+            font-weight: var(--fw-bold);
+            color: var(--text-primary);
+        }
+
+        /* External Disclaimer Box inside Viewer Layout */
+        .external-disclaimer-box {
+            background: var(--bg-inset);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            padding: var(--space-3) var(--space-4);
+            font-size: var(--fs-xs);
+            color: var(--text-muted);
+            line-height: var(--lh-normal);
+        }
+        .external-disclaimer-box strong {
+            color: var(--text-secondary);
+        }
+
+        /* Footer Utilities */
+        .footer {
+            margin-top: var(--space-8);
+            padding-bottom: var(--space-5);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+            align-items: center;
+            width: 100%;
+        }
+        .footer-title {
+            font-size: var(--fs-xs);
+            color: var(--text-muted);
+            opacity: 0.75;
+            letter-spacing: var(--ls-wide);
+        }
+        .footer-links {
+            display: flex;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .footer-links a {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--brand-accent-2-300);
+            text-decoration: none;
+            font-size: var(--fs-sm);
+            opacity: 0.85;
+            transition: opacity var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+        }
+        .footer-links a:hover {
+            color: var(--brand-accent-1-300);
+            opacity: 1;
+        }
+        .footer-links img {
+            width: 16px;
+            height: 16px;
+            color-scheme: dark !important;
+            filter: brightness(0) invert(1) !important;
+            opacity: 0.9;
+        }
+        .footer-links a.kofi { color: #ff5fa2; font-weight: var(--fw-medium); }
+        .footer-links a.kofi:hover { color: #ff8fc0; }
+        .footer-links a.kofi img {
+            width: 20px;
+            height: 20px;
+            color-scheme: dark !important;
+            filter: brightness(0) invert(1) !important;
+            opacity: 0.95;
+        }
+
+        /* De-emphasized Footer Styles for Third-Party Works */
+        .footer-deemphasized {
+            opacity: 0.6;
+            filter: grayscale(0.5);
+            transition: opacity var(--duration-fast) var(--ease-standard);
+        }
+        .footer-deemphasized:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <header>
+            <div class="title-block">
+                <button class="btn btn-secondary" style="font-family: var(--font-mono);" onclick="handleIntegratedBackSequence()">&lt;--</button>
+                <h1 id="app-display-header" onclick="routeReturnHomeDashboard()">Command Block Creation</h1>
+            </div>
+        </header>
+
+        <main id="app-view-router-canvas">
+             <div style="text-align: center; color: var(--text-muted); padding: var(--space-7);">Scanning workspace directories...</div>
+        </main>
+
+        <div class="footer" id="global-page-footer">
+            <div class="footer-title" id="footer-owner-title">By Nako Hikari</div>
+            <div class="footer-links">
+                <a href="https://github.com/nako-hikari/" target="_blank" class="social">
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub"> GitHub
+                </a>
+                <a href="https://m.youtube.com/@NaCryst" target="_blank" class="social">
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube"> YouTube
+                </a>
+                <a href="https://www.tiktok.com/@nako_hikari_mc" target="_blank" class="social">
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"> TikTok
+                </a>
+                <a href="https://ko-fi.com/arialicee" target="_blank" class="social kofi">
+                    <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/kofi-icon.png" alt="Ko-fi"> Support me on Ko-fi
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cachedParsedIndexDataset = [];
+        const CDNBASESRC = "https://raw.githubusercontent.com/nako-hikari/nako-hikari.github.io/main/assets/images";
+
+        window.addEventListener('DOMContentLoaded', initializeApplicationRuntimePipeline);
+        window.addEventListener('hashchange', readLocationHashRouteToken);
+
+        function handleIntegratedBackSequence() {
+            if (!!window.location.hash) {
+                routeReturnHomeDashboard();
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+
+        function isSelfCredit(creditVal) {
+            if (!creditVal) return true;
+            const normalized = creditVal.toLowerCase().replace(/\s+/g, '');
+            return normalized === 'nakohikari';
+        }
+
+        function resetGlobalFooterState() {
+            const footer = document.getElementById('global-page-footer');
+            const footerTitle = document.getElementById('footer-owner-title');
+            if (footer) footer.classList.remove('footer-deemphasized');
+            if (footerTitle) footerTitle.innerText = "By Nako Hikari";
+        }
+
+        async function initializeApplicationRuntimePipeline() {
+            try {
+                const response = await fetch('https://api.github.com/repos/nako-hikari/nako-hikari.github.io/contents/commands');
+                if (!response.ok) throw new Error();
+                const directoryItems = await response.json();
+                const targetFiles = directoryItems.filter(item => item.name.endsWith('.txt'));
+
+                const fetchPromises = targetFiles.map(async (item) => {
+                    try {
+                        const fileContentResponse = await fetch(`https://raw.githubusercontent.com/nako-hikari/nako-hikari.github.io/main/commands/${item.name}`);
+                        if (!fileContentResponse.ok) throw new Error();
+                        const data = await fileContentResponse.text();
+                        
+                        let cleanName = item.name.substring(0, item.name.lastIndexOf('.')).replace(/_/g, ' ');
+                        let title = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+                        
+                        let desc = "No descriptor statement declared in source file.";
+                        let tags = [];
+                        let credit = null;
+
+                        const segments = data.split('\n\n');
+                        if (segments[0]) {
+                            segments[0].split('\n').forEach(line => {
+                                if (line.startsWith('TITLE:')) title = line.replace('TITLE:', '').trim();
+                                if (line.startsWith('DESC:')) desc = line.replace('DESC:', '').trim();
+                                if (line.startsWith('TAG:')) tags = line.replace('TAG:', '').split(',').map(t => t.trim());
+                                if (line.startsWith('CREDIT:')) credit = line.replace('CREDIT:', '').trim();
+                            });
+                        }
+
+                        return { file: item.name, parsedTitle: title, parsedDesc: desc, parsedTags: tags, parsedCredit: credit, rawPayload: data };
+                    } catch (err) {
+                        let rawTitle = item.name.substring(0, item.name.lastIndexOf('.'));
+                        let cleanFallbackTitle = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1);
+                        return { file: item.name, parsedTitle: cleanFallbackTitle, parsedDesc: "Failed to download asset.", parsedTags: [], parsedCredit: null, rawPayload: null };
+                    }
+                });
+
+                cachedParsedIndexDataset = await Promise.all(fetchPromises);
+            } catch (err) {
+                console.warn("GitHub REST Engine connection fault.");
+            }
+            readLocationHashRouteToken();
+        }
+
+        function readLocationHashRouteToken() {
+            const currentHash = decodeURIComponent(window.location.hash.replace('#', '')).trim().toLowerCase();
+            
+            if (currentHash && cachedParsedIndexDataset.length > 0) {
+                const searchMatch = cachedParsedIndexDataset.find(c => {
+                    const cleanFileName = c.file.toLowerCase();
+                    return cleanFileName === currentHash || c.file.toLowerCase() === currentHash + '.txt';
+                });
+                
+                if (searchMatch) {
+                    if (searchMatch.rawPayload) {
+                        renderFocusedCreationDisplayPage(searchMatch);
+                        return;
+                    } else {
+                        attemptLiveOnDemandAssetRecovery(searchMatch);
+                        return;
+                    }
+                }
+            }
+            renderGlobalDashboardHomeGrid();
+        }
+
+        async function attemptLiveOnDemandAssetRecovery(matchedObject) {
+            const canvas = document.getElementById('app-view-router-canvas');
+            canvas.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: var(--space-7);">Fetching content payload on-demand...</div>`;
+            try {
+                const res = await fetch(`https://raw.githubusercontent.com/nako-hikari/nako-hikari.github.io/main/commands/${matchedObject.file}`);
+                if (!res.ok) throw new Error();
+                const textData = await res.text();
+                matchedObject.rawPayload = textData;
+                
+                const segments = textData.split('\n\n');
+                if (segments[0]) {
+                    segments[0].split('\n').forEach(line => {
+                        if (line.startsWith('TITLE:')) matchedObject.parsedTitle = line.replace('TITLE:', '').trim();
+                        if (line.startsWith('DESC:')) matchedObject.parsedDesc = line.replace('DESC:', '').trim();
+                        if (line.startsWith('TAG:')) matchedObject.parsedTags = line.replace('TAG:', '').split(',').map(t => t.trim());
+                        if (line.startsWith('CREDIT:')) matchedObject.parsedCredit = line.replace('CREDIT:', '').trim();
+                    });
+                }
+                renderFocusedCreationDisplayPage(matchedObject);
+            } catch (e) {
+                canvas.innerHTML = `
+                    <div style="text-align: center; padding: var(--space-7);">
+                        <p style="color: var(--color-danger); font-weight: bold;">Could not download ${matchedObject.file}</p>
+                        <button class="btn btn-secondary" onclick="routeReturnHomeDashboard()">Back to Dashboard</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderGlobalDashboardHomeGrid() {
+            resetGlobalFooterState();
+            const routerCanvas = document.getElementById('app-view-router-canvas');
+            routerCanvas.innerHTML = `
+                <div class="search-container">
+                    <input type="text" id="live-filter-search" class="search-box" placeholder="Search creations by title or tag keywords..." oninput="handleSearchFilteringEngine(this.value)">
+                </div>
+                <div class="creation-grid" id="dashboard-cards-container"></div>
+            `;
+            injectFilteredCardsIntoDashboard(cachedParsedIndexDataset);
+        }
+
+        function injectFilteredCardsIntoDashboard(dataset) {
+            const gridContainer = document.getElementById('dashboard-cards-container');
+            if (!gridContainer) return;
+            gridContainer.innerHTML = '';
+
+            dataset.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'creation-card';
+                card.onclick = () => { window.location.hash = encodeURIComponent(item.file); };
+                let tagPillsStr = item.parsedTags.map(t => `<span class="tag-pill">${t}</span>`).join(' ');
+
+                card.innerHTML = `
+                    <div class="card-title">${escapeHtmlEntities(item.parsedTitle)}</div>
+                    <div class="card-desc" style="${item.rawPayload ? '' : 'color: var(--color-danger);'}">${escapeHtmlEntities(item.parsedDesc)}</div>
+                    <div class="tag-pill-container" style="margin-top: var(--space-1);">${tagPillsStr}</div>
+                `;
+                gridContainer.appendChild(card);
+            });
+        }
+
+        function handleSearchFilteringEngine(searchQuery) {
+            const query = searchQuery.toLowerCase().trim();
+            if (!query) {
+                injectFilteredCardsIntoDashboard(cachedParsedIndexDataset);
+                return;
+            }
+            const filtered = cachedParsedIndexDataset.filter(item => {
+                return item.parsedTitle.toLowerCase().includes(query) || 
+                       item.parsedDesc.toLowerCase().includes(query) || 
+                       item.parsedTags.some(t => t.toLowerCase().includes(query));
+            });
+            injectFilteredCardsIntoDashboard(filtered);
+        }
+
+        function parseCustomMarkdownSyntaxes(rawTextString) {
+            let clean = escapeHtmlEntities(rawTextString);
+            clean = clean.replace(/\[link\]\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="parsed-link">$1</a>');
+            clean = clean.replace(/\[img\]\((.*?)\)/g, '<img src="$1" class="parsed-img" alt="Embedded Source Asset">');
+            return clean;
+        }
+
+        async function renderFocusedCreationDisplayPage(creationObject) {
+            const canvas = document.getElementById('app-view-router-canvas');
+            canvas.innerHTML = ''; 
+
+            const isSelf = isSelfCredit(creationObject.parsedCredit);
+            const globalFooter = document.getElementById('global-page-footer');
+            const footerTitle = document.getElementById('footer-owner-title');
+
+            if (!isSelf) {
+                const authorBanner = document.createElement('div');
+                authorBanner.className = 'external-author-banner';
+                authorBanner.innerHTML = `
+                    <div class="external-author-label">Created By</div>
+                    <div class="external-author-name">${escapeHtmlEntities(creationObject.parsedCredit)}</div>
+                `;
+                canvas.appendChild(authorBanner);
+
+                if (globalFooter) globalFooter.classList.add('footer-deemphasized');
+                if (footerTitle) footerTitle.innerText = `Original Creator: ${creationObject.parsedCredit} | Hosted By Nako Hikari`;
+            } else {
+                resetGlobalFooterState();
+            }
+
+            const container = document.createElement('div');
+            container.className = 'viewer-card';
+
+            let actionLayoutWrapper = document.createElement('div');
+            actionLayoutWrapper.className = 'viewer-action-row';
+
+            let headerMetaContainer = document.createElement('div');
+            headerMetaContainer.style.cssText = 'display: flex; flex-direction: column; gap: 4px;';
+
+            let shareButtonEl = document.createElement('button');
+            shareButtonEl.className = 'btn';
+            shareButtonEl.innerText = 'Share';
+            shareButtonEl.onclick = () => {
+                const linkString = `${window.location.origin}${window.location.pathname}#${encodeURIComponent(creationObject.file)}`;
+                navigator.clipboard.writeText(linkString);
+                shareButtonEl.innerText = 'Copied!';
+                setTimeout(() => { shareButtonEl.innerText = 'Share'; }, 1200);
+            };
+
+            let wrapToggleLabel = document.createElement('label');
+            wrapToggleLabel.className = 'toggle-wrap-container';
+            wrapToggleLabel.innerHTML = `<input type="checkbox" id="global-word-wrap-toggle"> Word Wrap`;
+            
+            wrapToggleLabel.querySelector('input').onchange = (e) => {
+                const canvasElement = document.getElementById('app-view-router-canvas');
+                if (e.target.checked) {
+                    canvasElement.classList.add('enable-word-wrap');
+                    canvasElement.classList.add('enable-word-wrap-npc');
+                    
+                    document.querySelectorAll('.npc-scroller-stack').forEach(stack => {
+                        const rawText = stack.getAttribute('data-raw-payload') || '';
+                        if (!rawText) return;
+                        stack.innerHTML = '';
+                        rawText.split('\n').forEach(line => {
+                            let lineRow = document.createElement('div');
+                            lineRow.className = 'npc-line-box';
+                            lineRow.innerText = line;
+                            stack.appendChild(lineRow);
+                        });
+                    });
+                } else {
+                    canvasElement.classList.remove('enable-word-wrap');
+                    canvasElement.classList.remove('enable-word-wrap-npc');
+                    
+                    document.querySelectorAll('.npc-scroller-stack').forEach(stack => {
+                        const rawText = stack.getAttribute('data-raw-payload') || '';
+                        if (!rawText) return;
+                        stack.innerHTML = '';
+                        let lineRow = document.createElement('div');
+                        lineRow.className = 'npc-line-box';
+                        lineRow.innerText = rawText;
+                        stack.appendChild(lineRow);
+                    });
+                }
+            };
+
+            let rightActionGroup = document.createElement('div');
+            rightActionGroup.style.cssText = 'display: flex; align-items: center; gap: var(--space-4); flex-shrink: 0;';
+            rightActionGroup.appendChild(wrapToggleLabel);
+            rightActionGroup.appendChild(shareButtonEl);
+
+            let tagsContainer = document.createElement('div');
+            tagsContainer.className = 'tag-pill-container';
+            
+            let elementsWrapper = document.createElement('div');
+            elementsWrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+
+            let activeChainStackElement = null;
+            let currentChainRowIndex = 0;
+
+            const isFlippedTagActive = creationObject.parsedTags.some(tag => tag.toLowerCase() === 'flip');
+            const calculatedRotationAngle = isFlippedTagActive ? "0deg" : "180deg";
+
+            const segments = creationObject.rawPayload.split('\n\n');
+
+            segments.forEach(seg => {
+                const lines = seg.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                if (lines.length === 0) return;
+
+                const baseLine = lines[0];
+
+                if (baseLine.startsWith('TITLE:')) {
+                    let titleEl = document.createElement('div');
+                    titleEl.className = 'render-title';
+                    titleEl.innerText = baseLine.replace('TITLE:', '').trim();
+                    headerMetaContainer.appendChild(titleEl);
+                } 
+                else if (baseLine.startsWith('DESC:')) {
+                    let descEl = document.createElement('div');
+                    descEl.className = 'render-desc';
+                    descEl.innerText = baseLine.replace('DESC:', '').trim();
+                    headerMetaContainer.appendChild(descEl);
+                } 
+                else if (baseLine.startsWith('TAG:')) {
+                    baseLine.replace('TAG:', '').split(',').forEach(t => {
+                        let pill = document.createElement('span');
+                        pill.className = 'tag-pill';
+                        if (t.trim().toLowerCase() === 'flip') pill.classList.add('tag-flip-pill');
+                        pill.innerText = t.trim();
+                        tagsContainer.appendChild(pill);
+                    });
+                }
+                else if (/^H[1-5]:/.test(baseLine)) {
+                    activeChainStackElement = null;
+                    const tier = baseLine.match(/^H[1-5]/)[0].toLowerCase();
+                    let headerEl = document.createElement('div');
+                    headerEl.className = `view-${tier}`;
+                    headerEl.innerText = baseLine.replace(/^H[1-5]:/, '').trim();
+                    elementsWrapper.appendChild(headerEl);
+                }
+                else if (baseLine.startsWith('TEXT:')) {
+                    activeChainStackElement = null;
+                    let textEl = document.createElement('p');
+                    textEl.className = 'view-text';
+                    textEl.innerHTML = parseCustomMarkdownSyntaxes(baseLine.replace('TEXT:', '').trim());
+                    elementsWrapper.appendChild(textEl);
+                }
+                else if (baseLine.startsWith('NOTE:')) {
+                    activeChainStackElement = null;
+                    let noteEl = document.createElement('p');
+                    noteEl.className = 'view-note';
+                    noteEl.innerHTML = parseCustomMarkdownSyntaxes(baseLine.replace('NOTE:', '').trim());
+                    elementsWrapper.appendChild(noteEl);
+                }
+                else if (baseLine.startsWith('CMD:NPC') || baseLine.startsWith('CMD:CHAT')) {
+                    activeChainStackElement = null;
+                    const isNpcType = baseLine.startsWith('CMD:NPC');
+
+                    let npcNodeWrapper = document.createElement('div');
+                    npcNodeWrapper.className = 'npc-compound-card';
+
+                    let assetTexture = document.createElement('img');
+                    assetTexture.className = 'block-face-texture-node';
+                    assetTexture.src = isNpcType ? `${CDNBASESRC}/npc.png` : `${CDNBASESRC}/chat.png`;
+
+                    let indexingLabel = document.createElement('div');
+                    indexingLabel.className = 'view-row-idx';
+                    indexingLabel.innerText = '1';
+
+                    let textBlockContainer = document.createElement('div');
+                    textBlockContainer.className = 'npc-scroller-stack';
+
+                    const macroPayloadLines = lines.slice(1);
+                    const joinedPayload = macroPayloadLines.join('\n');
+                    textBlockContainer.setAttribute('data-raw-payload', joinedPayload);
+                    
+                    let lineRow = document.createElement('div');
+                    lineRow.className = 'npc-line-box';
+                    lineRow.innerText = joinedPayload;
+                    textBlockContainer.appendChild(lineRow);
+
+                    let functionalCopyBtn = document.createElement('div');
+                    functionalCopyBtn.className = 'icon-copy-action-btn';
+                    functionalCopyBtn.innerHTML = `<img src="${CDNBASESRC}/copy.png" alt="Copy">`;
+                    functionalCopyBtn.onclick = () => {
+                        const compoundingTextBuffer = macroPayloadLines.join('\n');
+                        navigator.clipboard.writeText(compoundingTextBuffer);
+                        functionalCopyBtn.style.borderColor = 'var(--color-success-border)';
+                        functionalCopyBtn.style.background = 'var(--color-success-bg)';
+                        setTimeout(() => { 
+                            functionalCopyBtn.style.borderColor = ''; 
+                            functionalCopyBtn.style.background = '';
+                        }, 800);
+                    };
+
+                    npcNodeWrapper.appendChild(indexingLabel);
+                    npcNodeWrapper.appendChild(assetTexture);
+                    npcNodeWrapper.appendChild(textBlockContainer);
+                    npcNodeWrapper.appendChild(functionalCopyBtn);
+                    elementsWrapper.appendChild(npcNodeWrapper);
+
+                    if (isNpcType) {
+                        let dynamicExplainerLink = document.createElement('div');
+                        dynamicExplainerLink.className = 'npc-router-explainer-tag';
+                        dynamicExplainerLink.innerText = '--- click here to know how to use NPC as setup ---';
+                        dynamicExplainerLink.onclick = () => { window.location.href = 'npc-setup.html'; };
+                        elementsWrapper.appendChild(dynamicExplainerLink);
+                    }
+                }
+                else if (baseLine.startsWith('CMD:')) {
+                    if (!activeChainStackElement) {
+                        activeChainStackElement = document.createElement('div');
+                        activeChainStackElement.className = 'connected-chain-group';
+                        elementsWrapper.appendChild(activeChainStackElement);
+                        currentChainRowIndex = 0;
+                    }
+
+                    for (let i = 0; i < lines.length; i += 2) {
+                        if (!lines[i] || !lines[i].startsWith('CMD:')) continue;
+                        
+                        currentChainRowIndex++;
+                        const metaTokens = lines[i].split(':');
+                        const commandStringPayload = lines[i+1] || '';
+
+                        const modeToken = (metaTokens[1] || 'C').toUpperCase();
+                        const activeToken = (metaTokens[2] || 'AA').toUpperCase();
+                        const condToken = (metaTokens[3] || 'U').toUpperCase();
+                        const tickToken = metaTokens[4] || '0';
+
+                        const fullBlockTypeName = modeToken === 'I' ? 'Impulse' : modeToken === 'R' ? 'Repeat' : 'Chain';
+                        const fullConditionText = condToken.startsWith('C') ? 'Conditional' : 'Unconditional';
+                        const fullRedstoneText = activeToken === 'AA' ? 'Always Active' : 'Needs Redstone';
+
+                        let filePrefix = modeToken.toLowerCase();
+                        let fileSuffix = condToken.toLowerCase().startsWith('c') ? 'cn' : 'un';
+                        let blockGraphicSrc = `${CDNBASESRC}/${filePrefix}-${fileSuffix}.png`;
+
+                        let rowNode = document.createElement('div');
+                        rowNode.className = 'view-cmd-row';
+
+                        rowNode.innerHTML = `
+                            <div class="view-row-idx">${currentChainRowIndex}</div>
+                            <div class="block-interactive-wrapper" tabindex="0">
+                                <img src="${blockGraphicSrc}" class="block-face-texture-node" style="transform: rotate(${calculatedRotationAngle});" alt="Block Face">
+                                <div class="block-meta-tooltip">${fullBlockTypeName}\n${fullConditionText}\n${fullRedstoneText}\nTick = ${tickToken}</div>
+                            </div>
+                            <div class="view-cmd-payload-box">${escapeHtmlEntities(commandStringPayload)}</div>
+                            <div class="icon-copy-action-btn" onclick="copyInlinePayloadRowText(this)"><img src="${CDNBASESRC}/copy.png" alt="Copy"></div>
+                        `;
+                        activeChainStackElement.appendChild(rowNode);
+                    }
+                }
+            });
+
+            if (headerMetaContainer.children.length > 0) actionLayoutWrapper.appendChild(headerMetaContainer);
+            actionLayoutWrapper.appendChild(rightActionGroup);
+            container.appendChild(actionLayoutWrapper);
+
+            if (tagsContainer.children.length > 0) container.appendChild(tagsContainer);
+            if (headerMetaContainer.children.length > 0 || tagsContainer.children.length > 0) {
+                let ruleSpacer = document.createElement('hr');
+                ruleSpacer.style.cssText = 'border: none; border-bottom: 1px solid var(--border-subtle); margin: 0;';
+                container.appendChild(ruleSpacer);
+            }
+
+            container.appendChild(elementsWrapper);
+
+            if (!isSelf) {
+                const disclaimerBox = document.createElement('div');
+                disclaimerBox.className = 'external-disclaimer-box';
+                disclaimerBox.innerHTML = `
+                    <strong>Credit to:</strong> ${escapeHtmlEntities(creationObject.parsedCredit)}<br>
+                    I do not own this command creation nor do I take any credit for it. If this is your original creation and someone has registered it under their name without permission, or if you want to set things straight, please contact me directly.
+                `;
+                container.appendChild(disclaimerBox);
+            }
+
+            const pureBaseName = creationObject.file.substring(0, creationObject.file.lastIndexOf('.'));
+            const downloadStructureUrl = `structures/${pureBaseName}.mcstructure`;
+            
+            let structureDeck = document.createElement('div');
+            structureDeck.className = 'structure-deck-panel';
+
+            try {
+                const checkFileResponse = await fetch(downloadStructureUrl, { method: 'HEAD' });
+                if (checkFileResponse.ok) {
+                    structureDeck.innerHTML = `
+                        <div class="structure-preview-meta">
+                            <img src="${CDNBASESRC}/structure.png" class="structure-img-frame" alt="Structure Frame">
+                            <div>
+                                <div class="structure-label-title">${escapeHtmlEntities(pureBaseName)}.mcstructure</div>
+                                <div class="structure-label-sub">In-Game Block Structure Data</div>
+                            </div>
+                        </div>
+                        <button class="btn" onclick="window.location.href='${downloadStructureUrl}'">Download</button>
+                    `;
+                } else {
+                    throw new Error();
+                }
+            } catch (e) {
+                structureDeck.innerHTML = `
+                    <div class="structure-preview-meta">
+                        <img src="${CDNBASESRC}/structure.png" class="structure-img-frame" style="opacity: 0.3;" alt="">
+                        <div>
+                            <div class="structure-label-title" style="color: var(--text-muted);">Structure Unavailable</div>
+                            <div class="structure-label-sub">No matching model structure found for deployment</div>
+                        </div>
+                    </div>
+                    <button class="btn" disabled>Unavailable</button>
+                `;
+            }
+            
+            container.appendChild(structureDeck);
+            canvas.appendChild(container);
+        }
+
+        function routeReturnHomeDashboard() {
+            window.location.hash = '';
+            renderGlobalDashboardHomeGrid();
+        }
+
+        function copyInlinePayloadRowText(actionButtonNode) {
+            const contentString = actionButtonNode.parentElement.querySelector('.view-cmd-payload-box').innerText;
+            navigator.clipboard.writeText(contentString);
+            actionButtonNode.style.borderColor = 'var(--color-success-border)';
+            actionButtonNode.style.background = 'var(--color-success-bg)';
+            setTimeout(() => { 
+                actionButtonNode.style.borderColor = ''; 
+                actionButtonNode.style.background = '';
+            }, 800);
+        }
+
+        function escapeHtmlEntities(string) {
+            return string.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
