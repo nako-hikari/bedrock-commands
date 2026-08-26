@@ -7,11 +7,18 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/nako-hikari/support-files@main/css/nako.css">
     <style>
         .footer-links a.social {
-            opacity: 0.5;
+            opacity: 0.85;
             transition: opacity var(--transition-fast, 0.15s), color var(--transition-fast, 0.15s);
         }
         .footer-links a.social:hover {
-            opacity: 0.9;
+            opacity: 1;
+        }
+        #footer-brand {
+            opacity: 1;
+            transition: opacity var(--transition-fast, 0.15s);
+        }
+        #footer-brand.dimmed {
+            opacity: 0.5;
         }
         .author-credit-bar {
             background: #0f0f12;
@@ -26,11 +33,17 @@
             align-items: center;
             justify-content: space-between;
         }
+        .author-credit-bar.with-disclaimer {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
         .author-credit-disclaimer {
             font-size: 12px;
             color: var(--text-main);
             font-weight: normal;
             font-style: italic;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -40,7 +53,7 @@
         <header style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 20px;">
             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; position: relative;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <button class="secondary" style="font-family: monospace;" onclick="handleBack()">←</button>
+                    <button id="back-btn" class="secondary" style="display: none; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; font-family: monospace; font-size: 20px; line-height: 1;" onclick="handleBack()">←</button>
                 </div>
                 <h1 id="app-display-header" style="font-size: 1.5rem; margin: 0 auto; text-align: center; cursor: pointer;" onclick="goHome()">Command Block Creation</h1>
                 <div style="display: flex; align-items: center;">
@@ -51,30 +64,32 @@
             </div>
         </header>
 
-        <main id="app-view-router-canvas">
+        <main id="app-view-router-canvas" style="width: 100%;">
              <div style="text-align: center; color: var(--text-main); padding: 40px;">Scanning workspace directories...</div>
         </main>
 
         <div class="footer">
             <div id="bottom-author-credit"></div>
-            <div class="footer-title">By Nako Hikari</div>
-            <div class="footer-links">
-                <a href="https://github.com/nako-hikari/" target="_blank" class="social">
-                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
-                    GitHub
-                </a>
-                <a href="https://m.youtube.com/@NaCryst" target="_blank" class="social">
-                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube">
-                    YouTube
-                </a>
-                <a href="https://www.tiktok.com/@nako_hikari_mc" target="_blank" class="social">
-                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok">
-                    TikTok
-                </a>
-                <a href="https://ko-fi.com/arialicee" target="_blank" class="social kofi">
-                    <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/kofi-icon.png" alt="Ko-fi">
-                    Support me on Ko-fi
-                </a>
+            <div id="footer-brand">
+                <div class="footer-title">By Nako Hikari</div>
+                <div class="footer-links">
+                    <a href="https://github.com/nako-hikari/" target="_blank" class="social">
+                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+                        GitHub
+                    </a>
+                    <a href="https://m.youtube.com/@NaCryst" target="_blank" class="social">
+                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube">
+                        YouTube
+                    </a>
+                    <a href="https://www.tiktok.com/@nako_hikari_mc" target="_blank" class="social">
+                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok">
+                        TikTok
+                    </a>
+                    <a href="https://ko-fi.com/arialicee" target="_blank" class="social kofi">
+                        <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/kofi-icon.png" alt="Ko-fi">
+                        Support me on Ko-fi
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -135,16 +150,19 @@
         function route() {
             const hash = decodeURIComponent(window.location.hash.replace('#', '')).trim().toLowerCase();
             const headerTitle = document.getElementById('app-display-header');
-            
+            const backBtn = document.getElementById('back-btn');
+
             if (hash && db.length > 0) {
                 const match = db.find(item => item.file.toLowerCase() === hash || item.file.toLowerCase() === hash + '.txt');
                 if (match) {
+                    if (backBtn) backBtn.style.display = 'flex';
                     headerTitle.innerText = match.title;
                     if (match.payload) renderView(match);
                     else recoverAsset(match);
                     return;
                 }
             }
+            if (backBtn) backBtn.style.display = 'none';
             headerTitle.innerText = "Command Block Creation";
             renderGrid();
         }
@@ -177,6 +195,9 @@
 
         function renderGrid() {
             document.getElementById('bottom-author-credit').innerHTML = '';
+            const footerBrand = document.getElementById('footer-brand');
+            if (footerBrand) footerBrand.classList.remove('dimmed');
+
             const canvas = document.getElementById('app-view-router-canvas');
             canvas.innerHTML = `
                 <div style="width: 100%; margin-bottom: 16px;">
@@ -251,29 +272,29 @@
 
             const isExternalAuthor = !isNakoAuthor(item.credit);
             const bottomCreditContainer = document.getElementById('bottom-author-credit');
+            const footerBrand = document.getElementById('footer-brand');
 
             if (isExternalAuthor && item.credit) {
                 bottomCreditContainer.innerHTML = `
-                    <div class="author-credit-bar" style="margin-bottom: 8px;">
+                    <div class="author-credit-bar with-disclaimer">
                         <span>Creation by ${escape(item.credit)}</span>
-                        <span class="author-credit-disclaimer">(I do not own this command structure/file)</span>
+                        <span class="author-credit-disclaimer">I do not own this creation, all rights and ownership belong to the credited name.<br>If you own the command and think someone publish it with their name, contact me to straight things out</span>
                     </div>
                 `;
+                if (footerBrand) footerBrand.classList.add('dimmed');
             } else {
                 bottomCreditContainer.innerHTML = '';
+                if (footerBrand) footerBrand.classList.remove('dimmed');
             }
 
             const mainCard = document.createElement('div');
             mainCard.className = 'card';
-            mainCard.style.padding = '16px';
+            mainCard.style.cssText = 'padding: 16px; display: block; width: 100%; box-sizing: border-box;';
 
             if (isExternalAuthor && item.credit) {
                 const topCreditBar = document.createElement('div');
                 topCreditBar.className = 'author-credit-bar';
-                topCreditBar.innerHTML = `
-                    <span>Creation by ${escape(item.credit)}</span>
-                    <span class="author-credit-disclaimer">(I do not own this command structure/file)</span>
-                `;
+                topCreditBar.innerHTML = `<span>Creation by ${escape(item.credit)}</span>`;
                 mainCard.appendChild(topCreditBar);
             }
 
@@ -319,7 +340,7 @@
             tagBox.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;';
             
             let contentFlow = document.createElement('div');
-            contentFlow.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+            contentFlow.style.cssText = 'display: flex; flex-direction: column; gap: 12px; width: 100%; box-sizing: border-box;';
 
             let currentChain = null;
             let chainIdx = 0;
@@ -334,10 +355,8 @@
                 const head = lines[0].trim();
 
                 if (head.startsWith('TITLE:')) {
-                    let d = document.createElement('div');
-                    d.style.cssText = 'font-size: 1.6rem; color: var(--text-bright); font-weight: bold;';
-                    d.innerText = head.replace('TITLE:', '').trim();
-                    meta.appendChild(d);
+                    const headerEl = document.getElementById('app-display-header');
+                    if (headerEl) headerEl.innerText = head.replace('TITLE:', '').trim();
                 } 
                 else if (head.startsWith('DESC:')) {
                     let d = document.createElement('div');
@@ -381,7 +400,7 @@
                     const isNpc = head.startsWith('CMD:NPC');
 
                     let npcRow = document.createElement('div');
-                    npcRow.style.cssText = 'background: #0f0f12; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; display: flex; gap: 8px; align-items: center; margin: 8px 0; min-height: 40px;';
+                    npcRow.style.cssText = 'background: #0f0f12; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; display: flex; gap: 8px; align-items: center; margin: 8px 0; min-height: 40px; width: 100%; box-sizing: border-box;';
 
                     let img = document.createElement('img');
                     img.style.cssText = 'width: 32px; height: 32px; object-fit: contain; image-rendering: pixelated;';
@@ -426,7 +445,7 @@
                 else if (head.startsWith('CMD:')) {
                     if (!currentChain) {
                         currentChain = document.createElement('div');
-                        currentChain.style.cssText = 'display: flex; flex-direction: column; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; margin: 8px 0;';
+                        currentChain.style.cssText = 'display: flex; flex-direction: column; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; margin: 8px 0; width: 100%; box-sizing: border-box;';
                         contentFlow.appendChild(currentChain);
                         chainIdx = 0;
                     }
@@ -450,7 +469,7 @@
                         let graphic = `${ASSETS}/${mode.toLowerCase()}-${cond.toLowerCase().startsWith('c') ? 'cn' : 'un'}.png`;
 
                         let row = document.createElement('div');
-                        row.style.cssText = 'display: flex; align-items: center; padding: 4px 8px; gap: 8px; position: relative; min-height: 40px;';
+                        row.style.cssText = 'display: flex; align-items: center; padding: 4px 8px; gap: 8px; position: relative; min-height: 40px; width: 100%; box-sizing: border-box;';
 
                         let tipStyles = `
                             position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) scale(0.9);
@@ -547,6 +566,9 @@
 
         function goHome() {
             window.location.hash = '';
+            const backBtn = document.getElementById('back-btn');
+            if (backBtn) backBtn.style.display = 'none';
+            document.getElementById('app-display-header').innerText = "Command Block Creation";
             renderGrid();
         }
 
