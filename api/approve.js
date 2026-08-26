@@ -80,8 +80,45 @@ if (match[1] !== expected) {
                 ).toString("utf8")
             );
 
-        const approvedFilename =
-            `${submission.id}.txt`;
+const titleMatch = submission.content.match(
+    /^TITLE:\s*(.+)$/m
+);
+
+const rawTitle =
+    titleMatch
+        ? titleMatch[1].trim()
+        : "untitled";
+
+const safeTitle =
+    rawTitle
+        .replace(/[^a-zA-Z0-9\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-");
+
+let titlePart = "";
+
+for (const word of safeTitle.split("-")) {
+    const next =
+        titlePart
+            ? `${titlePart}-${word}`
+            : word;
+
+    if (next.length > 30) {
+        break;
+    }
+
+    titlePart = next;
+}
+
+if (!titlePart) {
+    titlePart = "untitled";
+}
+
+const shortId =
+    submission.id.slice(-6);
+
+const approvedFilename =
+    `${titlePart}-${shortId}.txt`;
 
         const approvedPath =
             `bedrock-commands/${approvedFilename}`;
