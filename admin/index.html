@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Submissions</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 24px;
+            background: #0e0e11;
+            color: #b4b4bc;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            color: white;
+        }
+
+        #submissions {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .submission {
+            background: #18181f;
+            border: 1px solid #2d2d38;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .submission h2 {
+            margin-top: 0;
+            color: white;
+        }
+
+        .meta {
+            color: #a77a99;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        pre {
+            background: #0f0f12;
+            border: 1px solid #2d2d38;
+            border-radius: 6px;
+            padding: 12px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .empty {
+            color: #5a5a66;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Pending Command Submissions</h1>
+
+    <div id="submissions">
+        Loading...
+    </div>
+
+    <script>
+        async function loadSubmissions() {
+            const container = document.getElementById("submissions");
+
+            try {
+                const response = await fetch("/api/pending");
+
+                if (!response.ok) {
+                    throw new Error("Failed to load submissions");
+                }
+
+                const submissions = await response.json();
+
+                if (submissions.length === 0) {
+                    container.innerHTML =
+                        '<div class="empty">No pending submissions.</div>';
+                    return;
+                }
+
+                container.innerHTML = "";
+
+                submissions.forEach(submission => {
+                    const card = document.createElement("div");
+                    card.className = "submission";
+
+                    const title =
+                        submission.content.match(/^TITLE: (.*)$/m);
+
+                    card.innerHTML = `
+                        <h2>
+                            ${title ? title[1] : "Untitled"}
+                        </h2>
+
+                        <div class="meta">
+                            Author: ${submission.author}<br>
+                            ID: ${submission.id}<br>
+                            Submitted: ${submission.submittedAt}
+                        </div>
+
+                        <pre></pre>
+                    `;
+
+                    card.querySelector("pre").textContent =
+                        submission.content;
+
+                    container.appendChild(card);
+                });
+
+            } catch (error) {
+                container.innerHTML =
+                    `<div class="empty">Error: ${error.message}</div>`;
+            }
+        }
+
+        loadSubmissions();
+    </script>
+
+</body>
+</html>
