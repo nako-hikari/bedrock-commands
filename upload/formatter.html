@@ -534,9 +534,6 @@
             <select id="header-type-selector" class="header-type-select">
                 <option value="H1">H1</option>
                 <option value="H2">H2</option>
-                <option value="H3">H3</option>
-                <option value="H4">H4</option>
-                <option value="H5">H5</option>
             </select>
             <button class="btn btn-secondary" onclick="addHeaderBlock()">+ Add Header</button>
             <button class="btn btn-secondary" onclick="addBodyTextBlock()">+ Add Body Text</button>
@@ -554,6 +551,7 @@
             <div class="group-header">
                 <span class="group-title">Formatted Raw Text String Output</span>
                 <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" onclick="copyOutputToClipboard()">Copy Output</button>
                     <button class="btn btn-secondary" onclick="exportAsTxtFile()">Export as .txt</button>
                     <button class="btn" onclick="uploadContent()">UPLOAD</button>
                 </div>
@@ -681,6 +679,25 @@
             compilerCoreEngine();
         }
 
+        function confirmDeleteBlock(buttonEl) {
+            const block = buttonEl.closest('.group-block');
+            displayModal({
+                title: 'Confirm Deletion',
+                message: 'Are you sure you want to remove this element block?',
+                actions: [
+                    { label: 'Cancel', class: 'btn-secondary' },
+                    {
+                        label: 'Delete',
+                        class: 'btn-danger',
+                        onClick: () => {
+                            block.remove();
+                            compilerCoreEngine();
+                        }
+                    }
+                ]
+            });
+        }
+
         function createStandardBlockHeader(titleText, belongsToGroup) {
             return `
                 <div class="group-header">
@@ -691,7 +708,7 @@
                         <button class="btn btn-sm btn-secondary" onclick="shiftBlockPosition(this, -1)">▲ Up</button>
                         <button class="btn btn-sm btn-secondary" onclick="shiftBlockPosition(this, 1)">▼ Down</button>
                         ${belongsToGroup === 'chain' ? `<button class="btn btn-sm" onclick="addCommandRowToGroup(this.closest('.group-block'))">+ Add Row</button>` : ''}
-                        <button class="btn btn-sm btn-danger" onclick="this.closest('.group-block').remove(); compilerCoreEngine();">Remove</button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmDeleteBlock(this)">Remove</button>
                     </div>
                 </div>
             `;
@@ -704,11 +721,6 @@
 
             group.innerHTML = `
                 ${createStandardBlockHeader('Command Block Group', 'chain')}
-                <div style="display: flex; align-items: center; gap: 6px; padding: 0 var(--space-xs);">
-                    <label style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer;">
-                        <input type="checkbox" class="group-flip-toggle" onchange="compilerCoreEngine()"> <span>Flip Tag</span>
-                    </label>
-                </div>
                 <div class="bulk-paste-zone">
                     <label>Bulk Paste Multi-Line Split Input Tool</label>
                     <textarea placeholder="Paste lines of commands directly here. Each line auto-creates a linked sub-row entry block..." oninput="handleBulkPasteEngine(this)"></textarea>
@@ -755,7 +767,7 @@
                         </select>
                         <input type="text" class="row-tick" value="0" oninput="compilerCoreEngine()">
                     </div>
-                    <button class="btn btn-sm btn-danger" style="padding: 2px 8px;" onclick="removeRowNodeElement(this)">X</button>
+                    <button class="btn btn-sm btn-danger" style="padding: 2px 8px;" onclick="confirmRemoveRowNode(this)">X</button>
                 </div>
                 <div class="cmd-input-container">
                     <input type="text" class="cmd-input-field" placeholder="Enter command string..." value="${targetCommandValue.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
@@ -764,6 +776,23 @@
 
             stack.appendChild(rowNode);
             compilerCoreEngine();
+        }
+
+        function confirmRemoveRowNode(buttonEl) {
+            displayModal({
+                title: 'Confirm Deletion',
+                message: 'Are you sure you want to remove this command row?',
+                actions: [
+                    { label: 'Cancel', class: 'btn-secondary' },
+                    {
+                        label: 'Delete',
+                        class: 'btn-danger',
+                        onClick: () => {
+                            removeRowNodeElement(buttonEl);
+                        }
+                    }
+                ]
+            });
         }
 
         function removeRowNodeElement(buttonEl) {
@@ -964,9 +993,6 @@
                 }
                 else if (type === 'chain-group') {
                     let groupOutput = '';
-                    const hasFlip = el.querySelector('.group-flip-toggle').checked;
-                    if (hasFlip) groupOutput += `TAG: flip\n`;
-
                     const rows = el.querySelectorAll('.cmd-row-node');
                     rows.forEach(row => {
                         const m = row.querySelector('.row-mode').value;
@@ -1109,6 +1135,23 @@
                     ]
                 });
             }
+        }
+
+        function copyOutputToClipboard() {
+            const rawText = document.getElementById('raw-string-output').innerText;
+            navigator.clipboard.writeText(rawText).then(() => {
+                displayModal({
+                    title: 'Copied!',
+                    message: 'Output string copied to clipboard successfully.',
+                    actions: [{ label: 'OK' }]
+                });
+            }).catch(err => {
+                displayModal({
+                    title: 'Copy Failed',
+                    message: 'Failed to copy output string: ' + err,
+                    actions: [{ label: 'Close', class: 'btn-danger' }]
+                });
+            });
         }
 
         function exportAsTxtFile() {
