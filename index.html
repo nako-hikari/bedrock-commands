@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Command Block Creation</title>
-    <link rel="stylesheet" href="css/nako.css">
     <style>
         :root {
             color-scheme: light dark;
+
+            /* Nako-Default-Purple Color Palette */
             --bg-color: #0e0e11;
             --container-bg: #18181f;
             --input-bg: #0f0f12;
@@ -18,6 +19,17 @@
             --accent-light: #A77A99;
             --accent-light-hover: #c5a4bc;
 
+            /* Unused color tokens */
+            --accent-dark2: #4a2340;
+            --accent-dark-hover2: #5e2f52;  
+            --accent-light2: #8b5fa3;
+            --accent-light-hover2: #a67bc0; 
+            --primary: #8b5fa3;
+            --primary-hover: #a67bc0;
+            --secondary: #4a2340;
+            --secondary-hover: #5e2f52;
+
+            /* Typography */
             --text-bright: #ffffff;
             --text-main: #b4b4bc;
             --text-muted: #5a5a66;
@@ -25,9 +37,29 @@
             --text-clickable-link: #52BBE8;
             --text-pale-purple: #9575cd;
 
+            /* Alert / Dangerous */
+            --red: #e05c5c;
+            --red-pale: #241616;
+            
+            /* Green Note Tokens */
+            --green: #4fbc75;
+            --green-pale: #132118;
+
+            /* Yellow Note Tokens */
+            --yellow: #dfb142;
+            --yellow-pale: #242014;
+
+            /* Extra Feedback Utility Elements */
             --success-bg: #2a4f32;
             --success-border: #3b6e47;
+            --impulse: #C77E4F;
+            --impulse-pale: #261b14;
+            --chain: #76B297;
+            --chain-pale: #18221e;
+            --repeat: #6A4FC7;
+            --repeat-pale: #171424;
 
+            /* Spacing & Layout Scale */
             --space-xs: 4px;
             --space-sm: 8px;
             --space-md: 12px;
@@ -36,6 +68,7 @@
             --space-2xl: 24px;
             --max-width: 900px;
 
+            /* Borders & Depth Elevation */
             --radius-sm: 4px;
             --radius-md: 6px;
             --radius-lg: 8px;
@@ -43,6 +76,7 @@
             --shadow-deep: 0 6px 16px rgba(0, 0, 0, 0.6);
             --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.3);
 
+            /* Animation & Transitions */
             --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-normal: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -193,10 +227,20 @@
             color: var(--text-main);
             flex: 1;
         }
-        .card-credit {
+
+        .tag-pill-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-sm);
+        }
+        .tag-pill {
+            background: var(--box-bg);
+            border: var(--border-width) solid var(--border-color);
+            color: var(--accent-light);
+            padding: 2px var(--space-sm);
             font-size: 12px;
-            color: var(--text-muted);
-            font-style: italic;
+            font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+            border-radius: var(--radius-sm);
         }
 
         .viewer-card {
@@ -229,25 +273,9 @@
             margin: 0;
         }
 
-        .tag-pill-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--space-sm);
-        }
-        .tag-pill {
-            background: var(--box-bg);
-            border: var(--border-width) solid var(--border-color);
-            color: var(--text-clickable-link);
-            padding: 2px var(--space-sm);
-            font-size: 12px;
-            font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
-            border-radius: var(--radius-sm);
-        }
-
         .view-h1 { font-size: 1.3rem; color: var(--text-bright); font-weight: 600; margin-top: 12px; }
         .view-h2 { font-size: 1.1rem; color: var(--text-bright); font-weight: 600; text-transform: uppercase; margin-top: 12px; }
         .view-text { font-size: 14px; color: var(--text-main); margin: 0; }
-        .view-note { font-style: italic; color: var(--text-muted); padding-left: 8px; border-left: 2px solid var(--border-color); margin: 0; }
 
         .connected-chain-group {
             display: flex;
@@ -288,28 +316,6 @@
             height: 32px;
             object-fit: contain;
             image-rendering: pixelated;
-        }
-
-        .block-meta-tooltip {
-            position: absolute;
-            bottom: calc(100% + 6px);
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--container-bg);
-            border: var(--border-width) solid var(--border-color);
-            border-radius: var(--radius-sm);
-            padding: 6px 10px;
-            color: var(--text-bright);
-            font-family: ui-monospace, "SF Mono", monospace;
-            font-size: 11px;
-            white-space: pre;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 10;
-            transition: opacity var(--transition-fast);
-        }
-        .block-interactive-wrapper:hover .block-meta-tooltip {
-            opacity: 1;
         }
 
         .view-cmd-payload-box {
@@ -390,6 +396,7 @@
             color: var(--text-bright);
         }
 
+        /* Footer Rules */
         .footer {
             margin-top: var(--space-2xl, 32px);
             padding-bottom: var(--space-lg, 16px);
@@ -419,7 +426,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            color: var(--text-clickable-link, #52BBE8);
+            color: var(--accent-light, #A77A99);
             text-decoration: none;
             font-size: 13px;
             opacity: 0.85;
@@ -427,7 +434,7 @@
         }
 
         .footer-links a:hover {
-            color: var(--text-bright, #ffffff);
+            color: var(--accent-light-hover, #c5a4bc);
             opacity: 1;
         }
 
@@ -594,8 +601,7 @@
                 let tagPillsStr = item.parsedTags.map(t => `<span class="tag-pill">${t}</span>`).join(' ');
                 card.innerHTML = `
                     <div class="card-title">${escapeHtml(item.parsedTitle)}</div>
-                    <div class="card-desc" style="${item.rawPayload ? '' : 'color: var(--red, #e05c5c);'}">${escapeHtml(item.parsedDesc)}</div>
-                    ${item.parsedCredit ? `<div class="card-credit">Credit: ${escapeHtml(item.parsedCredit)}</div>` : ''}
+                    <div class="card-desc">${escapeHtml(item.parsedDesc)}</div>
                     <div class="tag-pill-container">${tagPillsStr}</div>
                 `;
                 container.appendChild(card);
@@ -652,7 +658,7 @@
             let activeChainStackElement = null;
             let currentChainRowIndex = 0;
 
-            const segments = item.rawPayload.split('\n\n');
+            const segments = item.rawPayload ? item.rawPayload.split('\n\n') : [];
             segments.forEach(seg => {
                 const lines = seg.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                 if (lines.length === 0) return;
