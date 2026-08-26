@@ -49,6 +49,76 @@
             font-size: 1.4rem;
         }
 
+        /* LOGIN */
+
+        #login-screen {
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 380px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .login-card h1 {
+            margin-bottom: 8px;
+        }
+
+        .login-card p {
+            font-size: 13px;
+            margin: 0 0 16px;
+        }
+
+        .login-input {
+            width: 100%;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 10px;
+            color: var(--bright);
+            outline: none;
+            margin-bottom: 10px;
+        }
+
+        .login-input:focus {
+            border-color: #a77a99;
+        }
+
+        .login-button {
+            width: 100%;
+        }
+
+        .login-error {
+            color: #d47c7c;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        /* ADMIN */
+
+        #admin-screen {
+            display: none;
+        }
+
+        .admin-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .admin-toolbar h1 {
+            margin: 0;
+        }
+
         #submissions {
             display: flex;
             flex-direction: column;
@@ -127,6 +197,15 @@
             background: var(--danger-hover);
         }
 
+        .logout-btn {
+            background: var(--input);
+            border: 1px solid var(--border);
+        }
+
+        .logout-btn:hover {
+            border-color: #a77a99;
+        }
+
         .empty {
             color: #5a5a66;
             text-align: center;
@@ -145,9 +224,62 @@
 
 <body>
 
-<div class="wrapper">
+<!-- LOGIN -->
 
-    <h1>Pending Command Submissions</h1>
+<div id="login-screen">
+
+    <div class="login-card">
+
+        <h1>Admin Login</h1>
+
+        <p>
+            Enter the admin key to manage command submissions.
+        </p>
+
+        <input
+            id="admin-key"
+            class="login-input"
+            type="password"
+            placeholder="Admin key"
+            autocomplete="current-password"
+        >
+
+        <button
+            id="login-button"
+            class="login-button"
+        >
+            LOGIN
+        </button>
+
+        <div
+            id="login-error"
+            class="login-error"
+        ></div>
+
+    </div>
+
+</div>
+
+
+<!-- ADMIN -->
+
+<div
+    id="admin-screen"
+    class="wrapper"
+>
+
+    <div class="admin-toolbar">
+
+        <h1>Pending Command Submissions</h1>
+
+        <button
+            id="logout-button"
+            class="logout-btn"
+        >
+            LOGOUT
+        </button>
+
+    </div>
 
     <div id="submissions">
         Loading...
@@ -155,22 +287,187 @@
 
 </div>
 
+
 <script>
+
+async function checkAuthentication() {
+
+    try {
+
+        const response =
+            await fetch("/api/admin-auth");
+
+        if (response.ok) {
+
+            showAdminScreen();
+            loadSubmissions();
+
+        } else {
+
+            showLoginScreen();
+
+        }
+
+    } catch {
+
+        showLoginScreen();
+
+    }
+}
+
+
+function showLoginScreen() {
+
+    document.getElementById(
+        "login-screen"
+    ).style.display = "flex";
+
+    document.getElementById(
+        "admin-screen"
+    ).style.display = "none";
+}
+
+
+function showAdminScreen() {
+
+    document.getElementById(
+        "login-screen"
+    ).style.display = "none";
+
+    document.getElementById(
+        "admin-screen"
+    ).style.display = "block";
+}
+
+
+/*
+ * LOGIN
+ */
+
+document
+    .getElementById("login-button")
+    .addEventListener("click", login);
+
+
+document
+    .getElementById("admin-key")
+    .addEventListener("keydown", event => {
+
+        if (event.key === "Enter") {
+            login();
+        }
+
+    });
+
+
+async function login() {
+
+    const input =
+        document.getElementById("admin-key");
+
+    const button =
+        document.getElementById("login-button");
+
+    const error =
+        document.getElementById("login-error");
+
+    const key =
+        input.value;
+
+    if (!key) {
+
+        error.textContent =
+            "Enter the admin key.";
+
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "LOGGING IN...";
+    error.textContent = "";
+
+    try {
+
+        const response =
+            await fetch("/api/admin-login", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    key: key
+                })
+
+            });
+
+        const result =
+            await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                result.error ||
+                "Login failed"
+            );
+
+        }
+
+        input.value = "";
+
+        showAdminScreen();
+
+        loadSubmissions();
+
+    } catch (err) {
+
+        error.textContent =
+            err.message;
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = "LOGIN";
+
+    }
+}
+
+
+/*
+ * LOAD SUBMISSIONS
+ */
 
 async function loadSubmissions() {
 
     const container =
-        document.getElementById("submissions");
+        document.getElementById(
+            "submissions"
+        );
+
+    container.innerHTML =
+        "Loading...";
 
     try {
 
         const response =
             await fetch("/api/pending");
 
+        if (response.status === 401) {
+
+            showLoginScreen();
+
+            return;
+        }
+
         if (!response.ok) {
+
             throw new Error(
                 "Failed to load submissions"
             );
+
         }
 
         const submissions =
@@ -186,221 +483,298 @@ async function loadSubmissions() {
 
         container.innerHTML = "";
 
-        submissions.forEach(submission => {
+        submissions.forEach(
+            submission => {
 
-            const card =
-                document.createElement("div");
+                const card =
+                    document.createElement(
+                        "div"
+                    );
 
-            card.className =
-                "submission";
+                card.className =
+                    "submission";
 
-            const titleMatch =
-                submission.content.match(
-                    /^TITLE: (.*)$/m
-                );
+                const titleMatch =
+                    submission.content.match(
+                        /^TITLE: (.*)$/m
+                    );
 
-            const title =
-                titleMatch
-                    ? titleMatch[1]
-                    : "Untitled";
+                const title =
+                    titleMatch
+                        ? titleMatch[1]
+                        : "Untitled";
 
-            card.innerHTML = `
+                card.innerHTML = `
 
-                <h2 class="submission-title">
-                    ${escapeHtml(title)}
-                </h2>
+                    <h2 class="submission-title">
+                        ${escapeHtml(title)}
+                    </h2>
 
-                <div class="meta">
-                    <strong>Author:</strong>
-                    ${escapeHtml(submission.author)}
-                    <br>
+                    <div class="meta">
 
-                    <strong>ID:</strong>
-                    ${escapeHtml(submission.id)}
-                    <br>
+                        <strong>Author:</strong>
+                        ${escapeHtml(
+                            submission.author
+                        )}
 
-                    <strong>Submitted:</strong>
-                    ${escapeHtml(submission.submittedAt)}
-                </div>
+                        <br>
 
-                <div class="content"></div>
+                        <strong>ID:</strong>
+                        ${escapeHtml(
+                            submission.id
+                        )}
 
-                <div class="actions">
+                        <br>
 
-                    <button class="approve-btn">
-                        APPROVE
-                    </button>
+                        <strong>Submitted:</strong>
+                        ${escapeHtml(
+                            submission.submittedAt
+                        )}
 
-                    <button class="reject-btn">
-                        REJECT
-                    </button>
+                    </div>
 
-                </div>
-            `;
+                    <div class="content"></div>
 
-            card.querySelector(".content")
-                .textContent =
+                    <div class="actions">
+
+                        <button class="approve-btn">
+                            APPROVE
+                        </button>
+
+                        <button class="reject-btn">
+                            REJECT
+                        </button>
+
+                    </div>
+                `;
+
+                card.querySelector(
+                    ".content"
+                ).textContent =
                     submission.content;
 
 
-            /*
-             * APPROVE
-             */
+                /*
+                 * APPROVE
+                 */
 
-            card.querySelector(".approve-btn")
-                .addEventListener("click", async () => {
+                card.querySelector(
+                    ".approve-btn"
+                ).addEventListener(
+                    "click",
+                    async () => {
 
-                    const approveButton =
-                        card.querySelector(".approve-btn");
-
-                    const rejectButton =
-                        card.querySelector(".reject-btn");
-
-                    approveButton.disabled = true;
-                    rejectButton.disabled = true;
-
-                    approveButton.textContent =
-                        "APPROVING...";
-
-                    try {
-
-                        const response =
-                            await fetch("/api/approve", {
-
-                                method: "POST",
-
-                                headers: {
-                                    "Content-Type":
-                                        "application/json"
-                                },
-
-                                body: JSON.stringify({
-                                    filename:
-                                        submission.filename
-                                })
-                            });
-
-                        const result =
-                            await response.json();
-
-                        if (!response.ok) {
-
-                            throw new Error(
-                                result.details ||
-                                result.error ||
-                                "Approval failed"
+                        const approveButton =
+                            card.querySelector(
+                                ".approve-btn"
                             );
-                        }
 
-                        card.remove();
+                        const rejectButton =
+                            card.querySelector(
+                                ".reject-btn"
+                            );
 
-                    } catch (error) {
+                        approveButton.disabled =
+                            true;
 
-                        alert(
-                            "Approval failed: " +
-                            error.message
-                        );
-
-                        approveButton.disabled = false;
-                        rejectButton.disabled = false;
+                        rejectButton.disabled =
+                            true;
 
                         approveButton.textContent =
-                            "APPROVE";
-                    }
+                            "APPROVING...";
 
-                });
+                        try {
 
+                            const response =
+                                await fetch(
+                                    "/api/approve",
+                                    {
+                                        method: "POST",
 
-            /*
-             * REJECT
-             */
+                                        headers: {
+                                            "Content-Type":
+                                                "application/json"
+                                        },
 
-            card.querySelector(".reject-btn")
-                .addEventListener("click", async () => {
+                                        body:
+                                            JSON.stringify({
+                                                filename:
+                                                    submission.filename
+                                            })
+                                    }
+                                );
 
-                    const approveButton =
-                        card.querySelector(".approve-btn");
+                            const result =
+                                await response.json();
 
-                    const rejectButton =
-                        card.querySelector(".reject-btn");
+                            if (!response.ok) {
 
-                    const confirmed =
-                        confirm(
-                            "Reject this command submission?"
-                        );
+                                throw new Error(
+                                    result.details ||
+                                    result.error ||
+                                    "Approval failed"
+                                );
 
-                    if (!confirmed) {
-                        return;
-                    }
+                            }
 
-                    approveButton.disabled = true;
-                    rejectButton.disabled = true;
+                            card.remove();
 
-                    rejectButton.textContent =
-                        "REJECTING...";
+                        } catch (error) {
 
-                    try {
-
-                        const response =
-                            await fetch("/api/reject", {
-
-                                method: "POST",
-
-                                headers: {
-                                    "Content-Type":
-                                        "application/json"
-                                },
-
-                                body: JSON.stringify({
-                                    filename:
-                                        submission.filename
-                                })
-                            });
-
-                        const result =
-                            await response.json();
-
-                        if (!response.ok) {
-
-                            throw new Error(
-                                result.details ||
-                                result.error ||
-                                "Rejection failed"
+                            alert(
+                                "Approval failed: " +
+                                error.message
                             );
+
+                            approveButton.disabled =
+                                false;
+
+                            rejectButton.disabled =
+                                false;
+
+                            approveButton.textContent =
+                                "APPROVE";
+
                         }
 
-                        card.remove();
+                    }
+                );
 
-                    } catch (error) {
 
-                        alert(
-                            "Rejection failed: " +
-                            error.message
-                        );
+                /*
+                 * REJECT
+                 */
 
-                        approveButton.disabled = false;
-                        rejectButton.disabled = false;
+                card.querySelector(
+                    ".reject-btn"
+                ).addEventListener(
+                    "click",
+                    async () => {
+
+                        const approveButton =
+                            card.querySelector(
+                                ".approve-btn"
+                            );
+
+                        const rejectButton =
+                            card.querySelector(
+                                ".reject-btn"
+                            );
+
+                        const confirmed =
+                            confirm(
+                                "Reject this command submission?"
+                            );
+
+                        if (!confirmed) {
+                            return;
+                        }
+
+                        approveButton.disabled =
+                            true;
+
+                        rejectButton.disabled =
+                            true;
 
                         rejectButton.textContent =
-                            "REJECT";
+                            "REJECTING...";
+
+                        try {
+
+                            const response =
+                                await fetch(
+                                    "/api/reject",
+                                    {
+                                        method: "POST",
+
+                                        headers: {
+                                            "Content-Type":
+                                                "application/json"
+                                        },
+
+                                        body:
+                                            JSON.stringify({
+                                                filename:
+                                                    submission.filename
+                                            })
+                                    }
+                                );
+
+                            const result =
+                                await response.json();
+
+                            if (!response.ok) {
+
+                                throw new Error(
+                                    result.details ||
+                                    result.error ||
+                                    "Rejection failed"
+                                );
+
+                            }
+
+                            card.remove();
+
+                        } catch (error) {
+
+                            alert(
+                                "Rejection failed: " +
+                                error.message
+                            );
+
+                            approveButton.disabled =
+                                false;
+
+                            rejectButton.disabled =
+                                false;
+
+                            rejectButton.textContent =
+                                "REJECT";
+
+                        }
+
                     }
+                );
 
-                });
 
+                container.appendChild(
+                    card
+                );
 
-            container.appendChild(card);
-
-        });
+            }
+        );
 
     } catch (error) {
 
         container.innerHTML = `
             <div class="error">
-                Error: ${escapeHtml(error.message)}
+                Error:
+                ${escapeHtml(error.message)}
             </div>
         `;
+
     }
 }
+
+
+/*
+ * LOGOUT
+ *
+ * The session cookie is HttpOnly,
+ * so JavaScript cannot directly delete it.
+ *
+ * For now this simply returns to
+ * the login screen. The session itself
+ * expires after 24 hours.
+ */
+
+document
+    .getElementById("logout-button")
+    .addEventListener("click", () => {
+
+        showLoginScreen();
+
+    });
 
 
 function escapeHtml(value) {
@@ -415,7 +789,11 @@ function escapeHtml(value) {
 }
 
 
-loadSubmissions();
+/*
+ * START
+ */
+
+checkAuthentication();
 
 </script>
 
