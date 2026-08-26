@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Chain Formatter</title>
+    <link rel="stylesheet" href="../css/nako.css">
+</head>
+<body>
+
+    <div class="wrapper">
+        <header>
+            <h1>Command Chain Formatter</h1>
+        </header>
+
+        <section class="meta-card">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Creation Title</label>
+                    <input type="text" id="meta-title" placeholder="yo cmd name here..">
+                </div>
+                <div class="form-group">
+                    <label>Credit</label>
+                    <input type="text" id="meta-credit" value="Nako Hikari" placeholder="Nako Hikari">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" id="meta-desc" placeholder="desc if u ain't lazy here..">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Tags Selection</label>
+                <div class="tag-grid" id="tag-checkbox-list">
+                    <label class="tag-checkbox-label"><input type="checkbox" value="particle" onchange="compilerCoreEngine()"> particle</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="functional" onchange="compilerCoreEngine()"> functional</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="weapon" onchange="compilerCoreEngine()"> weapon</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="random" onchange="compilerCoreEngine()"> random</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="technique" onchange="compilerCoreEngine()"> technique</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="complex" onchange="compilerCoreEngine()"> complex</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="visual" onchange="compilerCoreEngine()"> visual</label>
+                </div>
+            </div>
+        </section>
+
+        <section class="controls-toolbar">
+            <button class="btn" onclick="addChainGroup()">+ Add Command Block</button>
+            <div style="border-left: 1px solid var(--border-color); height: 20px; margin: 0 var(--space-xs);"></div>
+            
+            <select id="header-type-selector" class="header-type-select">
+                <option value="H1">H1</option>
+                <option value="H2">H2</option>
+                <option value="H3">H3</option>
+                <option value="H4">H4</option>
+                <option value="H5">H5</option>
+            </select>
+            <button class="btn btn-secondary" onclick="addHeaderBlock()">+ Add Header</button>
+            <button class="btn btn-secondary" onclick="addBodyTextBlock()">+ Add Body Text</button>
+            <button class="btn btn-secondary" onclick="addNoteBlock()">+ Add Note</button>
+            
+            <div style="border-left: 1px solid var(--border-color); height: 20px; margin: 0 var(--space-xs);"></div>
+            <button class="btn btn-secondary" onclick="addLinkBlock()">+ Add Link</button>
+            <button class="btn btn-secondary" onclick="addImageBlock()">+ Add Image</button>
+            <button class="btn btn-secondary" onclick="addEmbedBlock()">+ Add Embed</button>
+        </section>
+
+        <main id="builder-canvas"></main>
+
+        <section class="meta-card">
+            <div class="group-header">
+                <span class="group-title">Formatted Raw Text String Output</span>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" onclick="exportAsTxtFile()">Export as .txt</button>
+                    <button class="btn" onclick="uploadContent()">UPLOAD</button>
+                </div>
+            </div>
+            <div class="output-box" id="raw-string-output">Your output lines are generated automatically...</div>
+        </section>
+
+        <div class="footer">
+            <div class="footer-title">By Nako Hikari</div>
+            <div class="footer-links">
+                <a href="https://github.com/nako-hikari/" target="_blank">
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub"> GitHub
+                </a>
+                <a href="https://m.youtube.com/@NaCryst" target="_blank">
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube"> YouTube
+                </a>
+                <a href="https://www.tiktok.com/@nako_hikari_mc" target="_blank">
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"> TikTok
+                </a>
+                <a href="https://ko-fi.com/arialicee" target="_blank" class="social kofi">
+                    <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/kofi-icon.png" alt="Ko-fi"> Support me on Ko-fi
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('builder-canvas');
+        const creditInput = document.getElementById('meta-credit');
+
+        // Credit default behavior handlers
+        creditInput.addEventListener('focus', () => {
+            if (creditInput.value === 'Nako Hikari') {
+                creditInput.value = '';
+            }
+        });
+
+        creditInput.addEventListener('blur', () => {
+            if (creditInput.value.trim() === '') {
+                creditInput.value = 'Nako Hikari';
+            }
+            compilerCoreEngine();
+        });
+
+        ['meta-title', 'meta-credit', 'meta-desc'].forEach(id => {
+            document.getElementById(id).addEventListener('input', compilerCoreEngine);
+        });
+
+        function shiftBlockPosition(button, offsetDirection) {
+            const currentBlock = button.closest('.group-block');
+            
+            if (offsetDirection === -1) {
+                const targetSibling = currentBlock.previousElementSibling;
+                if (targetSibling) {
+                    currentBlock.style.transform = 'translateY(-10px)';
+                    setTimeout(() => {
+                        canvas.insertBefore(currentBlock, targetSibling);
+                        currentBlock.style.transform = 'translateY(0)';
+                        applyVisualFlashFeedback(currentBlock);
+                    }, 80);
+                }
+            } else if (offsetDirection === 1) {
+                const targetSibling = currentBlock.nextElementSibling;
+                if (targetSibling) {
+                    currentBlock.style.transform = 'translateY(10px)';
+                    setTimeout(() => {
+                        canvas.insertBefore(targetSibling, currentBlock);
+                        currentBlock.style.transform = 'translateY(0)';
+                        applyVisualFlashFeedback(currentBlock);
+                    }, 80);
+                }
+            }
+            compilerCoreEngine();
+        }
+
+        function shiftRowPosition(button, offsetDirection) {
+            const currentRow = button.closest('.cmd-row-node');
+            const stack = currentRow.parentNode;
+            
+            if (offsetDirection === -1) {
+                const prevRow = currentRow.previousElementSibling;
+                if (prevRow) {
+                    currentRow.style.transform = 'translateY(-8px)';
+                    setTimeout(() => {
+                        stack.insertBefore(currentRow, prevRow);
+                        currentRow.style.transform = 'translateY(0)';
+                        applyVisualFlashFeedback(currentRow);
+                        rebuildRowNumberingIndexes(stack);
+                    }, 60);
+                }
+            } else if (offsetDirection === 1) {
+                const nextRow = currentRow.nextElementSibling;
+                if (nextRow) {
+                    currentRow.style.transform = 'translateY(8px)';
+                    setTimeout(() => {
+                        stack.insertBefore(nextRow, currentRow);
+                        currentRow.style.transform = 'translateY(0)';
+                        applyVisualFlashFeedback(currentRow);
+                        rebuildRowNumberingIndexes(stack);
+                    }, 60);
+                }
+            }
+        }
+
+        function applyVisualFlashFeedback(domElement) {
+            domElement.classList.add('block-moving-flash');
+            setTimeout(() => {
+                domElement.classList.remove('block-moving-flash');
+            }, 400);
+        }
+
+        function rebuildRowNumberingIndexes(stackElement) {
+            const allRows = stackElement.querySelectorAll('.cmd-row-node');
+            allRows.forEach((row, i) => {
+                row.querySelector('.row-index').innerText = i + 1;
+            });
+            compilerCoreEngine();
+        }
+
+        function createStandardBlockHeader(titleText, belongsToGroup) {
+            return `
+                <div class="group-header">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="group-title">${titleText}</span>
+                    </div>
+                    <div class="block-action-cluster">
+                        <button class="btn btn-sm btn-secondary" onclick="shiftBlockPosition(this, -1)">▲ Up</button>
+                        <button class="btn btn-sm btn-secondary" onclick="shiftBlockPosition(this, 1)">▼ Down</button>
+                        ${belongsToGroup === 'chain' ? `<button class="btn btn-sm" onclick="addCommandRowToGroup(this.closest('.group-block'))">+ Add Row</button>` : ''}
+                        <button class="btn btn-sm btn-danger" onclick="this.closest('.group-block').remove(); compilerCoreEngine();">Remove</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function addChainGroup() {
+            const group = document.createElement('div');
+            group.className = 'group-block';
+            group.dataset.itemType = 'chain-group';
+
+            group.innerHTML = `
+                ${createStandardBlockHeader('Command Block Group', 'chain')}
+                <div style="display: flex; align-items: center; gap: 6px; padding: 0 var(--space-xs);">
+                    <label style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer;">
+                        <input type="checkbox" class="group-flip-toggle" onchange="compilerCoreEngine()"> <span>Flip Tag</span>
+                    </label>
+                </div>
+                <div class="bulk-paste-zone">
+                    <label>Bulk Paste Multi-Line Split Input Tool</label>
+                    <textarea placeholder="Paste lines of commands directly here. Each line auto-creates a linked sub-row entry block..." oninput="handleBulkPasteEngine(this)"></textarea>
+                </div>
+                <div class="connected-chain-stack"></div>
+            `;
+
+            canvas.appendChild(group);
+            compilerCoreEngine();
+        }
+
+        function addCommandRowToGroup(groupElement, targetCommandValue = '') {
+            const stack = groupElement.querySelector('.connected-chain-stack');
+            const bulkBox = groupElement.querySelector('.bulk-paste-zone');
+            
+            if (bulkBox) bulkBox.style.display = 'none';
+
+            const rowIndex = stack.children.length + 1;
+            const rowNode = document.createElement('div');
+            rowNode.className = 'cmd-row-node color-c';
+
+            rowNode.innerHTML = `
+                <div class="row-index-container">
+                    <button class="row-nav-btn" onclick="shiftRowPosition(this, -1)">▲</button>
+                    <div class="row-index">${rowIndex}</div>
+                    <button class="row-nav-btn" onclick="shiftRowPosition(this, 1)">▼</button>
+                </div>
+                <div class="row-controls-line">
+                    <div class="inline-selector-set">
+                        <select class="row-mode" onchange="updateRowColorTheme(this)">
+                            <option value="C" selected>C</option>
+                            <option value="I">I</option>
+                            <option value="R">R</option>
+                            <option value="CHAT">CHAT</option>
+                            <option value="NPC">NPC</option>
+                        </select>
+                        <select class="row-cond" onchange="updateRowColorTheme(this)">
+                            <option value="U" selected>UN</option>
+                            <option value="C">CN</option>
+                        </select>
+                        <select class="row-active" onchange="compilerCoreEngine()">
+                            <option value="AA" selected>AA</option>
+                            <option value="NR">NR</option>
+                        </select>
+                        <input type="text" class="row-tick" value="0" oninput="compilerCoreEngine()">
+                    </div>
+                    <button class="btn btn-sm btn-danger" style="padding: 2px 8px;" onclick="removeRowNodeElement(this)">X</button>
+                </div>
+                <div class="cmd-input-container">
+                    <input type="text" class="cmd-input-field" placeholder="Enter command string..." value="${targetCommandValue.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
+                </div>
+            `;
+
+            stack.appendChild(rowNode);
+            compilerCoreEngine();
+        }
+
+        function removeRowNodeElement(buttonEl) {
+            const stack = buttonEl.closest('.connected-chain-stack');
+            const group = buttonEl.closest('.group-block');
+            buttonEl.closest('.cmd-row-node').remove();
+
+            const rows = stack.querySelectorAll('.cmd-row-node');
+            if (rows.length === 0) {
+                group.querySelector('.bulk-paste-zone').style.display = 'flex';
+                group.querySelector('.bulk-paste-zone textarea').value = '';
+            } else {
+                rows.forEach((row, i) => { row.querySelector('.row-index').innerText = i + 1; });
+            }
+            compilerCoreEngine();
+        }
+
+        function handleBulkPasteEngine(textareaEl) {
+            const lines = textareaEl.value.split('\n');
+            const group = textareaEl.closest('.group-block');
+            lines.forEach(line => {
+                const clean = line.trim();
+                if (clean) addCommandRowToGroup(group, clean);
+            });
+        }
+
+        function updateRowColorTheme(selectEl) {
+            const rowNode = selectEl.closest('.cmd-row-node');
+            const type = rowNode.querySelector('.row-mode').value;
+            const condSelect = rowNode.querySelector('.row-cond');
+            const activeSelect = rowNode.querySelector('.row-active');
+            const tickInput = rowNode.querySelector('.row-tick');
+            const inputContainer = rowNode.querySelector('.cmd-input-container');
+            
+            const currentVal = rowNode.querySelector('.cmd-input-field').value;
+
+            rowNode.className = 'cmd-row-node';
+            rowNode.classList.add(`color-${type.toLowerCase()}`);
+
+            if (type === 'NPC') {
+                condSelect.style.display = 'none';
+                activeSelect.style.display = 'none';
+                tickInput.style.display = 'none';
+                inputContainer.innerHTML = `<textarea class="cmd-input-field" placeholder="Enter multi-line code execution sequences..." oninput="compilerCoreEngine()">${currentVal}</textarea>`;
+            } else if (type === 'CHAT') {
+                condSelect.style.display = 'none';
+                activeSelect.style.display = 'none';
+                tickInput.style.display = 'none';
+                inputContainer.innerHTML = `<input type="text" class="cmd-input-field" placeholder="Enter command string..." value="${currentVal.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">`;
+            } else {
+                condSelect.style.display = '';
+                activeSelect.style.display = '';
+                tickInput.style.display = '';
+                inputContainer.innerHTML = `<input type="text" class="cmd-input-field" placeholder="Enter command string..." value="${currentVal.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">`;
+                if (condSelect.value === 'C') rowNode.classList.add('cond-border');
+            }
+
+            compilerCoreEngine();
+        }
+
+        function addHeaderBlock() {
+            const type = document.getElementById('header-type-selector').value;
+            const block = document.createElement('div');
+            block.className = 'group-block';
+            block.dataset.itemType = 'header';
+            block.dataset.headerTier = type;
+
+            block.innerHTML = `
+                ${createStandardBlockHeader(`Header Block Element (${type})`, 'standard')}
+                <input type="text" class="header-input-val" placeholder="Enter layout header text label..." oninput="compilerCoreEngine()">
+            `;
+            canvas.appendChild(block);
+            compilerCoreEngine();
+        }
+
+        function addBodyTextBlock() {
+            const block = document.createElement('div');
+            block.className = 'group-block';
+            block.dataset.itemType = 'text';
+
+            block.innerHTML = `
+                ${createStandardBlockHeader('Plain Body Text Block (TEXT)', 'standard')}
+                <textarea style="height: 60px; font-size: 13px; font-family: inherit; resize: vertical;" class="text-input-val" placeholder="Enter standard descriptive paragraph text content..." oninput="compilerCoreEngine()"></textarea>
+            `;
+            canvas.appendChild(block);
+            compilerCoreEngine();
+        }
+
+        function addNoteBlock() {
+            const block = document.createElement('div');
+            block.className = 'group-block';
+            block.dataset.itemType = 'note';
+
+            block.innerHTML = `
+                ${createStandardBlockHeader('User Note Box (NOTE)', 'standard')}
+                <input type="text" class="note-input-val" placeholder="Enter gray dynamic italics info comment string..." oninput="compilerCoreEngine()">
+            `;
+            canvas.appendChild(block);
+            compilerCoreEngine();
+        }
+
+        function addLinkBlock() {
+            const block = document.createElement('div');
+            block.className = 'group-block';
+            block.dataset.itemType = 'link-group';
+
+            block.innerHTML = `
+                ${createStandardBlockHeader('Link Element (LINK)', 'standard')}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pressable Link Title</label>
+                        <input type="text" class="link-title-val" placeholder="Enter the text that users click..." oninput="compilerCoreEngine()">
+                    </div>
+                    <div class="form-group">
+                        <label>Actual Link URL</label>
+                        <input type="text" class="link-url-val" placeholder="https://..." oninput="compilerCoreEngine()">
+                    </div>
+                </div>
+            `;
+            canvas.appendChild(block);
+            compilerCoreEngine();
+        }
+
+        function addImageBlock() {
+            const block = document.createElement('div');
+            block.className = 'group-block';
+            block.dataset.itemType = 'img-group';
+
+            block.innerHTML = `
+                ${createStandardBlockHeader('Image Asset Link (IMG)', 'standard')}
+                <input type="text" class="img-url-val" placeholder="Enter image URL or raw GitHub asset string..." oninput="compilerCoreEngine()">
+            `;
+            canvas.appendChild(block);
+            compilerCoreEngine();
+        }
+
+        function addEmbedBlock() {
+            const block = document.createElement('div');
+            block.className = 'group-block';
+            block.dataset.itemType = 'embed-group';
+
+            block.innerHTML = `
+                ${createStandardBlockHeader('Video Embed Resource (EMBED)', 'standard')}
+                <input type="text" class="embed-url-val" placeholder="Enter the source video file or hosting URL string..." oninput="compilerCoreEngine()">
+            `;
+            canvas.appendChild(block);
+            compilerCoreEngine();
+        }
+
+        function compilerCoreEngine() {
+            let sections = [];
+
+            const creditVal = document.getElementById('meta-credit').value.trim() || 'Nako Hikari';
+            sections.push(`credit : ${creditVal}`);
+
+            const title = document.getElementById('meta-title').value.trim();
+            const desc = document.getElementById('meta-desc').value.trim();
+            const checkedBoxes = document.querySelectorAll('#tag-checkbox-list input:checked');
+            const tagsArr = Array.from(checkedBoxes).map(cb => cb.value);
+
+            let metaBlock = '';
+            if (title) metaBlock += `TITLE: ${title}\n`;
+            if (desc)  metaBlock += `DESC: ${desc}\n`;
+            if (tagsArr.length > 0)  metaBlock += `TAG: ${tagsArr.join(',')}\n`;
+            
+            if (metaBlock) sections.push(metaBlock.trim());
+
+            const elements = canvas.children;
+            for (let i = 0; i < elements.length; i++) {
+                const el = elements[i];
+                const type = el.dataset.itemType;
+
+                if (type === 'header') {
+                    const tier = el.dataset.headerTier;
+                    const val = el.querySelector('.header-input-val').value.trim();
+                    if (val) sections.push(`${tier}: ${val}`);
+                } 
+                else if (type === 'text') {
+                    const val = el.querySelector('.text-input-val').value.trim();
+                    if (val) sections.push(`TEXT: ${val}`);
+                }
+                else if (type === 'note') {
+                    const val = el.querySelector('.note-input-val').value.trim();
+                    if (val) sections.push(`NOTE: ${val}`);
+                } 
+                else if (type === 'link-group') {
+                    const textTitle = el.querySelector('.link-title-val').value.trim();
+                    const targetUrl = el.querySelector('.link-url-val').value.trim();
+                    sections.push(`[link][${textTitle}](${targetUrl})`);
+                }
+                else if (type === 'img-group') {
+                    const targetUrl = el.querySelector('.img-url-val').value.trim();
+                    sections.push(`[img](${targetUrl})`);
+                }
+                else if (type === 'embed-group') {
+                    const targetUrl = el.querySelector('.embed-url-val').value.trim();
+                    sections.push(`[embed](${targetUrl})`);
+                }
+                else if (type === 'chain-group') {
+                    let groupOutput = '';
+                    const hasFlip = el.querySelector('.group-flip-toggle').checked;
+                    if (hasFlip) groupOutput += `TAG: flip\n`;
+
+                    const rows = el.querySelectorAll('.cmd-row-node');
+                    rows.forEach(row => {
+                        const m = row.querySelector('.row-mode').value;
+                        const cmd = row.querySelector('.cmd-input-field').value.trim();
+
+                        if (m === 'NPC' || m === 'CHAT') {
+                            groupOutput += `CMD:${m}\n${cmd}\n`;
+                        } else {
+                            const c = row.querySelector('.row-cond').value;
+                            const a = row.querySelector('.row-active').value;
+                            const t = row.querySelector('.row-tick').value.trim() || '0';
+                            groupOutput += `CMD:${m}:${a}:${c}:${t}\n${cmd}\n`;
+                        }
+                    });
+
+                    if (groupOutput) sections.push(groupOutput.trim());
+                }
+            }
+
+            document.getElementById('raw-string-output').innerText = sections.join('\n\n');
+        }
+
+async function uploadContent() {
+    try {
+        const response = await fetch("/api/upload", {
+            method: "POST"
+        });
+
+        const result = await response.json();
+
+        alert(result.message || result.error);
+    } catch (error) {
+        alert("Upload failed: " + error.message);
+    }
+}
+
+        function exportAsTxtFile() {
+            const rawText = document.getElementById('raw-string-output').innerText;
+            const titleInput = document.getElementById('meta-title').value.trim();
+            
+            const filename = titleInput ? titleInput.toLowerCase().replace(/[^a-z0-9]+/g, '_') + '_chain.txt' : 'command_chain_output.txt';
+            const blob = new Blob([rawText], { type: 'text/plain;charset=utf-8;' });
+            const link = document.createElement("a");
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        addChainGroup();
+    </script>
+</body>
+</html>
