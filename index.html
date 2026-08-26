@@ -1,57 +1,107 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Command Block Creation</title>
     <link rel="stylesheet" href="css/nako.css">
     <style>
-        img { color-scheme: only light !important; }
+        :root {
+            color-scheme: light dark;
+            --bg-color: #0e0e11;
+            --container-bg: #18181f;
+            --input-bg: #0f0f12;
+            --box-bg: #0f0f12;
+            --border-color: #2d2d38;
+            --accent-dark: #663657;
+            --accent-dark-hover: #81456e;
+            --accent-light: #A77A99;
+            --accent-light-hover: #c5a4bc;
+
+            --text-bright: #ffffff;
+            --text-main: #b4b4bc;
+            --text-muted: #5a5a66;
+            --text-codeblock: #C77E4F;
+            --text-clickable-link: #52BBE8;
+            --text-pale-purple: #9575cd;
+
+            --success-bg: #2a4f32;
+            --success-border: #3b6e47;
+
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 12px;
+            --space-lg: 16px;
+            --space-xl: 20px;
+            --space-2xl: 24px;
+            --max-width: 900px;
+
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --radius-lg: 8px;
+            --border-width: 1px;
+            --shadow-deep: 0 6px 16px rgba(0, 0, 0, 0.6);
+            --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.3);
+
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-normal: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        img {
+            color-scheme: only light !important;
+        }
 
         body {
-            background: var(--bg-body, #0f0f12);
-            color: var(--text-secondary, #a1a1aa);
-            font-family: var(--font-body, system-ui, -apple-system, sans-serif);
-            font-size: var(--fs-sm, 14px);
-            line-height: var(--lh-normal, 1.5);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
             margin: 0;
-            padding: var(--space-6, 24px) var(--space-5, 20px);
+            padding: var(--space-2xl) var(--space-lg);
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
         @media (max-width: 600px) {
-            body { padding: var(--space-5, 20px) var(--space-3, 12px); }
+            body {
+                padding: var(--space-lg) var(--space-sm);
+            }
         }
 
         .wrapper {
             width: 100%;
-            max-width: 1120px;
-            margin: 0 auto;
+            max-width: var(--max-width);
             display: flex;
             flex-direction: column;
-            gap: var(--space-6, 24px);
+            gap: var(--space-xl);
         }
 
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border-subtle, #27272a);
-            padding-bottom: var(--space-4, 16px);
+            border-bottom: var(--border-width) solid var(--border-color);
+            padding-bottom: var(--space-md);
         }
 
         .title-block {
             display: flex;
             align-items: center;
-            gap: var(--space-4, 16px);
+            gap: var(--space-md);
         }
 
         h1 {
-            font-size: var(--fs-xl, 20px);
-            font-weight: var(--fw-semibold, 600);
-            color: var(--text-primary, #f4f4f5);
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--text-bright);
             margin: 0;
             cursor: pointer;
         }
@@ -59,7 +109,7 @@
         .header-actions {
             display: flex;
             align-items: center;
-            gap: var(--space-3, 12px);
+            gap: var(--space-sm);
         }
 
         .upload-btn-link {
@@ -68,136 +118,162 @@
             justify-content: center;
             width: 36px;
             height: 36px;
-            background: var(--bg-inset, #18181b);
-            border: 1px solid var(--border-default, #27272a);
-            border-radius: var(--radius-md, 8px);
-            transition: border-color 0.15s ease, background 0.15s ease;
+            background: var(--box-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-md);
+            transition: border-color var(--transition-fast), background var(--transition-fast);
         }
         .upload-btn-link:hover {
-            border-color: var(--border-strong, #3f3f46);
-            background: var(--bg-surface, #18181b);
+            border-color: var(--accent-light);
+        }
+        .upload-btn-link:active {
+            border-color: var(--accent-light-hover);
+            background: #1e1924;
+            transform: scale(0.98);
         }
         .upload-btn-link img {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             object-fit: contain;
         }
 
         .search-container {
             width: 100%;
-            position: relative;
         }
 
         .search-box {
             width: 100%;
-            background: var(--bg-inset, #18181b);
-            border: 1px solid var(--border-default, #27272a);
-            border-radius: var(--radius-md, 8px);
-            padding: var(--space-3, 12px) var(--space-4, 16px);
-            color: var(--text-primary, #f4f4f5);
-            font-family: var(--font-mono, monospace);
-            font-size: var(--fs-sm, 14px);
-            box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+            background: var(--input-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--space-md) var(--space-lg);
+            color: var(--text-bright);
+            font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", monospace;
+            font-size: 14px;
             outline: none;
-            box-sizing: border-box;
         }
         .search-box:focus {
-            border-color: var(--brand-accent-2, #a855f7);
-            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+            border-color: var(--accent-light);
         }
 
         .creation-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: var(--space-4, 16px);
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: var(--space-lg);
         }
 
         .creation-card {
-            background: var(--bg-surface, #18181b);
-            border: 1px solid var(--border-subtle, #27272a);
-            border-radius: var(--radius-lg, 12px);
-            padding: var(--space-4, 16px);
-            box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+            background: var(--container-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-deep);
             cursor: pointer;
-            transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+            transition: border-color var(--transition-fast);
             display: flex;
             flex-direction: column;
-            gap: var(--space-2, 8px);
+            gap: var(--space-sm);
         }
         .creation-card:hover {
-            box-shadow: var(--shadow-md, 0 4px 6px rgba(0,0,0,0.1));
-            border-color: var(--border-strong, #3f3f46);
+            border-color: var(--accent-light);
         }
         .creation-card:active {
-            border-color: var(--brand-accent-2, #a855f7);
-            background: var(--bg-inset, #121215);
+            border-color: var(--accent-light-hover);
+            background: #1e1924;
             transform: scale(0.98);
         }
 
-        .card-title { font-size: var(--fs-base, 16px); font-weight: var(--fw-bold, 700); color: var(--text-primary, #f4f4f5); }
-        .card-desc { font-size: var(--fs-sm, 14px); color: var(--text-secondary, #a1a1aa); flex: 1; }
-        .card-credit { font-size: var(--fs-xs, 12px); color: var(--text-muted, #71717a); font-style: italic; }
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-bright);
+        }
+        .card-desc {
+            font-size: 14px;
+            color: var(--text-main);
+            flex: 1;
+        }
+        .card-credit {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
 
         .viewer-card {
-            background: var(--bg-surface, #18181b);
-            border: 1px solid var(--border-subtle, #27272a);
-            border-radius: var(--radius-lg, 12px);
-            padding: var(--space-5, 20px);
-            box-shadow: var(--shadow-md, 0 4px 6px rgba(0,0,0,0.1));
+            background: var(--container-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-deep);
             display: flex;
             flex-direction: column;
-            gap: var(--space-4, 16px);
+            gap: var(--space-lg);
         }
 
         .viewer-action-row {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: var(--space-4, 16px);
+            gap: var(--space-lg);
         }
 
-        .render-title { font-size: var(--fs-2xl, 24px); color: var(--text-primary, #f4f4f5); font-weight: var(--fw-bold, 700); margin: 0; }
-        .render-desc { font-size: var(--fs-sm, 14px); color: var(--text-secondary, #a1a1aa); margin: 0; }
-        
-        .tag-pill-container { display: flex; flex-wrap: wrap; gap: var(--space-2, 8px); }
+        .render-title {
+            font-size: 1.5rem;
+            color: var(--text-bright);
+            font-weight: 600;
+            margin: 0;
+        }
+        .render-desc {
+            font-size: 14px;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .tag-pill-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-sm);
+        }
         .tag-pill {
-            background: var(--bg-inset, #0f0f12);
-            border: 1px solid var(--border-default, #27272a);
-            color: var(--text-link, #a855f7);
-            padding: 2px var(--space-2, 8px);
-            font-size: var(--fs-xs, 12px);
-            font-weight: var(--fw-semibold, 600);
-            border-radius: var(--radius-sm, 4px);
-            text-transform: uppercase;
+            background: var(--box-bg);
+            border: var(--border-width) solid var(--border-color);
+            color: var(--text-clickable-link);
+            padding: 2px var(--space-sm);
+            font-size: 12px;
+            font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+            border-radius: var(--radius-sm);
         }
-        .tag-flip-pill { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444; }
 
-        .view-h1 { font-size: var(--fs-xl, 20px); color: var(--text-primary, #f4f4f5); font-weight: var(--fw-semibold, 600); margin-top: 16px; margin-bottom: 4px; }
-        .view-h2 { font-size: var(--fs-md, 16px); color: var(--text-primary, #f4f4f5); font-weight: var(--fw-semibold, 600); margin-top: 16px; margin-bottom: 4px; text-transform: uppercase; }
-        .view-text { font-size: var(--fs-sm, 14px); color: var(--text-secondary, #a1a1aa); line-height: 1.5; margin: 0; }
-        .view-note { font-style: italic; color: var(--text-muted, #71717a); padding-left: 8px; border-left: 2px solid var(--border-strong, #3f3f46); margin: 0; }
+        .view-h1 { font-size: 1.3rem; color: var(--text-bright); font-weight: 600; margin-top: 12px; }
+        .view-h2 { font-size: 1.1rem; color: var(--text-bright); font-weight: 600; text-transform: uppercase; margin-top: 12px; }
+        .view-text { font-size: 14px; color: var(--text-main); margin: 0; }
+        .view-note { font-style: italic; color: var(--text-muted); padding-left: 8px; border-left: 2px solid var(--border-color); margin: 0; }
 
         .connected-chain-group {
             display: flex;
             flex-direction: column;
-            background: var(--bg-inset, #0f0f12);
-            border: 1px solid var(--border-default, #27272a);
-            border-radius: var(--radius-md, 8px);
+            background: var(--box-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-md);
             margin: 8px 0;
-            padding: 0;
         }
 
         .view-cmd-row {
             display: flex;
             align-items: center;
-            padding: 4px 8px;
-            gap: 8px;
+            padding: 6px var(--space-sm);
+            gap: var(--space-sm);
             position: relative;
-            min-height: 40px;
         }
 
-        .view-row-idx { font-family: var(--font-mono, monospace); font-weight: bold; width: 22px; text-align: center; color: var(--text-muted, #71717a); font-size: 12px; }
-        
+        .view-row-idx {
+            font-family: ui-monospace, "SF Mono", monospace;
+            width: 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
         .block-interactive-wrapper {
             position: relative;
             width: 32px;
@@ -205,7 +281,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
         }
 
         .block-face-texture-node {
@@ -213,76 +288,47 @@
             height: 32px;
             object-fit: contain;
             image-rendering: pixelated;
-            flex-shrink: 0;
-            z-index: 2;
-            transition: transform 0.15s ease, filter 0.15s ease;
         }
-        .block-interactive-wrapper:hover .block-face-texture-node { filter: brightness(1.25); }
 
         .block-meta-tooltip {
             position: absolute;
-            bottom: calc(100% + 8px);
-            left: 50%;
-            transform: translateX(-50%) scale(0.9);
-            background: var(--bg-surface, #18181b);
-            border: 1px solid var(--border-strong, #3f3f46);
-            border-radius: var(--radius-sm, 4px);
-            padding: 8px 12px;
-            color: var(--text-primary, #f4f4f5);
-            font-family: var(--font-mono, monospace);
-            font-size: 12px;
-            font-weight: bold;
-            line-height: 1.3;
-            white-space: pre;
-            text-align: left;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 100;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            transition: opacity 0.15s ease, transform 0.15s ease;
-        }
-        .block-meta-tooltip::after {
-            content: '';
-            position: absolute;
-            top: 100%;
+            bottom: calc(100% + 6px);
             left: 50%;
             transform: translateX(-50%);
-            border: 6px solid transparent;
-            border-top-color: var(--border-strong, #3f3f46);
+            background: var(--container-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 6px 10px;
+            color: var(--text-bright);
+            font-family: ui-monospace, "SF Mono", monospace;
+            font-size: 11px;
+            white-space: pre;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+            transition: opacity var(--transition-fast);
         }
         .block-interactive-wrapper:hover .block-meta-tooltip {
             opacity: 1;
-            pointer-events: auto;
-            transform: translateX(-50%) scale(1);
         }
 
         .view-cmd-payload-box {
             flex: 1;
-            font-family: var(--font-mono, monospace);
-            background: var(--bg-body, #0f0f12);
-            border: 1px solid var(--border-subtle, #27272a);
-            color: var(--text-primary, #f4f4f5);
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 12px;
+            font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+            background: var(--bg-color);
+            border: var(--border-width) solid var(--border-color);
+            color: var(--text-codeblock);
+            padding: 6px var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
             white-space: nowrap;
             overflow-x: auto;
-            line-height: 1.3;
-            display: block;
             min-width: 0;
         }
 
         .enable-word-wrap .view-cmd-payload-box {
             white-space: pre-wrap !important;
             word-break: break-all !important;
-            overflow-x: hidden !important;
-        }
-
-        .enable-word-wrap-npc .npc-scroller-stack { gap: 4px; }
-        .enable-word-wrap-npc .npc-line-box {
-            white-space: pre-wrap !important;
-            word-break: break-all !important;
-            margin-bottom: 0;
         }
 
         .toggle-wrap-container {
@@ -290,176 +336,124 @@
             align-items: center;
             gap: 4px;
             font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: var(--text-muted, #71717a);
-            user-select: none;
+            color: var(--text-muted);
             cursor: pointer;
+            user-select: none;
         }
-        .toggle-wrap-container input { cursor: pointer; margin: 0; }
 
         .icon-copy-action-btn {
-            width: 36px;
-            height: 36px;
-            background: var(--bg-inset, #0f0f12);
-            border: 1px solid var(--border-default, #27272a);
-            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            background: var(--bg-color);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             flex-shrink: 0;
-            transition: background 0.15s ease, border-color 0.15s ease;
+            transition: background var(--transition-fast), border-color var(--transition-fast);
         }
-        .icon-copy-action-btn:hover { border-color: var(--border-strong, #3f3f46); background: var(--bg-surface, #18181b); }
-        .icon-copy-action-btn:active { transform: scale(0.9); }
-        .icon-copy-action-btn img { width: 16px; height: 16px; image-rendering: pixelated; }
-
-        .npc-compound-card {
-            background: var(--bg-inset, #0f0f12);
-            border: 1px solid var(--border-default, #27272a);
-            border-radius: 12px;
-            padding: 4px 8px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            margin: 8px 0;
-            min-height: 40px;
+        .icon-copy-action-btn:active {
+            transform: scale(0.98);
         }
-
-        .npc-scroller-stack {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            min-width: 0;
+        .icon-copy-action-btn img {
+            width: 14px;
+            height: 14px;
         }
-        .npc-line-box {
-            font-family: var(--font-mono, monospace);
-            background: var(--bg-body, #0f0f12);
-            border: 1px solid var(--border-subtle, #27272a);
-            color: var(--text-primary, #f4f4f5);
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            white-space: pre;
-            overflow-x: auto;
-        }
-
-        .npc-router-explainer-tag {
-            font-family: var(--font-mono, monospace);
-            font-size: 12px;
-            color: var(--text-muted, #71717a);
-            text-align: center;
-            cursor: pointer;
-            user-select: none;
-            display: block;
-            margin-top: -4px;
-            margin-bottom: 16px;
-        }
-        .npc-router-explainer-tag:hover { color: var(--text-link, #a855f7); }
-
-        .structure-deck-panel {
-            background: var(--bg-inset, #0f0f12);
-            border: 1px solid var(--border-default, #27272a);
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            margin-top: 16px;
-        }
-        .structure-preview-meta { display: flex; align-items: center; gap: 16px; }
-        .structure-img-frame {
-            width: 44px;
-            height: 44px;
-            background: var(--bg-body, #0f0f12);
-            border: 1px solid var(--border-default, #27272a);
-            border-radius: 8px;
-            object-fit: cover;
-            image-rendering: pixelated;
-        }
-        .structure-label-title { font-weight: bold; color: var(--text-primary, #f4f4f5); font-size: 14px; }
-        .structure-label-sub { font-size: 12px; color: var(--text-muted, #71717a); text-transform: uppercase; }
 
         .btn {
-            background: var(--accent, #8b5cf6);
+            background: var(--accent-dark);
             border: none;
-            color: #ffffff;
-            padding: 8px 16px;
-            border-radius: 4px;
+            color: var(--text-bright);
+            padding: var(--space-sm) var(--space-lg);
+            border-radius: var(--radius-md);
             cursor: pointer;
-            font-weight: 600;
+            font-size: 12px;
             text-transform: uppercase;
-            font-size: 12px;
-            transition: background 0.15s ease, transform 0.15s ease;
+            font-weight: 600;
+            transition: background var(--transition-fast);
         }
-        .btn:hover { background: var(--accent-hover, #7c3aed); }
-        .btn:active { transform: scale(0.96); }
-        .btn-secondary { background: var(--bg-inset, #0f0f12); border: 1px solid var(--border-default, #27272a); color: var(--text-secondary, #a1a1aa); }
-        .btn-secondary:hover { border-color: var(--border-strong, #3f3f46); color: var(--text-primary, #f4f4f5); }
-        .btn:disabled { background: var(--bg-inset, #0f0f12); color: var(--text-disabled, #52525b); border: 1px solid var(--border-subtle, #27272a); cursor: not-allowed; transform: none; }
-
-        .external-author-banner {
-            background: var(--bg-inset, #0f0f12);
-            border: 1px solid var(--border-default, #27272a);
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-bottom: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
+        .btn:hover {
+            background: var(--accent-dark-hover);
         }
-        .external-author-label { font-size: 12px; color: var(--text-muted, #71717a); text-transform: uppercase; }
-        .external-author-name { font-size: 16px; font-weight: bold; color: var(--text-primary, #f4f4f5); }
-
-        .external-disclaimer-box {
-            background: var(--bg-inset, #0f0f12);
-            border: 1px solid var(--border-default, #27272a);
-            border-radius: 8px;
-            padding: 12px 16px;
-            font-size: 12px;
-            color: var(--text-muted, #71717a);
-            line-height: 1.5;
+        .btn:active {
+            transform: scale(0.98);
         }
-        .external-disclaimer-box strong { color: var(--text-secondary, #a1a1aa); }
+        .btn-secondary {
+            background: var(--box-bg);
+            border: var(--border-width) solid var(--border-color);
+            color: var(--text-main);
+        }
+        .btn-secondary:hover {
+            border-color: var(--accent-light);
+            color: var(--text-bright);
+        }
 
         .footer {
-            margin-top: 32px;
-            padding-bottom: 20px;
+            margin-top: var(--space-2xl, 32px);
+            padding-bottom: var(--space-lg, 16px);
             text-align: center;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: var(--space-sm, 8px);
             align-items: center;
             width: 100%;
         }
-        .footer-title { font-size: 12px; color: var(--text-muted, #71717a); opacity: 0.75; }
-        .footer-links { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+        .footer-title {
+            font-size: 12px;
+            color: var(--text-muted, #5a5a66);
+            opacity: 0.75;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: var(--space-md, 12px);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
         .footer-links a {
             display: flex;
             align-items: center;
             gap: 6px;
-            color: var(--brand-accent-2-300, #c084fc);
+            color: var(--text-clickable-link, #52BBE8);
             text-decoration: none;
-            font-size: 14px;
+            font-size: 13px;
             opacity: 0.85;
-            transition: opacity 0.15s ease, color 0.15s ease;
+            transition: opacity var(--transition-fast, 0.15s), color var(--transition-fast, 0.15s);
         }
-        .footer-links a:hover { color: var(--brand-accent-1-300, #e879f9); opacity: 1; }
+
+        .footer-links a:hover {
+            color: var(--text-bright, #ffffff);
+            opacity: 1;
+        }
+
         .footer-links img {
+            color-scheme: dark !important;
             width: 16px;
             height: 16px;
             filter: brightness(0) invert(1) !important;
             opacity: 0.9;
         }
-        .footer-links a.kofi { color: #ff5fa2; font-weight: 500; }
-        .footer-links a.kofi:hover { color: #ff8fc0; }
-        .footer-links a.kofi img { width: 20px; height: 20px; filter: brightness(0) invert(1) !important; opacity: 0.95; }
 
-        .footer-deemphasized { opacity: 0.6; filter: grayscale(0.5); transition: opacity 0.15s ease; }
-        .footer-deemphasized:hover { opacity: 0.9; }
+        .footer-links a.kofi {
+            color: #ff5fa2;
+            font-weight: 500;
+        }
+
+        .footer-links a.kofi:hover {
+            color: #ff8fc0;
+        }
+
+        .footer-links a.kofi img {
+            width: 20px;
+            height: 20px;
+            filter: brightness(0) invert(1) !important; 
+            opacity: 0.95;
+        }
     </style>
 </head>
 <body>
@@ -477,30 +471,33 @@
         </header>
 
         <main id="app-view-router-canvas">
-             <div style="text-align: center; color: var(--text-muted, #71717a); padding: 32px;">Loading commands...</div>
+            <div style="text-align: center; color: var(--text-muted); padding: 32px;">Loading commands...</div>
         </main>
 
-        <div class="footer" id="global-page-footer">
-            <div class="footer-title" id="footer-owner-title">By Nako Hikari</div>
+        <div class="footer">
+            <div class="footer-title">By Nako Hikari</div>
             <div class="footer-links">
                 <a href="https://github.com/nako-hikari/" target="_blank" class="social">
-                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub"> GitHub
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+                    GitHub
                 </a>
                 <a href="https://m.youtube.com/@NaCryst" target="_blank" class="social">
-                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube"> YouTube
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube">
+                    YouTube
                 </a>
                 <a href="https://www.tiktok.com/@nako_hikari_mc" target="_blank" class="social">
-                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"> TikTok
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok">
+                    TikTok
                 </a>
                 <a href="https://ko-fi.com/arialicee" target="_blank" class="social kofi">
-                    <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/kofi-icon.png" alt="Ko-fi"> Support me on Ko-fi
+                    <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/kofi-icon.png" alt="Ko-fi">
+                    Support me on Ko-fi
                 </a>
             </div>
         </div>
     </div>
 
     <script>
-        // List of command text files relative to ./commands/ directory in current repository
         const COMMAND_FILES = [
             "something.txt",
             "test.txt",
@@ -511,58 +508,19 @@
         let cachedParsedIndexDataset = [];
         const CDNBASESRC = "https://raw.githubusercontent.com/nako-hikari/nako-hikari.github.io/main/assets/images";
 
-        window.addEventListener('DOMContentLoaded', initializeApplicationRuntimePipeline);
+        window.addEventListener('DOMContentLoaded', initializeApp);
         window.addEventListener('hashchange', readLocationHashRouteToken);
 
-        function handleIntegratedBackSequence() {
-            if (!!window.location.hash) {
-                routeReturnHomeDashboard();
-            } else {
-                window.location.href = '../index.html';
-            }
-        }
-
-        function isSelfCredit(creditVal) {
-            if (!creditVal) return true;
-            const normalized = creditVal.toLowerCase().replace(/\s+/g, '');
-            return normalized === 'nakohikari';
-        }
-
-        function updateHeaderTitleBlock(isViewerPage = false) {
-            const titleBlock = document.getElementById('header-title-block');
-            if (!titleBlock) return;
-
-            if (isViewerPage) {
-                titleBlock.innerHTML = `
-                    <button class="btn btn-secondary" style="font-family: var(--font-mono, monospace);" onclick="handleIntegratedBackSequence()">←</button>
-                    <h1 id="app-display-header" onclick="routeReturnHomeDashboard()">Command Block Creation</h1>
-                `;
-            } else {
-                titleBlock.innerHTML = `
-                    <h1 id="app-display-header" onclick="routeReturnHomeDashboard()">Command Block Creation</h1>
-                `;
-            }
-        }
-
-        function resetGlobalFooterState() {
-            const footer = document.getElementById('global-page-footer');
-            const footerTitle = document.getElementById('footer-owner-title');
-            if (footer) footer.classList.remove('footer-deemphasized');
-            if (footerTitle) footerTitle.innerText = "By Nako Hikari";
-        }
-
-        async function initializeApplicationRuntimePipeline() {
+        async function initializeApp() {
             const fetchPromises = COMMAND_FILES.map(async (fileName) => {
                 try {
-                    const relativePath = `commands/${fileName}`;
-                    const fileContentResponse = await fetch(relativePath);
-                    if (!fileContentResponse.ok) throw new Error();
-                    const data = await fileContentResponse.text();
-                    
+                    const res = await fetch(`commands/${fileName}`);
+                    if (!res.ok) throw new Error();
+                    const data = await res.text();
+
                     let cleanName = fileName.substring(0, fileName.lastIndexOf('.')).replace(/_/g, ' ');
                     let title = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
-                    
-                    let desc = "No descriptor statement declared in source file.";
+                    let desc = "No descriptor statement declared.";
                     let tags = [];
                     let credit = null;
 
@@ -577,10 +535,9 @@
                     }
 
                     return { file: fileName, parsedTitle: title, parsedDesc: desc, parsedTags: tags, parsedCredit: credit, rawPayload: data };
-                } catch (err) {
-                    let rawTitle = fileName.substring(0, fileName.lastIndexOf('.'));
-                    let cleanFallbackTitle = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1);
-                    return { file: fileName, parsedTitle: cleanFallbackTitle, parsedDesc: "Failed to download asset.", parsedTags: [], parsedCredit: null, rawPayload: null };
+                } catch {
+                    let cleanName = fileName.substring(0, fileName.lastIndexOf('.'));
+                    return { file: fileName, parsedTitle: cleanName, parsedDesc: "Failed to download asset.", parsedTags: [], parsedCredit: null, rawPayload: null };
                 }
             });
 
@@ -590,284 +547,132 @@
 
         function readLocationHashRouteToken() {
             const currentHash = decodeURIComponent(window.location.hash.replace('#', '')).trim().toLowerCase();
-            
             if (currentHash && cachedParsedIndexDataset.length > 0) {
-                const searchMatch = cachedParsedIndexDataset.find(c => {
-                    const cleanFileName = c.file.toLowerCase();
-                    return cleanFileName === currentHash || c.file.toLowerCase() === currentHash + '.txt';
-                });
-                
-                if (searchMatch) {
-                    renderFocusedCreationDisplayPage(searchMatch);
+                const match = cachedParsedIndexDataset.find(c => c.file.toLowerCase() === currentHash || c.file.toLowerCase() === currentHash + '.txt');
+                if (match) {
+                    renderFocusedDisplay(match);
                     return;
                 }
             }
-            renderGlobalDashboardHomeGrid();
+            renderHomeGrid();
         }
 
-        function renderGlobalDashboardHomeGrid() {
-            updateHeaderTitleBlock(false);
-            resetGlobalFooterState();
-            const routerCanvas = document.getElementById('app-view-router-canvas');
-            routerCanvas.innerHTML = `
+        function updateHeader(isViewer = false) {
+            const titleBlock = document.getElementById('header-title-block');
+            if (isViewer) {
+                titleBlock.innerHTML = `
+                    <button class="btn btn-secondary" onclick="routeReturnHomeDashboard()">←</button>
+                    <h1 onclick="routeReturnHomeDashboard()">Command Block Creation</h1>
+                `;
+            } else {
+                titleBlock.innerHTML = `<h1 onclick="routeReturnHomeDashboard()">Command Block Creation</h1>`;
+            }
+        }
+
+        function renderHomeGrid() {
+            updateHeader(false);
+            const canvas = document.getElementById('app-view-router-canvas');
+            canvas.innerHTML = `
                 <div class="search-container">
-                    <input type="text" id="live-filter-search" class="search-box" placeholder="Search creations by title or tag keywords..." oninput="handleSearchFilteringEngine(this.value)">
+                    <input type="text" class="search-box" placeholder="Search creations by title or tag keywords..." oninput="handleSearch(this.value)">
                 </div>
-                <div class="creation-grid" id="dashboard-cards-container"></div>
+                <div class="creation-grid" id="cards-container"></div>
             `;
-            injectFilteredCardsIntoDashboard(cachedParsedIndexDataset);
+            injectCards(cachedParsedIndexDataset);
         }
 
-        function injectFilteredCardsIntoDashboard(dataset) {
-            const gridContainer = document.getElementById('dashboard-cards-container');
-            if (!gridContainer) return;
-            gridContainer.innerHTML = '';
+        function injectCards(dataset) {
+            const container = document.getElementById('cards-container');
+            if (!container) return;
+            container.innerHTML = '';
 
             dataset.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'creation-card';
                 card.onclick = () => { window.location.hash = encodeURIComponent(item.file); };
+
                 let tagPillsStr = item.parsedTags.map(t => `<span class="tag-pill">${t}</span>`).join(' ');
-
-                const isSelf = isSelfCredit(item.parsedCredit);
-                const creditDisplayStr = !isSelf && item.parsedCredit ? `<div class="card-credit">Credit: ${escapeHtmlEntities(item.parsedCredit)}</div>` : '';
-
                 card.innerHTML = `
-                    <div class="card-title">${escapeHtmlEntities(item.parsedTitle)}</div>
-                    <div class="card-desc" style="${item.rawPayload ? '' : 'color: #ef4444;'}">${escapeHtmlEntities(item.parsedDesc)}</div>
-                    ${creditDisplayStr}
-                    <div class="tag-pill-container" style="margin-top: 4px;">${tagPillsStr}</div>
+                    <div class="card-title">${escapeHtml(item.parsedTitle)}</div>
+                    <div class="card-desc" style="${item.rawPayload ? '' : 'color: var(--red, #e05c5c);'}">${escapeHtml(item.parsedDesc)}</div>
+                    ${item.parsedCredit ? `<div class="card-credit">Credit: ${escapeHtml(item.parsedCredit)}</div>` : ''}
+                    <div class="tag-pill-container">${tagPillsStr}</div>
                 `;
-                gridContainer.appendChild(card);
+                container.appendChild(card);
             });
         }
 
-        function handleSearchFilteringEngine(searchQuery) {
-            const query = searchQuery.toLowerCase().trim();
+        function handleSearch(q) {
+            const query = q.toLowerCase().trim();
             if (!query) {
-                injectFilteredCardsIntoDashboard(cachedParsedIndexDataset);
+                injectCards(cachedParsedIndexDataset);
                 return;
             }
-            const filtered = cachedParsedIndexDataset.filter(item => {
-                return item.parsedTitle.toLowerCase().includes(query) || 
-                       item.parsedDesc.toLowerCase().includes(query) || 
-                       (item.parsedCredit && item.parsedCredit.toLowerCase().includes(query)) ||
-                       item.parsedTags.some(t => t.toLowerCase().includes(query));
-            });
-            injectFilteredCardsIntoDashboard(filtered);
+            const filtered = cachedParsedIndexDataset.filter(item => 
+                item.parsedTitle.toLowerCase().includes(query) || 
+                item.parsedDesc.toLowerCase().includes(query) || 
+                item.parsedTags.some(t => t.toLowerCase().includes(query))
+            );
+            injectCards(filtered);
         }
 
-        function parseCustomMarkdownSyntaxes(rawTextString) {
-            let clean = escapeHtmlEntities(rawTextString);
-            clean = clean.replace(/\[link\]\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="parsed-link">$1</a>');
-            clean = clean.replace(/\[img\]\((.*?)\)/g, '<img src="$1" class="parsed-img" alt="Embedded Source Asset">');
-            return clean;
-        }
-
-        async function renderFocusedCreationDisplayPage(creationObject) {
-            updateHeaderTitleBlock(true);
+        function renderFocusedDisplay(item) {
+            updateHeader(true);
             const canvas = document.getElementById('app-view-router-canvas');
-            canvas.innerHTML = ''; 
-
-            const isSelf = isSelfCredit(creationObject.parsedCredit);
-            const globalFooter = document.getElementById('global-page-footer');
-            const footerTitle = document.getElementById('footer-owner-title');
-
-            if (!isSelf) {
-                const authorBanner = document.createElement('div');
-                authorBanner.className = 'external-author-banner';
-                authorBanner.innerHTML = `
-                    <div class="external-author-label">Created By</div>
-                    <div class="external-author-name">${escapeHtmlEntities(creationObject.parsedCredit)}</div>
-                `;
-                canvas.appendChild(authorBanner);
-
-                if (globalFooter) globalFooter.classList.add('footer-deemphasized');
-                if (footerTitle) footerTitle.innerText = `Original Creator: ${creationObject.parsedCredit} | Hosted By Nako Hikari`;
-            } else {
-                resetGlobalFooterState();
-            }
+            canvas.innerHTML = '';
 
             const container = document.createElement('div');
             container.className = 'viewer-card';
 
-            let actionLayoutWrapper = document.createElement('div');
-            actionLayoutWrapper.className = 'viewer-action-row';
+            const actionRow = document.createElement('div');
+            actionRow.className = 'viewer-action-row';
 
-            let headerMetaContainer = document.createElement('div');
-            headerMetaContainer.style.cssText = 'display: flex; flex-direction: column; gap: 4px;';
+            const metaCol = document.createElement('div');
+            metaCol.innerHTML = `
+                <div class="render-title">${escapeHtml(item.parsedTitle)}</div>
+                <div class="render-desc">${escapeHtml(item.parsedDesc)}</div>
+            `;
 
-            let shareButtonEl = document.createElement('button');
-            shareButtonEl.className = 'btn';
-            shareButtonEl.innerText = 'Share';
-            shareButtonEl.onclick = () => {
-                const linkString = `${window.location.origin}${window.location.pathname}#${encodeURIComponent(creationObject.file)}`;
-                navigator.clipboard.writeText(linkString);
-                shareButtonEl.innerText = 'Copied!';
-                setTimeout(() => { shareButtonEl.innerText = 'Share'; }, 1200);
-            };
+            const rightActions = document.createElement('div');
+            rightActions.style.cssText = 'display: flex; align-items: center; gap: 12px;';
+            rightActions.innerHTML = `
+                <label class="toggle-wrap-container">
+                    <input type="checkbox" onchange="document.getElementById('app-view-router-canvas').classList.toggle('enable-word-wrap', this.checked)"> Wrap
+                </label>
+                <button class="btn" onclick="copyShareLink('${encodeURIComponent(item.file)}', this)">Share</button>
+            `;
 
-            let wrapToggleLabel = document.createElement('label');
-            wrapToggleLabel.className = 'toggle-wrap-container';
-            wrapToggleLabel.innerHTML = `<input type="checkbox" id="global-word-wrap-toggle"> Word Wrap`;
-            
-            wrapToggleLabel.querySelector('input').onchange = (e) => {
-                const canvasElement = document.getElementById('app-view-router-canvas');
-                if (e.target.checked) {
-                    canvasElement.classList.add('enable-word-wrap');
-                    canvasElement.classList.add('enable-word-wrap-npc');
-                    
-                    document.querySelectorAll('.npc-scroller-stack').forEach(stack => {
-                        const rawText = stack.getAttribute('data-raw-payload') || '';
-                        if (!rawText) return;
-                        stack.innerHTML = '';
-                        rawText.split('\n').forEach(line => {
-                            let lineRow = document.createElement('div');
-                            lineRow.className = 'npc-line-box';
-                            lineRow.innerText = line;
-                            stack.appendChild(lineRow);
-                        });
-                    });
-                } else {
-                    canvasElement.classList.remove('enable-word-wrap');
-                    canvasElement.classList.remove('enable-word-wrap-npc');
-                    
-                    document.querySelectorAll('.npc-scroller-stack').forEach(stack => {
-                        const rawText = stack.getAttribute('data-raw-payload') || '';
-                        if (!rawText) return;
-                        stack.innerHTML = '';
-                        let lineRow = document.createElement('div');
-                        lineRow.className = 'npc-line-box';
-                        lineRow.innerText = rawText;
-                        stack.appendChild(lineRow);
-                    });
-                }
-            };
+            actionRow.appendChild(metaCol);
+            actionRow.appendChild(rightActions);
+            container.appendChild(actionRow);
 
-            let rightActionGroup = document.createElement('div');
-            rightActionGroup.style.cssText = 'display: flex; align-items: center; gap: 16px; flex-shrink: 0;';
-            rightActionGroup.appendChild(wrapToggleLabel);
-            rightActionGroup.appendChild(shareButtonEl);
-
-            let tagsContainer = document.createElement('div');
-            tagsContainer.className = 'tag-pill-container';
-            
-            let elementsWrapper = document.createElement('div');
-            elementsWrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+            const elementsWrapper = document.createElement('div');
+            elementsWrapper.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
 
             let activeChainStackElement = null;
             let currentChainRowIndex = 0;
 
-            const isFlippedTagActive = creationObject.parsedTags.some(tag => tag.toLowerCase() === 'flip');
-            const calculatedRotationAngle = isFlippedTagActive ? "0deg" : "180deg";
-
-            const segments = creationObject.rawPayload.split('\n\n');
-
+            const segments = item.rawPayload.split('\n\n');
             segments.forEach(seg => {
                 const lines = seg.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                 if (lines.length === 0) return;
 
                 const baseLine = lines[0];
 
-                if (baseLine.startsWith('TITLE:')) {
-                    let titleEl = document.createElement('div');
-                    titleEl.className = 'render-title';
-                    titleEl.innerText = baseLine.replace('TITLE:', '').trim();
-                    headerMetaContainer.appendChild(titleEl);
-                } 
-                else if (baseLine.startsWith('DESC:')) {
-                    let descEl = document.createElement('div');
-                    descEl.className = 'render-desc';
-                    descEl.innerText = baseLine.replace('DESC:', '').trim();
-                    headerMetaContainer.appendChild(descEl);
-                } 
-                else if (baseLine.startsWith('TAG:')) {
-                    baseLine.replace('TAG:', '').split(',').forEach(t => {
-                        let pill = document.createElement('span');
-                        pill.className = 'tag-pill';
-                        if (t.trim().toLowerCase() === 'flip') pill.classList.add('tag-flip-pill');
-                        pill.innerText = t.trim();
-                        tagsContainer.appendChild(pill);
-                    });
-                }
-                else if (/^H[1-5]:/.test(baseLine)) {
+                if (/^H[1-5]:/.test(baseLine)) {
                     activeChainStackElement = null;
                     const tier = baseLine.match(/^H[1-5]/)[0].toLowerCase();
-                    let headerEl = document.createElement('div');
+                    const headerEl = document.createElement('div');
                     headerEl.className = `view-${tier}`;
                     headerEl.innerText = baseLine.replace(/^H[1-5]:/, '').trim();
                     elementsWrapper.appendChild(headerEl);
-                }
-                else if (baseLine.startsWith('TEXT:')) {
+                } else if (baseLine.startsWith('TEXT:')) {
                     activeChainStackElement = null;
-                    let textEl = document.createElement('p');
+                    const textEl = document.createElement('p');
                     textEl.className = 'view-text';
-                    textEl.innerHTML = parseCustomMarkdownSyntaxes(baseLine.replace('TEXT:', '').trim());
+                    textEl.innerText = baseLine.replace('TEXT:', '').trim();
                     elementsWrapper.appendChild(textEl);
-                }
-                else if (baseLine.startsWith('NOTE:')) {
-                    activeChainStackElement = null;
-                    let noteEl = document.createElement('p');
-                    noteEl.className = 'view-note';
-                    noteEl.innerHTML = parseCustomMarkdownSyntaxes(baseLine.replace('NOTE:', '').trim());
-                    elementsWrapper.appendChild(noteEl);
-                }
-                else if (baseLine.startsWith('CMD:NPC') || baseLine.startsWith('CMD:CHAT')) {
-                    activeChainStackElement = null;
-                    const isNpcType = baseLine.startsWith('CMD:NPC');
-
-                    let npcNodeWrapper = document.createElement('div');
-                    npcNodeWrapper.className = 'npc-compound-card';
-
-                    let assetTexture = document.createElement('img');
-                    assetTexture.className = 'block-face-texture-node';
-                    assetTexture.src = isNpcType ? `${CDNBASESRC}/npc.png` : `${CDNBASESRC}/chat.png`;
-
-                    let indexingLabel = document.createElement('div');
-                    indexingLabel.className = 'view-row-idx';
-                    indexingLabel.innerText = '1';
-
-                    let textBlockContainer = document.createElement('div');
-                    textBlockContainer.className = 'npc-scroller-stack';
-
-                    const macroPayloadLines = lines.slice(1);
-                    const joinedPayload = macroPayloadLines.join('\n');
-                    textBlockContainer.setAttribute('data-raw-payload', joinedPayload);
-                    
-                    let lineRow = document.createElement('div');
-                    lineRow.className = 'npc-line-box';
-                    lineRow.innerText = joinedPayload;
-                    textBlockContainer.appendChild(lineRow);
-
-                    let functionalCopyBtn = document.createElement('div');
-                    functionalCopyBtn.className = 'icon-copy-action-btn';
-                    functionalCopyBtn.innerHTML = `<img src="${CDNBASESRC}/copy.png" alt="Copy">`;
-                    functionalCopyBtn.onclick = () => {
-                        const compoundingTextBuffer = macroPayloadLines.join('\n');
-                        navigator.clipboard.writeText(compoundingTextBuffer);
-                        functionalCopyBtn.style.borderColor = '#10b981';
-                        functionalCopyBtn.style.background = 'rgba(16, 185, 129, 0.1)';
-                        setTimeout(() => { 
-                            functionalCopyBtn.style.borderColor = ''; 
-                            functionalCopyBtn.style.background = '';
-                        }, 800);
-                    };
-
-                    npcNodeWrapper.appendChild(indexingLabel);
-                    npcNodeWrapper.appendChild(assetTexture);
-                    npcNodeWrapper.appendChild(textBlockContainer);
-                    npcNodeWrapper.appendChild(functionalCopyBtn);
-                    elementsWrapper.appendChild(npcNodeWrapper);
-
-                    if (isNpcType) {
-                        let dynamicExplainerLink = document.createElement('div');
-                        dynamicExplainerLink.className = 'npc-router-explainer-tag';
-                        dynamicExplainerLink.innerText = '--- click here to know how to use NPC as setup ---';
-                        dynamicExplainerLink.onclick = () => { window.location.href = 'npc-setup.html'; };
-                        elementsWrapper.appendChild(dynamicExplainerLink);
-                    }
-                }
-                else if (baseLine.startsWith('CMD:')) {
+                } else if (baseLine.startsWith('CMD:')) {
                     if (!activeChainStackElement) {
                         activeChainStackElement = document.createElement('div');
                         activeChainStackElement.className = 'connected-chain-group';
@@ -877,121 +682,60 @@
 
                     for (let i = 0; i < lines.length; i += 2) {
                         if (!lines[i] || !lines[i].startsWith('CMD:')) continue;
-                        
                         currentChainRowIndex++;
                         const metaTokens = lines[i].split(':');
                         const commandStringPayload = lines[i+1] || '';
 
                         const modeToken = (metaTokens[1] || 'C').toUpperCase();
-                        const activeToken = (metaTokens[2] || 'AA').toUpperCase();
                         const condToken = (metaTokens[3] || 'U').toUpperCase();
-                        const tickToken = metaTokens[4] || '0';
-
-                        const fullBlockTypeName = modeToken === 'I' ? 'Impulse' : modeToken === 'R' ? 'Repeat' : 'Chain';
-                        const fullConditionText = condToken.startsWith('C') ? 'Conditional' : 'Unconditional';
-                        const fullRedstoneText = activeToken === 'AA' ? 'Always Active' : 'Needs Redstone';
 
                         let filePrefix = modeToken.toLowerCase();
                         let fileSuffix = condToken.toLowerCase().startsWith('c') ? 'cn' : 'un';
                         let blockGraphicSrc = `${CDNBASESRC}/${filePrefix}-${fileSuffix}.png`;
 
-                        let rowNode = document.createElement('div');
+                        const rowNode = document.createElement('div');
                         rowNode.className = 'view-cmd-row';
-
                         rowNode.innerHTML = `
                             <div class="view-row-idx">${currentChainRowIndex}</div>
-                            <div class="block-interactive-wrapper" tabindex="0">
-                                <img src="${blockGraphicSrc}" class="block-face-texture-node" style="transform: rotate(${calculatedRotationAngle});" alt="Block Face">
-                                <div class="block-meta-tooltip">${fullBlockTypeName}\n${fullConditionText}\n${fullRedstoneText}\nTick = ${tickToken}</div>
+                            <div class="block-interactive-wrapper">
+                                <img src="${blockGraphicSrc}" class="block-face-texture-node" alt="Block">
                             </div>
-                            <div class="view-cmd-payload-box">${escapeHtmlEntities(commandStringPayload)}</div>
-                            <div class="icon-copy-action-btn" onclick="copyInlinePayloadRowText(this)"><img src="${CDNBASESRC}/copy.png" alt="Copy"></div>
+                            <div class="view-cmd-payload-box">${escapeHtml(commandStringPayload)}</div>
+                            <div class="icon-copy-action-btn" onclick="copyRowPayload(this)"><img src="${CDNBASESRC}/copy.png" alt="Copy"></div>
                         `;
                         activeChainStackElement.appendChild(rowNode);
                     }
                 }
             });
 
-            if (headerMetaContainer.children.length > 0) actionLayoutWrapper.appendChild(headerMetaContainer);
-            actionLayoutWrapper.appendChild(rightActionGroup);
-            container.appendChild(actionLayoutWrapper);
-
-            if (tagsContainer.children.length > 0) container.appendChild(tagsContainer);
-            if (headerMetaContainer.children.length > 0 || tagsContainer.children.length > 0) {
-                let ruleSpacer = document.createElement('hr');
-                ruleSpacer.style.cssText = 'border: none; border-bottom: 1px solid var(--border-subtle, #27272a); margin: 0;';
-                container.appendChild(ruleSpacer);
-            }
-
             container.appendChild(elementsWrapper);
-
-            if (!isSelf) {
-                const disclaimerBox = document.createElement('div');
-                disclaimerBox.className = 'external-disclaimer-box';
-                disclaimerBox.innerHTML = `
-                    <strong>Credit to:</strong> ${escapeHtmlEntities(creationObject.parsedCredit)}<br>
-                    I do not own this command creation nor do I take any credit for it. If this is your original creation and someone has registered it under their name without permission, or if you want to set things straight, please contact me directly.
-                `;
-                container.appendChild(disclaimerBox);
-            }
-
-            const pureBaseName = creationObject.file.substring(0, creationObject.file.lastIndexOf('.'));
-            const downloadStructureUrl = `structures/${pureBaseName}.mcstructure`;
-            
-            let structureDeck = document.createElement('div');
-            structureDeck.className = 'structure-deck-panel';
-
-            try {
-                const checkFileResponse = await fetch(downloadStructureUrl, { method: 'HEAD' });
-                if (checkFileResponse.ok) {
-                    structureDeck.innerHTML = `
-                        <div class="structure-preview-meta">
-                            <img src="${CDNBASESRC}/structure.png" class="structure-img-frame" alt="Structure Frame">
-                            <div>
-                                <div class="structure-label-title">${escapeHtmlEntities(pureBaseName)}.mcstructure</div>
-                                <div class="structure-label-sub">In-Game Block Structure Data</div>
-                            </div>
-                        </div>
-                        <button class="btn" onclick="window.location.href='${downloadStructureUrl}'">Download</button>
-                    `;
-                } else {
-                    throw new Error();
-                }
-            } catch (e) {
-                structureDeck.innerHTML = `
-                    <div class="structure-preview-meta">
-                        <img src="${CDNBASESRC}/structure.png" class="structure-img-frame" style="opacity: 0.3;" alt="">
-                        <div>
-                            <div class="structure-label-title" style="color: var(--text-muted, #71717a);">Structure Unavailable</div>
-                            <div class="structure-label-sub">No matching model structure found for deployment</div>
-                        </div>
-                    </div>
-                    <button class="btn" disabled>Unavailable</button>
-                `;
-            }
-            
-            container.appendChild(structureDeck);
             canvas.appendChild(container);
         }
 
         function routeReturnHomeDashboard() {
             window.location.hash = '';
-            renderGlobalDashboardHomeGrid();
+            renderHomeGrid();
         }
 
-        function copyInlinePayloadRowText(actionButtonNode) {
-            const contentString = actionButtonNode.parentElement.querySelector('.view-cmd-payload-box').innerText;
-            navigator.clipboard.writeText(contentString);
-            actionButtonNode.style.borderColor = '#10b981';
-            actionButtonNode.style.background = 'rgba(16, 185, 129, 0.1)';
-            setTimeout(() => { 
-                actionButtonNode.style.borderColor = ''; 
-                actionButtonNode.style.background = '';
+        function copyShareLink(fileHash, btn) {
+            navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#${fileHash}`);
+            btn.innerText = 'Copied!';
+            setTimeout(() => { btn.innerText = 'Share'; }, 1200);
+        }
+
+        function copyRowPayload(btnNode) {
+            const txt = btnNode.parentElement.querySelector('.view-cmd-payload-box').innerText;
+            navigator.clipboard.writeText(txt);
+            btnNode.style.background = 'var(--success-bg)';
+            btnNode.style.borderColor = 'var(--success-border)';
+            setTimeout(() => {
+                btnNode.style.background = '';
+                btnNode.style.borderColor = '';
             }, 800);
         }
 
-        function escapeHtmlEntities(string) {
-            return string.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
     </script>
 </body>
