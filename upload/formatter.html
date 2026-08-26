@@ -4,7 +4,490 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Command Chain Formatter</title>
-    <link rel="stylesheet" href="../css/nako.css">
+    <style>
+        :root {
+            --bg-color: #0e0e11;
+            --container-bg: #18181f;
+            --input-bg: #0f0f12;
+            --box-bg: #0f0f12;
+            --border-color: #2d2d38;
+            --accent-dark: #663657;
+            --accent-dark-hover: #81456e;
+            --accent-light: #A77A99;
+            --accent-light-hover: #c5a4bc;
+            --text-bright: #ffffff;
+            --text-main: #b4b4bc;
+            --text-muted: #5a5a66;
+            --text-codeblock: #C77E4F;
+            
+            /* Minecraft Block Palette */
+            --mc-impulse: #C77E4F;
+            --mc-chain: #76B297;
+            --mc-repeat: #6A4FC7;
+            --mc-chat: #BFBFBF;
+            --mc-npc: #111111;
+
+            /* Stripe Left Colors */
+            --stripe-header: #ffffff;
+            --stripe-body: #5a5a66;
+            --stripe-note: #d47c34;
+            --stripe-command: #2b8c83;
+            --stripe-link: #3a7bd5;
+            --stripe-img: #10b981;
+            --stripe-embed: #ec4899;
+
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 12px;
+            --space-lg: 16px;
+            --space-xl: 20px;
+            --space-2xl: 24px;
+            --max-width: 950px;
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --radius-lg: 8px;
+            --border-width: 1px;
+            --shadow-deep: 0 6px 16px rgba(0, 0, 0, 0.6);
+            --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.3);
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-move: 0.6s cubic-bezier(0.2, 1, 0.2, 1);
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: var(--space-2xl) var(--space-lg);
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: var(--max-width);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-lg);
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-bright);
+            margin: 0;
+        }
+
+        .meta-card {
+            background: var(--container-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
+            box-shadow: var(--shadow-deep);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .form-row {
+            display: flex;
+            gap: var(--space-sm);
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 150px;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xs);
+        }
+
+        label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-bright);
+            font-weight: 600;
+        }
+
+        .tag-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: var(--space-sm);
+            background: var(--input-bg);
+            padding: var(--space-sm);
+            border-radius: var(--radius-sm);
+            border: var(--border-width) solid var(--border-color);
+        }
+
+        .tag-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: 12px;
+            color: var(--text-main);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .tag-checkbox-label input {
+            margin: 0;
+            width: auto;
+            cursor: pointer;
+        }
+
+        input[type="text"], textarea, select {
+            background: var(--input-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 6px var(--space-sm);
+            color: var(--text-bright);
+            font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+            font-size: 13px;
+            width: 100%;
+            outline: none;
+            transition: border-color var(--transition-fast);
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--accent-light);
+        }
+
+        .controls-toolbar {
+            display: flex;
+            gap: var(--space-sm);
+            flex-wrap: wrap;
+            background: var(--container-bg);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-lg);
+            border: var(--border-width) solid var(--border-color);
+            align-items: center;
+        }
+
+        .group-block {
+            background: var(--container-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+            box-shadow: var(--shadow-soft);
+            position: relative;
+            transition: transform var(--transition-move), box-shadow var(--transition-move), background-color 0.4s ease;
+        }
+
+        .group-block[data-item-type="header"] { border-left: 4px solid var(--stripe-header); }
+        .group-block[data-item-type="text"] { border-left: 4px solid var(--stripe-body); }
+        .group-block[data-item-type="note"] { border-left: 4px solid var(--stripe-note); }
+        .group-block[data-item-type="chain-group"] { border-left: 4px solid var(--stripe-command); }
+        .group-block[data-item-type="link-group"] { border-left: 4px solid var(--stripe-link); }
+        .group-block[data-item-type="img-group"] { border-left: 4px solid var(--stripe-img); }
+        .group-block[data-item-type="embed-group"] { border-left: 4px solid var(--stripe-embed); }
+
+        .block-moving-flash {
+            background-color: rgba(167, 122, 153, 0.1) !important;
+            box-shadow: 0 0 14px rgba(167, 122, 153, 0.3);
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: var(--border-width) solid var(--border-color);
+            padding-bottom: var(--space-xs);
+        }
+
+        .group-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: var(--accent-light);
+        }
+
+        .block-action-cluster {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .connected-chain-stack {
+            display: flex;
+            flex-direction: column;
+            background: var(--input-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+
+        .cmd-row-node {
+            display: flex;
+            flex-direction: column;
+            padding: var(--space-sm);
+            gap: var(--space-sm);
+            border-bottom: var(--border-width) solid var(--border-color);
+            position: relative;
+            padding-left: 36px;
+            transition: transform var(--transition-move), background-color 0.4s ease;
+        }
+
+        .cmd-row-node:last-child { border-bottom: none; }
+
+        .cmd-row-node.color-c { background-color: rgba(118, 178, 151, 0.04); }
+        .cmd-row-node.color-i { background-color: rgba(199, 126, 79, 0.04); }
+        .cmd-row-node.color-r { background-color: rgba(106, 79, 199, 0.04); }
+        .cmd-row-node.color-chat { background-color: rgba(191, 191, 191, 0.04); }
+        .cmd-row-node.color-npc { background-color: rgba(17, 17, 17, 0.2); }
+        .cmd-row-node.cond-border { box-shadow: inset 0 0 0 1px #ffffff; }
+
+        .row-index-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 26px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--mc-chain); 
+            padding: 4px 0;
+        }
+
+        .row-index {
+            font-family: monospace;
+            font-weight: bold;
+            color: var(--text-bright);
+            font-size: 11px;
+            user-select: none;
+        }
+
+        .row-nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-bright);
+            font-size: 9px;
+            cursor: pointer;
+            padding: 2px;
+            line-height: 1;
+            opacity: 0.6;
+            transition: opacity var(--transition-fast);
+            user-select: none;
+        }
+        .row-nav-btn:hover { opacity: 1; }
+
+        .cmd-row-node.color-c .row-index-container { background-color: var(--mc-chain); }
+        .cmd-row-node.color-i .row-index-container { background-color: var(--mc-impulse); }
+        .cmd-row-node.color-r .row-index-container { background-color: var(--mc-repeat); }
+        .cmd-row-node.color-chat .row-index-container { background-color: var(--mc-chat); }
+        .cmd-row-node.color-chat .row-index, .cmd-row-node.color-chat .row-nav-btn { color: #111111; }
+        .cmd-row-node.color-npc .row-index-container { background-color: var(--mc-npc); border-right: 1px solid var(--border-color); }
+
+        .row-controls-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-sm);
+            width: 100%;
+        }
+
+        .inline-selector-set {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+            align-items: center;
+        }
+
+        .inline-selector-set select {
+            padding: 4px var(--space-xs);
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: var(--radius-sm);
+            background: var(--bg-color);
+            height: 28px;
+            width: auto;
+        }
+
+        .inline-selector-set input {
+            width: 32px;
+            text-align: center;
+            padding: 4px var(--space-xs);
+            font-size: 11px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-color);
+            height: 28px;
+        }
+
+        .cmd-input-container {
+            display: flex;
+            width: 100%;
+            gap: var(--space-sm);
+        }
+
+        .cmd-input-field {
+            flex: 1;
+            border: var(--border-width) solid var(--border-color) !important;
+            background: var(--bg-color) !important;
+            padding: 4px var(--space-sm) !important;
+            border-radius: var(--radius-sm);
+            height: 32px;
+        }
+
+        textarea.cmd-input-field {
+            height: 72px;
+            resize: vertical;
+            padding: var(--space-xs) var(--space-sm) !important;
+            line-height: 1.4;
+        }
+
+        .bulk-paste-zone {
+            background: rgba(255, 255, 255, 0.02);
+            border: var(--border-width) dashed var(--border-color);
+            padding: var(--space-sm);
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xs);
+        }
+
+        .bulk-paste-zone textarea { height: 55px; font-size: 12px; }
+
+        .btn {
+            background: var(--accent-dark);
+            border: none;
+            color: var(--text-bright);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            transition: var(--transition-fast);
+        }
+        .btn:hover { background: var(--accent-dark-hover); }
+        .btn:active { transform: scale(0.98); }
+
+        .btn-sm { padding: var(--space-xs) var(--space-sm); font-size: 10px; }
+        .btn-danger { background: #4a2323; }
+        .btn-danger:hover { background: #6e3333; }
+        .btn-secondary { background: var(--box-bg); border: var(--border-width) solid var(--border-color); color: var(--text-main); }
+        .btn-secondary:hover { border-color: var(--accent-light); color: var(--text-bright); }
+
+        .header-type-select {
+            padding: var(--space-xs) var(--space-sm);
+            font-size: 11px;
+            background: var(--box-bg);
+            color: var(--text-bright);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-sm);
+            width: auto;
+        }
+
+        .output-box {
+            background: var(--input-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
+            font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+            color: var(--text-codeblock);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 220px;
+            overflow-y: auto;
+            font-size: 13px;
+        }
+
+        /* Modal Overlay System */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-fast);
+            padding: var(--space-md);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--container-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            max-width: 420px;
+            width: 100%;
+            box-shadow: var(--shadow-deep);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-bright);
+            margin: 0;
+        }
+
+        .modal-body {
+            font-size: 13px;
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: var(--space-sm);
+            justify-content: flex-end;
+            margin-top: var(--space-xs);
+        }
+
+        .footer {
+            margin-top: 32px;
+            padding-bottom: 16px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            width: 100%;
+        }
+        .footer-title { font-size: 12px; color: var(--text-muted); opacity: 0.75; letter-spacing: 0.5px; }
+        .footer-links { display: flex; gap: var(--space-md); flex-wrap: wrap; justify-content: center; }
+        .footer-links a { display: flex; align-items: center; gap: 6px; color: var(--accent-light); text-decoration: none; font-size: 13px; opacity: 0.85; transition: opacity var(--transition-fast), color var(--transition-fast); }
+        .footer-links a:hover { color: var(--accent-light-hover); opacity: 1; }
+        .footer-links img { width: 16px; height: 16px; filter: brightness(0) invert(1) !important; opacity: 0.9; }
+        .footer-links a.kofi { color: #ff5fa2; font-weight: 500; }
+        .footer-links a.kofi:hover { color: #ff8fc0; }
+        .footer-links a.kofi img { width: 20px; height: 20px; filter: brightness(0) invert(1) !important; opacity: 0.95; }
+
+        @media (max-width: 600px) {
+            body { padding: var(--space-lg) var(--space-sm); }
+        }
+    </style>
 </head>
 <body>
 
@@ -94,6 +577,15 @@
                     <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/kofi-icon.png" alt="Ko-fi"> Support me on Ko-fi
                 </a>
             </div>
+        </div>
+    </div>
+
+    <!-- Reusable Confirmation / Info Modal -->
+    <div id="app-modal-overlay" class="modal-overlay">
+        <div class="modal-card">
+            <h3 id="modal-title" class="modal-title">Notice</h3>
+            <div id="modal-body" class="modal-body">Modal body text goes here.</div>
+            <div id="modal-actions" class="modal-actions"></div>
         </div>
     </div>
 
@@ -497,17 +989,125 @@
             document.getElementById('raw-string-output').innerText = sections.join('\n\n');
         }
 
-        async function uploadContent() {
+        /* Modal Helper Utility */
+        function displayModal({ title, message, actions }) {
+            const overlay = document.getElementById('app-modal-overlay');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const modalActions = document.getElementById('modal-actions');
+
+            modalTitle.innerText = title;
+            modalBody.innerText = message;
+            modalActions.innerHTML = '';
+
+            actions.forEach(act => {
+                const btn = document.createElement('button');
+                btn.className = `btn ${act.class || ''}`;
+                btn.innerText = act.label;
+                btn.onclick = () => {
+                    hideModal();
+                    if (act.onClick) act.onClick();
+                };
+                modalActions.appendChild(btn);
+            });
+
+            overlay.classList.add('active');
+        }
+
+        function hideModal() {
+            document.getElementById('app-modal-overlay').classList.remove('active');
+        }
+
+        /* UPLOAD FLOW LOGIC */
+        function uploadContent() {
+            const creditField = document.getElementById('meta-credit');
+            const currentCredit = creditField.value.trim();
+
+            if (currentCredit === 'Nako Hikari') {
+                // Step 2: Unchanged Credit Warning
+                displayModal({
+                    title: 'Credit is still unchanged',
+                    message: 'Your credit is still set to Nako Hikari. Continuing will result in this creation being credited to Nako Hikari.',
+                    actions: [
+                        {
+                            label: 'Change credit',
+                            class: 'btn-secondary',
+                            onClick: () => {
+                                creditField.focus();
+                            }
+                        },
+                        {
+                            label: 'Proceed',
+                            onClick: () => {
+                                showGeneralConfirmation();
+                            }
+                        }
+                    ]
+                });
+            } else {
+                showGeneralConfirmation();
+            }
+        }
+
+        function showGeneralConfirmation() {
+            // Step 3: General Confirmation
+            displayModal({
+                title: 'Confirm Upload',
+                message: 'Make sure everything is correct before uploading. You will not be able to edit the submission after uploading.',
+                actions: [
+                    {
+                        label: 'Let me check',
+                        class: 'btn-secondary'
+                    },
+                    {
+                        label: 'Upload',
+                        onClick: () => {
+                            executeUploadRequest();
+                        }
+                    }
+                ]
+            });
+        }
+
+        async function executeUploadRequest() {
+            const outputText = document.getElementById('raw-string-output').innerText;
+            const creditVal = document.getElementById('meta-credit').value.trim() || 'Nako Hikari';
+
             try {
                 const response = await fetch("/api/upload", {
-                    method: "POST"
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        content: outputText,
+                        author: creditVal
+                    })
                 });
+
+                if (!response.ok) {
+                    throw new Error(`Server returned HTTP status ${response.status}`);
+                }
 
                 const result = await response.json();
 
-                alert(result.message || result.error);
+                // Step 4: Success Modal
+                displayModal({
+                    title: 'Upload Successful',
+                    message: 'Command creation is on review and will show on the main page after approval.',
+                    actions: [
+                        { label: 'OK' }
+                    ]
+                });
             } catch (error) {
-                alert("Upload failed: " + error.message);
+                // Step 5: Failure Error Modal
+                displayModal({
+                    title: 'Upload Failed',
+                    message: 'Upload failed: ' + error.message,
+                    actions: [
+                        { label: 'Close', class: 'btn-danger' }
+                    ]
+                });
             }
         }
 
