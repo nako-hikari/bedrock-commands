@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Command Submissions</title>
 
     <style>
@@ -81,16 +80,13 @@
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 12px;
-
             white-space: pre-wrap;
             word-break: break-word;
-
             font-family:
                 ui-monospace,
                 "SF Mono",
                 "JetBrains Mono",
                 monospace;
-
             color: #c77e4f;
             font-size: 13px;
             line-height: 1.5;
@@ -106,14 +102,11 @@
             border: none;
             border-radius: 4px;
             padding: 8px 14px;
-
             color: white;
             background: var(--accent);
-
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
-
             cursor: pointer;
         }
 
@@ -257,12 +250,16 @@ async function loadSubmissions() {
             card.querySelector(".approve-btn")
                 .addEventListener("click", async () => {
 
-                    const button =
+                    const approveButton =
                         card.querySelector(".approve-btn");
 
-                    button.disabled = true;
+                    const rejectButton =
+                        card.querySelector(".reject-btn");
 
-                    button.textContent =
+                    approveButton.disabled = true;
+                    rejectButton.disabled = true;
+
+                    approveButton.textContent =
                         "APPROVING...";
 
                     try {
@@ -295,11 +292,6 @@ async function loadSubmissions() {
                             );
                         }
 
-                        /*
-                         * Remove the card from
-                         * the admin page after success.
-                         */
-
                         card.remove();
 
                     } catch (error) {
@@ -309,9 +301,10 @@ async function loadSubmissions() {
                             error.message
                         );
 
-                        button.disabled = false;
+                        approveButton.disabled = false;
+                        rejectButton.disabled = false;
 
-                        button.textContent =
+                        approveButton.textContent =
                             "APPROVE";
                     }
 
@@ -320,16 +313,77 @@ async function loadSubmissions() {
 
             /*
              * REJECT
-             *
-             * Not connected yet.
              */
 
             card.querySelector(".reject-btn")
-                .addEventListener("click", () => {
+                .addEventListener("click", async () => {
 
-                    alert(
-                        "Reject system isn't connected yet."
-                    );
+                    const approveButton =
+                        card.querySelector(".approve-btn");
+
+                    const rejectButton =
+                        card.querySelector(".reject-btn");
+
+                    const confirmed =
+                        confirm(
+                            "Reject this command submission?"
+                        );
+
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    approveButton.disabled = true;
+                    rejectButton.disabled = true;
+
+                    rejectButton.textContent =
+                        "REJECTING...";
+
+                    try {
+
+                        const response =
+                            await fetch("/api/reject", {
+
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body: JSON.stringify({
+                                    filename:
+                                        submission.filename
+                                })
+                            });
+
+                        const result =
+                            await response.json();
+
+                        if (!response.ok) {
+
+                            throw new Error(
+                                result.details ||
+                                result.error ||
+                                "Rejection failed"
+                            );
+                        }
+
+                        card.remove();
+
+                    } catch (error) {
+
+                        alert(
+                            "Rejection failed: " +
+                            error.message
+                        );
+
+                        approveButton.disabled = false;
+                        rejectButton.disabled = false;
+
+                        rejectButton.textContent =
+                            "REJECT";
+                    }
 
                 });
 
@@ -349,11 +403,6 @@ async function loadSubmissions() {
 }
 
 
-/*
- * Prevent submission content from
- * being interpreted as HTML.
- */
-
 function escapeHtml(value) {
 
     const div =
@@ -365,10 +414,6 @@ function escapeHtml(value) {
     return div.innerHTML;
 }
 
-
-/*
- * Load submissions when page opens.
- */
 
 loadSubmissions();
 
