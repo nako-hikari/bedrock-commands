@@ -45,6 +45,29 @@
             font-style: italic;
             line-height: 1.4;
         }
+        .grid-card-credit {
+            font-size: 12px;
+            color: var(--accent-light);
+            font-weight: 600;
+        }
+        /* Force the page to lay out from the top instead of vertically
+           centering short content, so the header never drifts down. */
+        html, body {
+            min-height: 100vh;
+            height: auto !important;
+        }
+        body {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            align-items: stretch !important;
+        }
+        .wrapper header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: var(--bg-color);
+        }
     </style>
 </head>
 <body>
@@ -101,6 +124,27 @@
 
         let db = [];
 
+        // Matches a metadata line like "TITLE:", "credit :", "Tag:" — tolerant
+        // of case and stray whitespace before the colon. Returns the trimmed
+        // value if the line matches `key`, otherwise null.
+        function matchMeta(ln, key) {
+            const re = new RegExp('^\\s*' + key + '\\s*:', 'i');
+            return re.test(ln) ? ln.replace(re, '').trim() : null;
+        }
+
+        // Scans every line of a creation file (not just the first paragraph,
+        // since fields like CREDIT/TITLE/TAG can be split across separate
+        // blank-line-delimited blocks) and pulls out the recognized metadata.
+        function extractMeta(txt, target) {
+            txt.split('\n').forEach(ln => {
+                let v;
+                if ((v = matchMeta(ln, 'TITLE')) !== null) target.title = v;
+                if ((v = matchMeta(ln, 'DESC')) !== null) target.desc = v;
+                if ((v = matchMeta(ln, 'TAG')) !== null) target.tags = v.split(',').map(t => t.trim());
+                if ((v = matchMeta(ln, 'CREDIT')) !== null) target.credit = v;
+            });
+        }
+
         window.addEventListener('DOMContentLoaded', initApp);
         window.addEventListener('hashchange', route);
 
@@ -123,19 +167,15 @@
                         const txt = await rawRes.text();
                         
                         let label = f.name.replace('.txt', '').replace(/_/g, ' ');
-                        let title = label.charAt(0).toUpperCase() + label.slice(1);
-                        let desc = "No descriptor statement declared in source file.";
-                        let tags = [];
-                        let credit = null;
+                        let entry = {
+                            title: label.charAt(0).toUpperCase() + label.slice(1),
+                            desc: "No descriptor statement declared in source file.",
+                            tags: [],
+                            credit: null
+                        };
+                        extractMeta(txt, entry);
 
-                        txt.split('\n\n')[0].split('\n').forEach(ln => {
-                            if (ln.startsWith('TITLE:')) title = ln.replace('TITLE:', '').trim();
-                            if (ln.startsWith('DESC:')) desc = ln.replace('DESC:', '').trim();
-                            if (ln.startsWith('TAG:')) tags = ln.replace('TAG:', '').split(',').map(t => t.trim());
-                            if (ln.startsWith('CREDIT:')) credit = ln.replace('CREDIT:', '').trim();
-                        });
-
-                        return { file: f.name, title, desc, tags, credit, payload: txt };
+                        return { file: f.name, title: entry.title, desc: entry.desc, tags: entry.tags, credit: entry.credit, payload: txt };
                     } catch {
                         let label = f.name.replace('.txt', '');
                         return { file: f.name, title: label.charAt(0).toUpperCase() + label.slice(1), desc: "Failed to download asset.", tags: [], credit: null, payload: null };
@@ -175,12 +215,7 @@
                 if (!res.ok) throw '';
                 item.payload = await res.text();
                 
-                item.payload.split('\n\n')[0].split('\n').forEach(ln => {
-                    if (ln.startsWith('TITLE:')) item.title = ln.replace('TITLE:', '').trim();
-                    if (ln.startsWith('DESC:')) item.desc = ln.replace('DESC:', '').trim();
-                    if (ln.startsWith('TAG:')) item.tags = ln.replace('TAG:', '').split(',').map(t => t.trim());
-                    if (ln.startsWith('CREDIT:')) item.credit = ln.replace('CREDIT:', '').trim();
-                });
+                extractMeta(item.payload, item);
                 document.getElementById('app-display-header').innerText = item.title;
                 renderView(item);
             } catch {
@@ -221,8 +256,11 @@
                 
                 let pills = item.tags.map(t => `<span style="background: #0f0f12; border: 1px solid var(--border-color); color: var(--accent-light); padding: 2px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; text-transform: uppercase;">${escape(t)}</span>`).join(' ');
 
+                const creditName = item.credit ? item.credit : 'Nako Hikari';
+
                 card.innerHTML = `
                     <div style="font-size: 15px; font-weight: bold; color: var(--text-bright);">${escape(item.title)}</div>
+                    <div class="grid-card-credit">By ${escape(creditName)}</div>
                     <div style="font-size: 13px; color: var(--text-main); flex: 1; ${item.payload ? '' : 'color: var(--accent-light);'}">${escape(item.desc)}</div>
                     <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">${pills}</div>
                 `;
@@ -271,19 +309,24 @@
             canvas.innerHTML = ''; 
 
             const isExternalAuthor = !isNakoAuthor(item.credit);
+            const creditDisplayName = item.credit ? item.credit : 'Nako Hikari';
             const bottomCreditContainer = document.getElementById('bottom-author-credit');
             const footerBrand = document.getElementById('footer-brand');
 
-            if (isExternalAuthor && item.credit) {
+            if (isExternalAuthor) {
                 bottomCreditContainer.innerHTML = `
                     <div class="author-credit-bar with-disclaimer">
-                        <span>Creation by ${escape(item.credit)}</span>
+                        <span>Creation by ${escape(creditDisplayName)}</span>
                         <span class="author-credit-disclaimer">I do not own this creation, all rights and ownership belong to the credited name.<br>If you own the command and think someone publish it with their name, contact me to straight things out</span>
                     </div>
                 `;
                 if (footerBrand) footerBrand.classList.add('dimmed');
             } else {
-                bottomCreditContainer.innerHTML = '';
+                bottomCreditContainer.innerHTML = `
+                    <div class="author-credit-bar">
+                        <span>Creation by ${escape(creditDisplayName)}</span>
+                    </div>
+                `;
                 if (footerBrand) footerBrand.classList.remove('dimmed');
             }
 
@@ -291,12 +334,10 @@
             mainCard.className = 'card';
             mainCard.style.cssText = 'padding: 16px; display: block; width: 100%; box-sizing: border-box;';
 
-            if (isExternalAuthor && item.credit) {
-                const topCreditBar = document.createElement('div');
-                topCreditBar.className = 'author-credit-bar';
-                topCreditBar.innerHTML = `<span>Creation by ${escape(item.credit)}</span>`;
-                mainCard.appendChild(topCreditBar);
-            }
+            const topCreditBar = document.createElement('div');
+            topCreditBar.className = 'author-credit-bar';
+            topCreditBar.innerHTML = `<span>Creation by ${escape(creditDisplayName)}</span>`;
+            mainCard.appendChild(topCreditBar);
 
             let topRow = document.createElement('div');
             topRow.style.cssText = 'display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px;';
@@ -354,24 +395,30 @@
 
                 const head = lines[0].trim();
 
-                if (head.startsWith('TITLE:')) {
+                let v;
+
+                if ((v = matchMeta(head, 'TITLE')) !== null) {
                     const headerEl = document.getElementById('app-display-header');
-                    if (headerEl) headerEl.innerText = head.replace('TITLE:', '').trim();
+                    if (headerEl) headerEl.innerText = v;
                 } 
-                else if (head.startsWith('DESC:')) {
+                else if ((v = matchMeta(head, 'DESC')) !== null) {
                     let d = document.createElement('div');
                     d.style.cssText = 'font-size: 14px; color: var(--text-main);';
-                    d.innerText = head.replace('DESC:', '').trim();
+                    d.innerText = v;
                     meta.appendChild(d);
                 } 
-                else if (head.startsWith('TAG:')) {
-                    head.replace('TAG:', '').split(',').forEach(t => {
+                else if ((v = matchMeta(head, 'TAG')) !== null) {
+                    v.split(',').forEach(t => {
                         let pill = document.createElement('span');
                         let isFlipTag = t.trim().toLowerCase() === 'flip';
                         pill.style.cssText = `background: ${isFlipTag ? '#4a2323' : '#0f0f12'}; border: 1px solid ${isFlipTag ? '#6e3333' : 'var(--border-color)'}; color: ${isFlipTag ? '#ff8fc0' : 'var(--accent-light)'}; padding: 2px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; text-transform: uppercase;`;
                         pill.innerText = t.trim();
                         tagBox.appendChild(pill);
                     });
+                }
+                else if (matchMeta(head, 'CREDIT') !== null) {
+                    // Already applied via extractMeta() before this render; a
+                    // CREDIT line in the body is metadata, not content, so skip it.
                 }
                 else if (/^H[1-5]:/.test(head)) {
                     currentChain = null;
@@ -397,50 +444,68 @@
                 }
                 else if (head.startsWith('CMD:NPC') || head.startsWith('CMD:CHAT')) {
                     currentChain = null;
-                    const isNpc = head.startsWith('CMD:NPC');
 
-                    let npcRow = document.createElement('div');
-                    npcRow.style.cssText = 'background: #0f0f12; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; display: flex; gap: 8px; align-items: center; margin: 8px 0; min-height: 40px; width: 100%; box-sizing: border-box;';
+                    // A segment can contain several CMD:NPC / CMD:CHAT headers back to
+                    // back with no blank line between them. Split into one independent
+                    // block per header instead of dumping everything into one box.
+                    let blocks = [];
+                    let curBlock = null;
+                    lines.forEach(ln => {
+                        const t = ln.trim();
+                        if (t.startsWith('CMD:NPC') || t.startsWith('CMD:CHAT')) {
+                            curBlock = { isNpc: t.startsWith('CMD:NPC'), payload: [] };
+                            blocks.push(curBlock);
+                        } else if (curBlock) {
+                            curBlock.payload.push(ln);
+                        }
+                    });
 
-                    let img = document.createElement('img');
-                    img.style.cssText = 'width: 32px; height: 32px; object-fit: contain; image-rendering: pixelated;';
-                    img.src = isNpc ? `${ASSETS}/npc.png` : `${ASSETS}/chat.png`;
+                    blocks.forEach((blk, blkIdx) => {
+                        const isNpc = blk.isNpc;
 
-                    let idx = document.createElement('div');
-                    idx.style.cssText = 'font-family: monospace; font-weight: bold; width: 22px; text-align: center; color: var(--text-main); font-size: 12px;';
-                    idx.innerText = '1';
+                        let npcRow = document.createElement('div');
+                        npcRow.style.cssText = 'background: #0f0f12; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; display: flex; gap: 8px; align-items: center; margin: 8px 0; min-height: 40px; width: 100%; box-sizing: border-box;';
 
-                    let block = document.createElement('div');
-                    block.className = 'output-box';
-                    block.style.cssText = 'flex: 1; font-family: monospace; background: var(--bg-color); border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; font-size: 12.5px; overflow-x: hidden; min-width: 0; scrollbar-width: none;';
-                    block.style.setProperty('-ms-overflow-style', 'none');
+                        let img = document.createElement('img');
+                        img.style.cssText = 'width: 32px; height: 32px; object-fit: contain; image-rendering: pixelated;';
+                        img.src = isNpc ? `${ASSETS}/npc.png` : `${ASSETS}/chat.png`;
 
-                    const rawLinesPayload = lines.slice(1);
-                    block.innerHTML = buildCodeWithLineNumbers(rawLinesPayload, true);
+                        let idx = document.createElement('div');
+                        idx.style.cssText = 'font-family: monospace; font-weight: bold; width: 22px; text-align: center; color: var(--text-main); font-size: 12px;';
+                        idx.innerText = blocks.length > 1 ? (blkIdx + 1) : '1';
 
-                    let copy = document.createElement('button');
-                    copy.className = 'secondary interactive';
-                    copy.style.cssText = 'width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0;';
-                    copy.innerHTML = `<img src="${ASSETS}/copy.png" style="width: 16px; height: 16px; image-rendering: pixelated;" alt="Copy">`;
-                    copy.onclick = () => {
-                        navigator.clipboard.writeText(rawLinesPayload.join('\n'));
-                        copy.classList.add('copy-success');
-                        setTimeout(() => { copy.classList.remove('copy-success'); }, 800);
-                    };
+                        let block = document.createElement('div');
+                        block.className = 'output-box';
+                        block.style.cssText = 'flex: 1; font-family: monospace; background: var(--bg-color); border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; font-size: 12.5px; overflow-x: hidden; min-width: 0; scrollbar-width: none;';
+                        block.style.setProperty('-ms-overflow-style', 'none');
 
-                    npcRow.appendChild(idx);
-                    npcRow.appendChild(img);
-                    npcRow.appendChild(block);
-                    npcRow.appendChild(copy);
-                    contentFlow.appendChild(npcRow);
+                        const rawLinesPayload = blk.payload;
+                        block.innerHTML = buildCodeWithLineNumbers(rawLinesPayload, true);
 
-                    if (isNpc) {
-                        let linkTag = document.createElement('div');
-                        linkTag.style.cssText = 'font-family: monospace; font-size: 11px; color: var(--text-main); text-align: center; cursor: pointer; user-select: none; margin-top: -4px; margin-bottom: 12px;';
-                        linkTag.innerText = '--- click here to know how to use NPC as setup ---';
-                        linkTag.onclick = () => { window.location.href = 'npc-setup.html'; };
-                        contentFlow.appendChild(linkTag);
-                    }
+                        let copy = document.createElement('button');
+                        copy.className = 'secondary interactive';
+                        copy.style.cssText = 'width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0;';
+                        copy.innerHTML = `<img src="${ASSETS}/copy.png" style="width: 16px; height: 16px; image-rendering: pixelated;" alt="Copy">`;
+                        copy.onclick = () => {
+                            navigator.clipboard.writeText(rawLinesPayload.join('\n'));
+                            copy.classList.add('copy-success');
+                            setTimeout(() => { copy.classList.remove('copy-success'); }, 800);
+                        };
+
+                        npcRow.appendChild(idx);
+                        npcRow.appendChild(img);
+                        npcRow.appendChild(block);
+                        npcRow.appendChild(copy);
+                        contentFlow.appendChild(npcRow);
+
+                        if (isNpc) {
+                            let linkTag = document.createElement('div');
+                            linkTag.style.cssText = 'font-family: monospace; font-size: 11px; color: var(--text-main); text-align: center; cursor: pointer; user-select: none; margin-top: -4px; margin-bottom: 12px;';
+                            linkTag.innerText = '--- click here to know how to use NPC as setup ---';
+                            linkTag.onclick = () => { window.location.href = 'npc-setup.html'; };
+                            contentFlow.appendChild(linkTag);
+                        }
+                    });
                 }
                 else if (head.startsWith('CMD:')) {
                     if (!currentChain) {
