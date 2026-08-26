@@ -5,14 +5,28 @@ export default async function handler(req, res) {
         });
     }
 
-    // Check admin key
-    const adminKey = req.headers["x-admin-key"];
+const cookies = req.headers.cookie || "";
 
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-        return res.status(401).json({
-            error: "Unauthorized"
-        });
-    }
+const match = cookies.match(
+    /(?:^|;\s*)admin_session=([^;]+)/
+);
+
+if (!match) {
+    return res.status(401).json({
+        error: "Unauthorized"
+    });
+}
+
+const expected = crypto
+    .createHmac("sha256", process.env.ADMIN_SESSION_SECRET)
+    .update("nako-admin-session")
+    .digest("hex");
+
+if (match[1] !== expected) {
+    return res.status(401).json({
+        error: "Unauthorized"
+    });
+}
 
     try {
         const { filename } = req.body || {};
