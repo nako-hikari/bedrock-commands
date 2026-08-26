@@ -505,50 +505,65 @@
     </div>
 
     <script>
-        const COMMAND_FILES = [
-            "something.txt",
-            "test.txt",
-            "throw-tnt.txt",
-            "yet-to-finish.txt"
-        ];
+        const GITHUB_API_URL = "https://api.github.com/repos/nako-hikari/minecraft-bedrock/contents/bedrock-commands";
+        const RAW_BASE_URL = "https://raw.githubusercontent.com/nako-hikari/minecraft-bedrock/main/bedrock-commands";
+        const CDNBASESRC = "https://raw.githubusercontent.com/nako-hikari/nako-hikari.github.io/main/assets/images";
 
         let cachedParsedIndexDataset = [];
-        const CDNBASESRC = "https://raw.githubusercontent.com/nako-hikari/nako-hikari.github.io/main/assets/images";
 
         window.addEventListener('DOMContentLoaded', initializeApp);
         window.addEventListener('hashchange', readLocationHashRouteToken);
 
         async function initializeApp() {
-            const fetchPromises = COMMAND_FILES.map(async (fileName) => {
-                try {
-                    const res = await fetch(`commands/${fileName}`);
-                    if (!res.ok) throw new Error();
-                    const data = await res.text();
+            try {
+                const res = await fetch(GITHUB_API_URL);
+                if (!res.ok) throw new Error();
+                
+                const files = await res.json();
+                const txtFiles = files.filter(f => f.type === 'file' && f.name.endsWith('.txt'));
 
-                    let cleanName = fileName.substring(0, fileName.lastIndexOf('.')).replace(/_/g, ' ');
-                    let title = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
-                    let desc = "No descriptor statement declared.";
-                    let tags = [];
-                    let credit = null;
+                const fetchPromises = txtFiles.map(async (fileObj) => {
+                    try {
+                        const rawRes = await fetch(`${RAW_BASE_URL}/${fileObj.name}`);
+                        if (!rawRes.ok) return null;
+                        
+                        const data = await rawRes.text();
 
-                    const segments = data.split('\n\n');
-                    if (segments[0]) {
-                        segments[0].split('\n').forEach(line => {
-                            if (line.startsWith('TITLE:')) title = line.replace('TITLE:', '').trim();
-                            if (line.startsWith('DESC:')) desc = line.replace('DESC:', '').trim();
-                            if (line.startsWith('TAG:')) tags = line.replace('TAG:', '').split(',').map(t => t.trim());
-                            if (line.startsWith('CREDIT:')) credit = line.replace('CREDIT:', '').trim();
-                        });
+                        let cleanName = fileObj.name.substring(0, fileObj.name.lastIndexOf('.')).replace(/_/g, ' ');
+                        let title = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+                        let desc = "No descriptor statement declared.";
+                        let tags = [];
+                        let credit = null;
+
+                        const segments = data.split('\n\n');
+                        if (segments[0]) {
+                            segments[0].split('\n').forEach(line => {
+                                if (line.startsWith('TITLE:')) title = line.replace('TITLE:', '').trim();
+                                if (line.startsWith('DESC:')) desc = line.replace('DESC:', '').trim();
+                                if (line.startsWith('TAG:')) tags = line.replace('TAG:', '').split(',').map(t => t.trim());
+                                if (line.startsWith('CREDIT:')) credit = line.replace('CREDIT:', '').trim();
+                            });
+                        }
+
+                        return { 
+                            file: fileObj.name, 
+                            parsedTitle: title, 
+                            parsedDesc: desc, 
+                            parsedTags: tags, 
+                            parsedCredit: credit, 
+                            rawPayload: data 
+                        };
+                    } catch {
+                        return null;
                     }
+                });
 
-                    return { file: fileName, parsedTitle: title, parsedDesc: desc, parsedTags: tags, parsedCredit: credit, rawPayload: data };
-                } catch {
-                    let cleanName = fileName.substring(0, fileName.lastIndexOf('.'));
-                    return { file: fileName, parsedTitle: cleanName, parsedDesc: "Failed to download asset.", parsedTags: [], parsedCredit: null, rawPayload: null };
-                }
-            });
+                const results = await Promise.all(fetchPromises);
+                cachedParsedIndexDataset = results.filter(item => item !== null);
+            } catch {
+                cachedParsedIndexDataset = [];
+            }
 
-            cachedParsedIndexDataset = await Promise.all(fetchPromises);
             readLocationHashRouteToken();
         }
 
@@ -598,7 +613,7 @@
                 card.className = 'creation-card';
                 card.onclick = () => { window.location.hash = encodeURIComponent(item.file); };
 
-                let tagPillsStr = item.parsedTags.map(t => `<span class="tag-pill">${t}</span>`).join(' ');
+                let tagPillsStr = item.parsedTags.map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join(' ');
                 card.innerHTML = `
                     <div class="card-title">${escapeHtml(item.parsedTitle)}</div>
                     <div class="card-desc">${escapeHtml(item.parsedDesc)}</div>
