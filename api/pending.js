@@ -1,3 +1,4 @@
+import crypto from "crypto";
 export default async function handler(req, res) {
     if (req.method !== "GET") {
         return res.status(405).json({
@@ -5,6 +6,29 @@ export default async function handler(req, res) {
         });
     }
 
+    const cookies = req.headers.cookie || "";
+
+const match = cookies.match(
+    /(?:^|;\s*)admin_session=([^;]+)/
+);
+
+if (!match) {
+    return res.status(401).json({
+        error: "Unauthorized"
+    });
+}
+
+const expected = crypto
+    .createHmac("sha256", process.env.ADMIN_SESSION_SECRET)
+    .update("nako-admin-session")
+    .digest("hex");
+
+if (match[1] !== expected) {
+    return res.status(401).json({
+        error: "Unauthorized"
+    });
+}
+    
     try {
         const token = process.env.GITHUB_TOKEN;
 
