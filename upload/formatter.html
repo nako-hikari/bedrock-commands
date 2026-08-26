@@ -101,7 +101,6 @@
         const canvas = document.getElementById('builder-canvas');
         const creditInput = document.getElementById('meta-credit');
 
-        // Credit default behavior handlers
         creditInput.addEventListener('focus', () => {
             if (creditInput.value === 'Nako Hikari') {
                 creditInput.value = '';
@@ -498,19 +497,19 @@
             document.getElementById('raw-string-output').innerText = sections.join('\n\n');
         }
 
-async function uploadContent() {
-    try {
-        const response = await fetch("/api/upload", {
-            method: "POST"
-        });
+        async function uploadContent() {
+            try {
+                const response = await fetch("/api/upload", {
+                    method: "POST"
+                });
 
-        const result = await response.json();
+                const result = await response.json();
 
-        alert(result.message || result.error);
-    } catch (error) {
-        alert("Upload failed: " + error.message);
-    }
-}
+                alert(result.message || result.error);
+            } catch (error) {
+                alert("Upload failed: " + error.message);
+            }
+        }
 
         function exportAsTxtFile() {
             const rawText = document.getElementById('raw-string-output').innerText;
