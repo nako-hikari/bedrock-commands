@@ -284,9 +284,19 @@
 
         function parseMd(str) {
             let out = escape(str);
-            out = out.replace(/\[link\]\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color: var(--accent-light); text-decoration: none;">$1</a>');
+            // Image: [img](url)
             out = out.replace(/\[img\]\((.*?)\)/g, '<img src="$1" style="max-width: 100%; height: auto; display: block; border-radius: 4px; margin: 8px 0;" alt="Asset">');
+            // Legacy explicit link syntax: [link][Label](url)
+            out = out.replace(/\[link\]\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color: var(--accent-light); text-decoration: none;">$1</a>');
+            // Standard markdown link: [Label](url) — runs after [img]/[link] are
+            // already consumed above, so it won't collide with those.
+            out = out.replace(/\[([^\[\]]+?)\]\((https?:\/\/[^\s)]+?)\)/g, '<a href="$2" target="_blank" style="color: var(--accent-light); text-decoration: none;">$1</a>');
             return out;
+        }
+
+        function extractYouTubeId(url) {
+            const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+            return m ? m[1] : null;
         }
 
         function buildCodeWithLineNumbers(linesArray, isNpc = false) {
@@ -428,19 +438,36 @@
                     h.innerText = head.replace(/^H[1-5]:/, '').trim();
                     contentFlow.appendChild(h);
                 }
-                else if (head.startsWith('TEXT:')) {
+                else if ((v = matchMeta(head, 'TEXT')) !== null) {
                     currentChain = null;
                     let p = document.createElement('p');
                     p.style.cssText = 'font-size: 14px; color: var(--text-main); line-height: 1.5; margin: 0;';
-                    p.innerHTML = parseMd(head.replace('TEXT:', '').trim());
+                    const bodyLines = [v, ...lines.slice(1)];
+                    p.innerHTML = bodyLines.map(l => parseMd(l)).join('<br>');
                     contentFlow.appendChild(p);
                 }
-                else if (head.startsWith('NOTE:')) {
+                else if ((v = matchMeta(head, 'NOTE')) !== null) {
                     currentChain = null;
                     let n = document.createElement('p');
                     n.style.cssText = 'font-style: italic; color: var(--text-main); padding-left: 8px; border-left: 2px solid var(--border-color); margin: 0;';
-                    n.innerHTML = parseMd(head.replace('NOTE:', '').trim());
+                    const bodyLines = [v, ...lines.slice(1)];
+                    n.innerHTML = bodyLines.map(l => parseMd(l)).join('<br>');
                     contentFlow.appendChild(n);
+                }
+                else if ((v = matchMeta(head, 'VIDEO')) !== null || (v = matchMeta(head, 'YOUTUBE')) !== null) {
+                    currentChain = null;
+                    const ytId = extractYouTubeId(v.trim());
+                    if (ytId) {
+                        let wrap = document.createElement('div');
+                        wrap.style.cssText = 'position: relative; width: 100%; padding-top: 56.25%; border-radius: 8px; overflow: hidden; margin: 8px 0; background: #000;';
+                        wrap.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${ytId}" title="YouTube video" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>`;
+                        contentFlow.appendChild(wrap);
+                    } else {
+                        let p = document.createElement('p');
+                        p.style.cssText = 'font-size: 14px; color: var(--text-main); line-height: 1.5; margin: 0;';
+                        p.innerHTML = parseMd(`[Watch video](${v.trim()})`);
+                        contentFlow.appendChild(p);
+                    }
                 }
                 else if (head.startsWith('CMD:NPC') || head.startsWith('CMD:CHAT')) {
                     currentChain = null;
@@ -601,6 +628,17 @@
                         row.appendChild(copyBtn);
                         currentChain.appendChild(row);
                     }
+                }
+                else {
+                    // No recognized header matched this paragraph. Rather than
+                    // silently dropping it, render it as plain text so stray
+                    // content (including bare [img](url) / [Label](url)
+                    // markdown not wrapped in a TEXT:/NOTE: block) still shows.
+                    currentChain = null;
+                    let p = document.createElement('p');
+                    p.style.cssText = 'font-size: 14px; color: var(--text-main); line-height: 1.5; margin: 0;';
+                    p.innerHTML = lines.map(l => parseMd(l)).join('<br>');
+                    contentFlow.appendChild(p);
                 }
             });
 
