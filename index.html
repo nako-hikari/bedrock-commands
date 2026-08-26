@@ -4,484 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Command Block Creation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/nako-hikari/support-files@main/css/nako.css">
     <style>
-        :root {
-            color-scheme: light dark;
-
-            /* Nako-Default-Purple Color Palette */
-            --bg-color: #0e0e11;
-            --container-bg: #18181f;
-            --input-bg: #0f0f12;
-            --box-bg: #0f0f12;
-            --border-color: #2d2d38;
-            --accent-dark: #663657;
-            --accent-dark-hover: #81456e;
-            --accent-light: #A77A99;
-            --accent-light-hover: #c5a4bc;
-
-            /* Unused color tokens */
-            --accent-dark2: #4a2340;
-            --accent-dark-hover2: #5e2f52;  
-            --accent-light2: #8b5fa3;
-            --accent-light-hover2: #a67bc0; 
-            --primary: #8b5fa3;
-            --primary-hover: #a67bc0;
-            --secondary: #4a2340;
-            --secondary-hover: #5e2f52;
-
-            /* Typography */
-            --text-bright: #ffffff;
-            --text-main: #b4b4bc;
-            --text-muted: #5a5a66;
-            --text-codeblock: #C77E4F;
-            --text-clickable-link: #52BBE8;
-            --text-pale-purple: #9575cd;
-
-            /* Alert / Dangerous */
-            --red: #e05c5c;
-            --red-pale: #241616;
-            
-            /* Green Note Tokens */
-            --green: #4fbc75;
-            --green-pale: #132118;
-
-            /* Yellow Note Tokens */
-            --yellow: #dfb142;
-            --yellow-pale: #242014;
-
-            /* Extra Feedback Utility Elements */
-            --success-bg: #2a4f32;
-            --success-border: #3b6e47;
-            --impulse: #C77E4F;
-            --impulse-pale: #261b14;
-            --chain: #76B297;
-            --chain-pale: #18221e;
-            --repeat: #6A4FC7;
-            --repeat-pale: #171424;
-
-            /* Spacing & Layout Scale */
-            --space-xs: 4px;
-            --space-sm: 8px;
-            --space-md: 12px;
-            --space-lg: 16px;
-            --space-xl: 20px;
-            --space-2xl: 24px;
-            --max-width: 900px;
-
-            /* Borders & Depth Elevation */
-            --radius-sm: 4px;
-            --radius-md: 6px;
-            --radius-lg: 8px;
-            --border-width: 1px;
-            --shadow-deep: 0 6px 16px rgba(0, 0, 0, 0.6);
-            --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.3);
-
-            /* Animation & Transitions */
-            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-normal: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        img {
-            color-scheme: only light !important;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            line-height: 1.5;
-            margin: 0;
-            padding: var(--space-2xl) var(--space-lg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding: var(--space-lg) var(--space-sm);
-            }
-        }
-
-        .wrapper {
-            width: 100%;
-            max-width: var(--max-width);
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-xl);
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: var(--border-width) solid var(--border-color);
-            padding-bottom: var(--space-md);
-        }
-
-        .title-block {
-            display: flex;
-            align-items: center;
-            gap: var(--space-md);
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            line-height: 1.3;
-            color: var(--text-bright);
-            margin: 0;
-            cursor: pointer;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-        }
-
-        .upload-btn-link {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            background: var(--box-bg);
-            border: var(--border-width) solid var(--border-color);
-            border-radius: var(--radius-md);
-            transition: border-color var(--transition-fast), background var(--transition-fast);
-        }
-        .upload-btn-link:hover {
-            border-color: var(--accent-light);
-        }
-        .upload-btn-link:active {
-            border-color: var(--accent-light-hover);
-            background: #1e1924;
-            transform: scale(0.98);
-        }
-        .upload-btn-link img {
-            width: 18px;
-            height: 18px;
-            object-fit: contain;
-        }
-
-        .search-container {
-            width: 100%;
-        }
-
-        .search-box {
-            width: 100%;
-            background: var(--input-bg);
-            border: var(--border-width) solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: var(--space-md) var(--space-lg);
-            color: var(--text-bright);
-            font-family: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", monospace;
-            font-size: 14px;
-            outline: none;
-        }
-        .search-box:focus {
-            border-color: var(--accent-light);
-        }
-
-        .creation-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: var(--space-lg);
-        }
-
-        .creation-card {
-            background: var(--container-bg);
-            border: var(--border-width) solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: var(--space-lg);
-            box-shadow: var(--shadow-deep);
-            cursor: pointer;
-            transition: border-color var(--transition-fast);
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-sm);
-        }
-        .creation-card:hover {
-            border-color: var(--accent-light);
-        }
-        .creation-card:active {
-            border-color: var(--accent-light-hover);
-            background: #1e1924;
-            transform: scale(0.98);
-        }
-
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-bright);
-        }
-        .card-desc {
-            font-size: 14px;
-            color: var(--text-main);
-            flex: 1;
-        }
-
-        .tag-pill-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--space-sm);
-        }
-        .tag-pill {
-            background: var(--box-bg);
-            border: var(--border-width) solid var(--border-color);
-            color: var(--accent-light);
-            padding: 2px var(--space-sm);
-            font-size: 12px;
-            font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
-            border-radius: var(--radius-sm);
-        }
-
-        .viewer-card {
-            background: var(--container-bg);
-            border: var(--border-width) solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: var(--space-xl);
-            box-shadow: var(--shadow-deep);
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-lg);
-        }
-
-        .viewer-action-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: var(--space-lg);
-        }
-
-        .render-title {
-            font-size: 1.5rem;
-            color: var(--text-bright);
-            font-weight: 600;
-            margin: 0;
-        }
-        .render-desc {
-            font-size: 14px;
-            color: var(--text-main);
-            margin: 0;
-        }
-
-        .view-h1 { font-size: 1.3rem; color: var(--text-bright); font-weight: 600; margin-top: 12px; }
-        .view-h2 { font-size: 1.1rem; color: var(--text-bright); font-weight: 600; text-transform: uppercase; margin-top: 12px; }
-        .view-text { font-size: 14px; color: var(--text-main); margin: 0; }
-
-        .connected-chain-group {
-            display: flex;
-            flex-direction: column;
-            background: var(--box-bg);
-            border: var(--border-width) solid var(--border-color);
-            border-radius: var(--radius-md);
-            margin: 8px 0;
-        }
-
-        .view-cmd-row {
-            display: flex;
-            align-items: center;
-            padding: 6px var(--space-sm);
-            gap: var(--space-sm);
-            position: relative;
-        }
-
-        .view-row-idx {
-            font-family: ui-monospace, "SF Mono", monospace;
-            width: 20px;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 12px;
-        }
-
-        .block-interactive-wrapper {
-            position: relative;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .block-face-texture-node {
-            width: 32px;
-            height: 32px;
-            object-fit: contain;
-            image-rendering: pixelated;
-        }
-
-        .view-cmd-payload-box {
-            flex: 1;
-            font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
-            background: var(--bg-color);
-            border: var(--border-width) solid var(--border-color);
-            color: var(--text-codeblock);
-            padding: 6px var(--space-sm);
-            border-radius: var(--radius-sm);
-            font-size: 13px;
-            white-space: nowrap;
-            overflow-x: auto;
-            min-width: 0;
-        }
-
-        .enable-word-wrap .view-cmd-payload-box {
-            white-space: pre-wrap !important;
-            word-break: break-all !important;
-        }
-
-        .toggle-wrap-container {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 12px;
-            color: var(--text-muted);
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .icon-copy-action-btn {
-            width: 32px;
-            height: 32px;
-            background: var(--bg-color);
-            border: var(--border-width) solid var(--border-color);
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            flex-shrink: 0;
-            transition: background var(--transition-fast), border-color var(--transition-fast);
-        }
-        .icon-copy-action-btn:active {
-            transform: scale(0.98);
-        }
-        .icon-copy-action-btn img {
-            width: 14px;
-            height: 14px;
-        }
-
-        .btn {
-            background: var(--accent-dark);
-            border: none;
-            color: var(--text-bright);
-            padding: var(--space-sm) var(--space-lg);
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            font-size: 12px;
-            text-transform: uppercase;
-            font-weight: 600;
-            transition: background var(--transition-fast);
-        }
-        .btn:hover {
-            background: var(--accent-dark-hover);
-        }
-        .btn:active {
-            transform: scale(0.98);
-        }
-        .btn-secondary {
-            background: var(--box-bg);
-            border: var(--border-width) solid var(--border-color);
-            color: var(--text-main);
-        }
-        .btn-secondary:hover {
-            border-color: var(--accent-light);
-            color: var(--text-bright);
-        }
-
-        /* Footer Rules */
-        .footer {
-            margin-top: var(--space-2xl, 32px);
-            padding-bottom: var(--space-lg, 16px);
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-sm, 8px);
-            align-items: center;
-            width: 100%;
-        }
-
-        .footer-title {
-            font-size: 12px;
-            color: var(--text-muted, #5a5a66);
-            opacity: 0.75;
-            letter-spacing: 0.5px;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: var(--space-md, 12px);
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .footer-links a {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--accent-light, #A77A99);
-            text-decoration: none;
-            font-size: 13px;
-            opacity: 0.85;
+        .footer-links a.social {
+            opacity: 0.5;
             transition: opacity var(--transition-fast, 0.15s), color var(--transition-fast, 0.15s);
         }
-
-        .footer-links a:hover {
-            color: var(--accent-light-hover, #c5a4bc);
-            opacity: 1;
-        }
-
-        .footer-links img {
-            color-scheme: dark !important;
-            width: 16px;
-            height: 16px;
-            filter: brightness(0) invert(1) !important;
+        .footer-links a.social:hover {
             opacity: 0.9;
         }
-
-        .footer-links a.kofi {
-            color: #ff5fa2;
-            font-weight: 500;
+        .author-credit-bar {
+            background: #0f0f12;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 13px;
+            color: var(--accent-light);
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-
-        .footer-links a.kofi:hover {
-            color: #ff8fc0;
-        }
-
-        .footer-links a.kofi img {
-            width: 20px;
-            height: 20px;
-            filter: brightness(0) invert(1) !important; 
-            opacity: 0.95;
+        .author-credit-disclaimer {
+            font-size: 12px;
+            color: var(--text-main);
+            font-weight: normal;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
 
     <div class="wrapper">
-        <header>
-            <div class="title-block" id="header-title-block">
-                <h1 id="app-display-header" onclick="routeReturnHomeDashboard()">Command Block Creation</h1>
-            </div>
-            <div class="header-actions">
-                <a href="upload/formatter.html" class="upload-btn-link" title="Upload Formatter">
-                    <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/upload.png" alt="Upload">
-                </a>
+        <header style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; position: relative;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button class="secondary" style="font-family: monospace;" onclick="handleBack()">←</button>
+                </div>
+                <h1 id="app-display-header" style="font-size: 1.5rem; margin: 0 auto; text-align: center; cursor: pointer;" onclick="goHome()">Command Block Creation</h1>
+                <div style="display: flex; align-items: center;">
+                    <a href="upload/formatter.html" class="upload-btn-link" title="Upload Formatter" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; text-decoration: none;">
+                        <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/upload.png" alt="Upload" style="width: 18px; height: 18px; object-fit: contain;">
+                    </a>
+                </div>
             </div>
         </header>
 
         <main id="app-view-router-canvas">
-            <div style="text-align: center; color: var(--text-muted); padding: 32px;">Loading commands...</div>
+             <div style="text-align: center; color: var(--text-main); padding: 40px;">Scanning workspace directories...</div>
         </main>
 
         <div class="footer">
+            <div id="bottom-author-credit"></div>
             <div class="footer-title">By Nako Hikari</div>
             <div class="footer-links">
                 <a href="https://github.com/nako-hikari/" target="_blank" class="social">
@@ -507,255 +82,483 @@
     <script>
         const GITHUB_API_URL = "https://api.github.com/repos/nako-hikari/minecraft-bedrock/contents/bedrock-commands";
         const RAW_BASE_URL = "https://raw.githubusercontent.com/nako-hikari/minecraft-bedrock/main/bedrock-commands";
-        const CDNBASESRC = "https://raw.githubusercontent.com/nako-hikari/nako-hikari.github.io/main/assets/images";
+        const ASSETS = "https://raw.githubusercontent.com/nako-hikari/nako-hikari.github.io/main/assets/images";
 
-        let cachedParsedIndexDataset = [];
+        let db = [];
 
-        window.addEventListener('DOMContentLoaded', initializeApp);
-        window.addEventListener('hashchange', readLocationHashRouteToken);
+        window.addEventListener('DOMContentLoaded', initApp);
+        window.addEventListener('hashchange', route);
 
-        async function initializeApp() {
+        function handleBack() {
+            if (window.location.hash) goHome();
+            else window.location.href = '../index.html';
+        }
+
+        async function initApp() {
             try {
                 const res = await fetch(GITHUB_API_URL);
-                if (!res.ok) throw new Error();
-                
-                const files = await res.json();
-                const txtFiles = files.filter(f => f.type === 'file' && f.name.endsWith('.txt'));
+                if (!res.ok) throw '';
+                const items = await res.json();
+                const files = items.filter(i => i.type === 'file' && i.name.endsWith('.txt'));
 
-                const fetchPromises = txtFiles.map(async (fileObj) => {
+                db = await Promise.all(files.map(async (f) => {
                     try {
-                        const rawRes = await fetch(`${RAW_BASE_URL}/${fileObj.name}`);
-                        if (!rawRes.ok) return null;
+                        const rawRes = await fetch(`${RAW_BASE_URL}/${f.name}`);
+                        if (!rawRes.ok) throw '';
+                        const txt = await rawRes.text();
                         
-                        const data = await rawRes.text();
-
-                        let cleanName = fileObj.name.substring(0, fileObj.name.lastIndexOf('.')).replace(/_/g, ' ');
-                        let title = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
-                        let desc = "No descriptor statement declared.";
+                        let label = f.name.replace('.txt', '').replace(/_/g, ' ');
+                        let title = label.charAt(0).toUpperCase() + label.slice(1);
+                        let desc = "No descriptor statement declared in source file.";
                         let tags = [];
                         let credit = null;
 
-                        const segments = data.split('\n\n');
-                        if (segments[0]) {
-                            segments[0].split('\n').forEach(line => {
-                                if (line.startsWith('TITLE:')) title = line.replace('TITLE:', '').trim();
-                                if (line.startsWith('DESC:')) desc = line.replace('DESC:', '').trim();
-                                if (line.startsWith('TAG:')) tags = line.replace('TAG:', '').split(',').map(t => t.trim());
-                                if (line.startsWith('CREDIT:')) credit = line.replace('CREDIT:', '').trim();
-                            });
-                        }
+                        txt.split('\n\n')[0].split('\n').forEach(ln => {
+                            if (ln.startsWith('TITLE:')) title = ln.replace('TITLE:', '').trim();
+                            if (ln.startsWith('DESC:')) desc = ln.replace('DESC:', '').trim();
+                            if (ln.startsWith('TAG:')) tags = ln.replace('TAG:', '').split(',').map(t => t.trim());
+                            if (ln.startsWith('CREDIT:')) credit = ln.replace('CREDIT:', '').trim();
+                        });
 
-                        return { 
-                            file: fileObj.name, 
-                            parsedTitle: title, 
-                            parsedDesc: desc, 
-                            parsedTags: tags, 
-                            parsedCredit: credit, 
-                            rawPayload: data 
-                        };
+                        return { file: f.name, title, desc, tags, credit, payload: txt };
                     } catch {
-                        return null;
+                        let label = f.name.replace('.txt', '');
+                        return { file: f.name, title: label.charAt(0).toUpperCase() + label.slice(1), desc: "Failed to download asset.", tags: [], credit: null, payload: null };
                     }
-                });
-
-                const results = await Promise.all(fetchPromises);
-                cachedParsedIndexDataset = results.filter(item => item !== null);
+                }));
             } catch {
-                cachedParsedIndexDataset = [];
+                console.warn("GitHub connection fault.");
             }
-
-            readLocationHashRouteToken();
+            route();
         }
 
-        function readLocationHashRouteToken() {
-            const currentHash = decodeURIComponent(window.location.hash.replace('#', '')).trim().toLowerCase();
-            if (currentHash && cachedParsedIndexDataset.length > 0) {
-                const match = cachedParsedIndexDataset.find(c => c.file.toLowerCase() === currentHash || c.file.toLowerCase() === currentHash + '.txt');
+        function route() {
+            const hash = decodeURIComponent(window.location.hash.replace('#', '')).trim().toLowerCase();
+            const headerTitle = document.getElementById('app-display-header');
+            
+            if (hash && db.length > 0) {
+                const match = db.find(item => item.file.toLowerCase() === hash || item.file.toLowerCase() === hash + '.txt');
                 if (match) {
-                    renderFocusedDisplay(match);
+                    headerTitle.innerText = match.title;
+                    if (match.payload) renderView(match);
+                    else recoverAsset(match);
                     return;
                 }
             }
-            renderHomeGrid();
+            headerTitle.innerText = "Command Block Creation";
+            renderGrid();
         }
 
-        function updateHeader(isViewer = false) {
-            const titleBlock = document.getElementById('header-title-block');
-            if (isViewer) {
-                titleBlock.innerHTML = `
-                    <button class="btn btn-secondary" onclick="routeReturnHomeDashboard()">←</button>
-                    <h1 onclick="routeReturnHomeDashboard()">Command Block Creation</h1>
+        async function recoverAsset(item) {
+            const view = document.getElementById('app-view-router-canvas');
+            view.innerHTML = `<div style="text-align: center; color: var(--text-main); padding: 40px;">Fetching content payload on-demand...</div>`;
+            try {
+                const res = await fetch(`${RAW_BASE_URL}/${item.file}`);
+                if (!res.ok) throw '';
+                item.payload = await res.text();
+                
+                item.payload.split('\n\n')[0].split('\n').forEach(ln => {
+                    if (ln.startsWith('TITLE:')) item.title = ln.replace('TITLE:', '').trim();
+                    if (ln.startsWith('DESC:')) item.desc = ln.replace('DESC:', '').trim();
+                    if (ln.startsWith('TAG:')) item.tags = ln.replace('TAG:', '').split(',').map(t => t.trim());
+                    if (ln.startsWith('CREDIT:')) item.credit = ln.replace('CREDIT:', '').trim();
+                });
+                document.getElementById('app-display-header').innerText = item.title;
+                renderView(item);
+            } catch {
+                view.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <p style="color: var(--accent-light); font-weight: bold;">Could not download ${item.file}</p>
+                        <button class="secondary" onclick="goHome()">Back to Dashboard</button>
+                    </div>
                 `;
-            } else {
-                titleBlock.innerHTML = `<h1 onclick="routeReturnHomeDashboard()">Command Block Creation</h1>`;
             }
         }
 
-        function renderHomeGrid() {
-            updateHeader(false);
+        function renderGrid() {
+            document.getElementById('bottom-author-credit').innerHTML = '';
             const canvas = document.getElementById('app-view-router-canvas');
             canvas.innerHTML = `
-                <div class="search-container">
-                    <input type="text" class="search-box" placeholder="Search creations by title or tag keywords..." oninput="handleSearch(this.value)">
+                <div style="width: 100%; margin-bottom: 16px;">
+                    <input type="text" id="search" style="width: 100%; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; color: var(--text-bright);" placeholder="Search creations by title or tag keywords..." oninput="filterGrid(this.value)">
                 </div>
-                <div class="creation-grid" id="cards-container"></div>
+                <div id="grid-box" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;"></div>
             `;
-            injectCards(cachedParsedIndexDataset);
+            populateGrid(db);
         }
 
-        function injectCards(dataset) {
-            const container = document.getElementById('cards-container');
+        function populateGrid(list) {
+            const container = document.getElementById('grid-box');
             if (!container) return;
             container.innerHTML = '';
 
-            dataset.forEach(item => {
+            list.forEach(item => {
                 const card = document.createElement('div');
-                card.className = 'creation-card';
+                card.className = 'card interactive';
+                card.style.cssText = 'cursor: pointer; display: flex; flex-direction: column; gap: 4px; padding: 16px;';
                 card.onclick = () => { window.location.hash = encodeURIComponent(item.file); };
+                
+                let pills = item.tags.map(t => `<span style="background: #0f0f12; border: 1px solid var(--border-color); color: var(--accent-light); padding: 2px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; text-transform: uppercase;">${escape(t)}</span>`).join(' ');
 
-                let tagPillsStr = item.parsedTags.map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join(' ');
                 card.innerHTML = `
-                    <div class="card-title">${escapeHtml(item.parsedTitle)}</div>
-                    <div class="card-desc">${escapeHtml(item.parsedDesc)}</div>
-                    <div class="tag-pill-container">${tagPillsStr}</div>
+                    <div style="font-size: 15px; font-weight: bold; color: var(--text-bright);">${escape(item.title)}</div>
+                    <div style="font-size: 13px; color: var(--text-main); flex: 1; ${item.payload ? '' : 'color: var(--accent-light);'}">${escape(item.desc)}</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">${pills}</div>
                 `;
                 container.appendChild(card);
             });
         }
 
-        function handleSearch(q) {
-            const query = q.toLowerCase().trim();
-            if (!query) {
-                injectCards(cachedParsedIndexDataset);
+        function filterGrid(q) {
+            const term = q.toLowerCase().trim();
+            if (!term) {
+                populateGrid(db);
                 return;
             }
-            const filtered = cachedParsedIndexDataset.filter(item => 
-                item.parsedTitle.toLowerCase().includes(query) || 
-                item.parsedDesc.toLowerCase().includes(query) || 
-                item.parsedTags.some(t => t.toLowerCase().includes(query))
+            const filtered = db.filter(i => 
+                i.title.toLowerCase().includes(term) || 
+                i.desc.toLowerCase().includes(term) || 
+                i.tags.some(t => t.toLowerCase().includes(term))
             );
-            injectCards(filtered);
+            populateGrid(filtered);
         }
 
-        function renderFocusedDisplay(item) {
-            updateHeader(true);
+        function parseMd(str) {
+            let out = escape(str);
+            out = out.replace(/\[link\]\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color: var(--accent-light); text-decoration: none;">$1</a>');
+            out = out.replace(/\[img\]\((.*?)\)/g, '<img src="$1" style="max-width: 100%; height: auto; display: block; border-radius: 4px; margin: 8px 0;" alt="Asset">');
+            return out;
+        }
+
+        function buildCodeWithLineNumbers(linesArray, isNpc = false) {
+            return linesArray.map((line, idx) => {
+                return `<div style="display: flex; align-items: flex-start; line-height: 1.4; white-space: ${isNpc ? 'pre' : 'nowrap'};">` +
+                       `<span class="line-num-node" style="color: var(--accent-light); opacity: 0.5; font-family: monospace; padding-right: 8px; margin-right: 8px; border-right: 1px solid var(--border-color); min-width: 20px; text-align: right; user-select: none;">${idx + 1}</span>` +
+                       `<span class="line-content-node" style="color: var(--text-bright); font-family: monospace; flex: 1;">${escape(line)}</span>` +
+                       `</div>`;
+            }).join('');
+        }
+
+        function isNakoAuthor(credit) {
+            if (!credit) return true;
+            const normalized = credit.toLowerCase().replace(/[\s_\-]/g, '');
+            return normalized === 'nakohikari';
+        }
+
+        async function renderView(item) {
             const canvas = document.getElementById('app-view-router-canvas');
-            canvas.innerHTML = '';
+            canvas.innerHTML = ''; 
 
-            const container = document.createElement('div');
-            container.className = 'viewer-card';
+            const isExternalAuthor = !isNakoAuthor(item.credit);
+            const bottomCreditContainer = document.getElementById('bottom-author-credit');
 
-            const actionRow = document.createElement('div');
-            actionRow.className = 'viewer-action-row';
+            if (isExternalAuthor && item.credit) {
+                bottomCreditContainer.innerHTML = `
+                    <div class="author-credit-bar" style="margin-bottom: 8px;">
+                        <span>Creation by ${escape(item.credit)}</span>
+                        <span class="author-credit-disclaimer">(I do not own this command structure/file)</span>
+                    </div>
+                `;
+            } else {
+                bottomCreditContainer.innerHTML = '';
+            }
 
-            const metaCol = document.createElement('div');
-            metaCol.innerHTML = `
-                <div class="render-title">${escapeHtml(item.parsedTitle)}</div>
-                <div class="render-desc">${escapeHtml(item.parsedDesc)}</div>
-            `;
+            const mainCard = document.createElement('div');
+            mainCard.className = 'card';
+            mainCard.style.padding = '16px';
 
-            const rightActions = document.createElement('div');
-            rightActions.style.cssText = 'display: flex; align-items: center; gap: 12px;';
-            rightActions.innerHTML = `
-                <label class="toggle-wrap-container">
-                    <input type="checkbox" onchange="document.getElementById('app-view-router-canvas').classList.toggle('enable-word-wrap', this.checked)"> Wrap
-                </label>
-                <button class="btn" onclick="copyShareLink('${encodeURIComponent(item.file)}', this)">Share</button>
-            `;
+            if (isExternalAuthor && item.credit) {
+                const topCreditBar = document.createElement('div');
+                topCreditBar.className = 'author-credit-bar';
+                topCreditBar.innerHTML = `
+                    <span>Creation by ${escape(item.credit)}</span>
+                    <span class="author-credit-disclaimer">(I do not own this command structure/file)</span>
+                `;
+                mainCard.appendChild(topCreditBar);
+            }
 
-            actionRow.appendChild(metaCol);
-            actionRow.appendChild(rightActions);
-            container.appendChild(actionRow);
+            let topRow = document.createElement('div');
+            topRow.style.cssText = 'display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px;';
 
-            const elementsWrapper = document.createElement('div');
-            elementsWrapper.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
+            let meta = document.createElement('div');
+            meta.style.cssText = 'display: flex; flex-direction: column; gap: 4px;';
 
-            let activeChainStackElement = null;
-            let currentChainRowIndex = 0;
+            let shareBtn = document.createElement('button');
+            shareBtn.className = 'primary';
+            shareBtn.innerText = 'Share';
+            shareBtn.onclick = () => {
+                navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#${encodeURIComponent(item.file)}`);
+                shareBtn.innerText = 'Copied!';
+                shareBtn.classList.add('copy-success');
+                setTimeout(() => { 
+                    shareBtn.innerText = 'Share'; 
+                    shareBtn.classList.remove('copy-success');
+                }, 1200);
+            };
 
-            const segments = item.rawPayload ? item.rawPayload.split('\n\n') : [];
-            segments.forEach(seg => {
-                const lines = seg.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            let wrapLabel = document.createElement('label');
+            wrapLabel.style.cssText = 'display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; user-select: none; cursor: pointer; color: var(--text-main);';
+            wrapLabel.innerHTML = `<input type="checkbox" id="wrap-toggle" style="cursor: pointer;"> Word Wrap`;
+            
+            wrapLabel.querySelector('input').onchange = (e) => {
+                document.querySelectorAll('.output-box .line-content-node').forEach(node => {
+                    node.style.whiteSpace = e.target.checked ? 'pre-wrap' : 'nowrap';
+                    node.style.wordBreak = e.target.checked ? 'break-all' : 'normal';
+                });
+                document.querySelectorAll('.output-box').forEach(box => {
+                    box.style.overflowX = e.target.checked ? 'hidden' : 'auto';
+                });
+            };
+
+            let actions = document.createElement('div');
+            actions.style.cssText = 'display: flex; align-items: center; gap: 12px; flex-shrink: 0;';
+            actions.appendChild(wrapLabel);
+            actions.appendChild(shareBtn);
+
+            let tagBox = document.createElement('div');
+            tagBox.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;';
+            
+            let contentFlow = document.createElement('div');
+            contentFlow.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+
+            let currentChain = null;
+            let chainIdx = 0;
+
+            const isFlipped = item.tags.some(t => t.toLowerCase() === 'flip');
+            const rotation = isFlipped ? "0deg" : "180deg";
+
+            item.payload.split('\n\n').forEach(seg => {
+                const lines = seg.split('\n').filter(l => l.trim().length > 0);
                 if (lines.length === 0) return;
 
-                const baseLine = lines[0];
+                const head = lines[0].trim();
 
-                if (/^H[1-5]:/.test(baseLine)) {
-                    activeChainStackElement = null;
-                    const tier = baseLine.match(/^H[1-5]/)[0].toLowerCase();
-                    const headerEl = document.createElement('div');
-                    headerEl.className = `view-${tier}`;
-                    headerEl.innerText = baseLine.replace(/^H[1-5]:/, '').trim();
-                    elementsWrapper.appendChild(headerEl);
-                } else if (baseLine.startsWith('TEXT:')) {
-                    activeChainStackElement = null;
-                    const textEl = document.createElement('p');
-                    textEl.className = 'view-text';
-                    textEl.innerText = baseLine.replace('TEXT:', '').trim();
-                    elementsWrapper.appendChild(textEl);
-                } else if (baseLine.startsWith('CMD:')) {
-                    if (!activeChainStackElement) {
-                        activeChainStackElement = document.createElement('div');
-                        activeChainStackElement.className = 'connected-chain-group';
-                        elementsWrapper.appendChild(activeChainStackElement);
-                        currentChainRowIndex = 0;
+                if (head.startsWith('TITLE:')) {
+                    let d = document.createElement('div');
+                    d.style.cssText = 'font-size: 1.6rem; color: var(--text-bright); font-weight: bold;';
+                    d.innerText = head.replace('TITLE:', '').trim();
+                    meta.appendChild(d);
+                } 
+                else if (head.startsWith('DESC:')) {
+                    let d = document.createElement('div');
+                    d.style.cssText = 'font-size: 14px; color: var(--text-main);';
+                    d.innerText = head.replace('DESC:', '').trim();
+                    meta.appendChild(d);
+                } 
+                else if (head.startsWith('TAG:')) {
+                    head.replace('TAG:', '').split(',').forEach(t => {
+                        let pill = document.createElement('span');
+                        let isFlipTag = t.trim().toLowerCase() === 'flip';
+                        pill.style.cssText = `background: ${isFlipTag ? '#4a2323' : '#0f0f12'}; border: 1px solid ${isFlipTag ? '#6e3333' : 'var(--border-color)'}; color: ${isFlipTag ? '#ff8fc0' : 'var(--accent-light)'}; padding: 2px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; text-transform: uppercase;`;
+                        pill.innerText = t.trim();
+                        tagBox.appendChild(pill);
+                    });
+                }
+                else if (/^H[1-5]:/.test(head)) {
+                    currentChain = null;
+                    const tier = head.match(/^H[1-5]/)[0].toLowerCase();
+                    let h = document.createElement('div');
+                    h.style.cssText = tier === 'h1' ? 'font-size: 1.6rem; color: var(--text-bright); font-weight: 600; margin-top: 12px;' : 'font-size: 1.1rem; color: var(--text-bright); font-weight: 600; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.5px;';
+                    h.innerText = head.replace(/^H[1-5]:/, '').trim();
+                    contentFlow.appendChild(h);
+                }
+                else if (head.startsWith('TEXT:')) {
+                    currentChain = null;
+                    let p = document.createElement('p');
+                    p.style.cssText = 'font-size: 14px; color: var(--text-main); line-height: 1.5; margin: 0;';
+                    p.innerHTML = parseMd(head.replace('TEXT:', '').trim());
+                    contentFlow.appendChild(p);
+                }
+                else if (head.startsWith('NOTE:')) {
+                    currentChain = null;
+                    let n = document.createElement('p');
+                    n.style.cssText = 'font-style: italic; color: var(--text-main); padding-left: 8px; border-left: 2px solid var(--border-color); margin: 0;';
+                    n.innerHTML = parseMd(head.replace('NOTE:', '').trim());
+                    contentFlow.appendChild(n);
+                }
+                else if (head.startsWith('CMD:NPC') || head.startsWith('CMD:CHAT')) {
+                    currentChain = null;
+                    const isNpc = head.startsWith('CMD:NPC');
+
+                    let npcRow = document.createElement('div');
+                    npcRow.style.cssText = 'background: #0f0f12; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; display: flex; gap: 8px; align-items: center; margin: 8px 0; min-height: 40px;';
+
+                    let img = document.createElement('img');
+                    img.style.cssText = 'width: 32px; height: 32px; object-fit: contain; image-rendering: pixelated;';
+                    img.src = isNpc ? `${ASSETS}/npc.png` : `${ASSETS}/chat.png`;
+
+                    let idx = document.createElement('div');
+                    idx.style.cssText = 'font-family: monospace; font-weight: bold; width: 22px; text-align: center; color: var(--text-main); font-size: 12px;';
+                    idx.innerText = '1';
+
+                    let block = document.createElement('div');
+                    block.className = 'output-box';
+                    block.style.cssText = 'flex: 1; font-family: monospace; background: var(--bg-color); border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; font-size: 12.5px; overflow-x: hidden; min-width: 0; scrollbar-width: none;';
+                    block.style.setProperty('-ms-overflow-style', 'none');
+
+                    const rawLinesPayload = lines.slice(1);
+                    block.innerHTML = buildCodeWithLineNumbers(rawLinesPayload, true);
+
+                    let copy = document.createElement('button');
+                    copy.className = 'secondary interactive';
+                    copy.style.cssText = 'width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0;';
+                    copy.innerHTML = `<img src="${ASSETS}/copy.png" style="width: 16px; height: 16px; image-rendering: pixelated;" alt="Copy">`;
+                    copy.onclick = () => {
+                        navigator.clipboard.writeText(rawLinesPayload.join('\n'));
+                        copy.classList.add('copy-success');
+                        setTimeout(() => { copy.classList.remove('copy-success'); }, 800);
+                    };
+
+                    npcRow.appendChild(idx);
+                    npcRow.appendChild(img);
+                    npcRow.appendChild(block);
+                    npcRow.appendChild(copy);
+                    contentFlow.appendChild(npcRow);
+
+                    if (isNpc) {
+                        let linkTag = document.createElement('div');
+                        linkTag.style.cssText = 'font-family: monospace; font-size: 11px; color: var(--text-main); text-align: center; cursor: pointer; user-select: none; margin-top: -4px; margin-bottom: 12px;';
+                        linkTag.innerText = '--- click here to know how to use NPC as setup ---';
+                        linkTag.onclick = () => { window.location.href = 'npc-setup.html'; };
+                        contentFlow.appendChild(linkTag);
+                    }
+                }
+                else if (head.startsWith('CMD:')) {
+                    if (!currentChain) {
+                        currentChain = document.createElement('div');
+                        currentChain.style.cssText = 'display: flex; flex-direction: column; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; margin: 8px 0;';
+                        contentFlow.appendChild(currentChain);
+                        chainIdx = 0;
                     }
 
                     for (let i = 0; i < lines.length; i += 2) {
-                        if (!lines[i] || !lines[i].startsWith('CMD:')) continue;
-                        currentChainRowIndex++;
-                        const metaTokens = lines[i].split(':');
-                        const commandStringPayload = lines[i+1] || '';
+                        if (!lines[i] || !lines[i].trim().startsWith('CMD:')) continue;
+                        
+                        chainIdx++;
+                        const tokens = lines[i].split(':');
+                        const payload = lines[i+1] || '';
 
-                        const modeToken = (metaTokens[1] || 'C').toUpperCase();
-                        const condToken = (metaTokens[3] || 'U').toUpperCase();
+                        const mode = (tokens[1] || 'C').toUpperCase();
+                        const active = (tokens[2] || 'AA').toUpperCase();
+                        const cond = (tokens[3] || 'U').toUpperCase();
+                        const tick = tokens[4] || '0';
 
-                        let filePrefix = modeToken.toLowerCase();
-                        let fileSuffix = condToken.toLowerCase().startsWith('c') ? 'cn' : 'un';
-                        let blockGraphicSrc = `${CDNBASESRC}/${filePrefix}-${fileSuffix}.png`;
+                        const bName = mode === 'I' ? 'Impulse' : mode === 'R' ? 'Repeat' : 'Chain';
+                        const cText = cond.startsWith('C') ? 'Conditional' : 'Unconditional';
+                        const aText = active === 'AA' ? 'Always Active' : 'Needs Redstone';
 
-                        const rowNode = document.createElement('div');
-                        rowNode.className = 'view-cmd-row';
-                        rowNode.innerHTML = `
-                            <div class="view-row-idx">${currentChainRowIndex}</div>
-                            <div class="block-interactive-wrapper">
-                                <img src="${blockGraphicSrc}" class="block-face-texture-node" alt="Block">
-                            </div>
-                            <div class="view-cmd-payload-box">${escapeHtml(commandStringPayload)}</div>
-                            <div class="icon-copy-action-btn" onclick="copyRowPayload(this)"><img src="${CDNBASESRC}/copy.png" alt="Copy"></div>
+                        let graphic = `${ASSETS}/${mode.toLowerCase()}-${cond.toLowerCase().startsWith('c') ? 'cn' : 'un'}.png`;
+
+                        let row = document.createElement('div');
+                        row.style.cssText = 'display: flex; align-items: center; padding: 4px 8px; gap: 8px; position: relative; min-height: 40px;';
+
+                        let tipStyles = `
+                            position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) scale(0.9);
+                            background: #101015; border: 2px solid #2d2d3c; border-radius: 4px; padding: 8px 12px;
+                            color: #ffffff; font-family: monospace; font-size: 12px; font-weight: bold;
+                            line-height: 1.4; white-space: pre; text-align: left; opacity: 0; pointer-events: none; z-index: 99;
+                            box-shadow: 0 8px 20px rgba(0,0,0,0.8); transition: opacity 0.15s ease, transform 0.15s ease;
                         `;
-                        activeChainStackElement.appendChild(rowNode);
+
+                        let blockGraphicContainer = document.createElement('div');
+                        blockGraphicContainer.className = 'interactive';
+                        blockGraphicContainer.style.cssText = 'position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer;';
+                        blockGraphicContainer.tabIndex = 0;
+
+                        let blockImg = document.createElement('img');
+                        blockImg.src = graphic;
+                        blockImg.style.cssText = `width: 32px; height: 32px; object-fit: contain; image-rendering: pixelated; transform: rotate(${rotation});`;
+                        blockImg.alt = "Block";
+
+                        let tooltipNode = document.createElement('div');
+                        tooltipNode.style.cssText = tipStyles;
+                        tooltipNode.innerText = `${bName}\n${cText}\n${aText}\nTick = ${tick}`;
+
+                        blockGraphicContainer.appendChild(blockImg);
+                        blockGraphicContainer.appendChild(tooltipNode);
+
+                        blockGraphicContainer.onmouseenter = () => {
+                            tooltipNode.style.opacity = '1';
+                            tooltipNode.style.transform = 'translateX(-50%) scale(1)';
+                        };
+                        blockGraphicContainer.onmouseleave = () => {
+                            tooltipNode.style.opacity = '0';
+                            tooltipNode.style.transform = 'translateX(-50%) scale(0.9)';
+                        };
+                        blockGraphicContainer.onfocus = () => {
+                            tooltipNode.style.opacity = '1';
+                            tooltipNode.style.transform = 'translateX(-50%) scale(1)';
+                        };
+                        blockGraphicContainer.onblur = () => {
+                            tooltipNode.style.opacity = '0';
+                            tooltipNode.style.transform = 'translateX(-50%) scale(0.9)';
+                        };
+
+                        let outputBox = document.createElement('div');
+                        outputBox.className = 'output-box';
+                        outputBox.style.cssText = 'flex: 1; margin: 0; font-size: 12.5px; padding: 8px; overflow-x: hidden; min-width: 0; scrollbar-width: none;';
+                        outputBox.style.setProperty('-ms-overflow-style', 'none');
+                        
+                        outputBox.innerHTML = buildCodeWithLineNumbers([payload], false);
+
+                        let copyBtn = document.createElement('button');
+                        copyBtn.className = 'secondary interactive';
+                        copyBtn.style.cssText = 'width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0;';
+                        copyBtn.innerHTML = `<img src="${ASSETS}/copy.png" style="width: 16px; height: 16px; image-rendering: pixelated;" alt="Copy">`;
+                        copyBtn.onclick = () => { copyRow(copyBtn); };
+
+                        let rowIdxNode = document.createElement('div');
+                        rowIdxNode.style.cssText = 'font-family: monospace; font-weight: bold; width: 22px; text-align: center; color: var(--text-main); font-size: 12px;';
+                        rowIdxNode.innerText = chainIdx;
+
+                        row.appendChild(rowIdxNode);
+                        row.appendChild(blockGraphicContainer);
+                        row.appendChild(outputBox);
+                        row.appendChild(copyBtn);
+                        currentChain.appendChild(row);
                     }
                 }
             });
 
-            container.appendChild(elementsWrapper);
-            canvas.appendChild(container);
+            if (meta.children.length > 0) topRow.appendChild(meta);
+            topRow.appendChild(actions);
+            mainCard.appendChild(topRow);
+
+            if (tagBox.children.length > 0) mainCard.appendChild(tagBox);
+            if (meta.children.length > 0 || tagBox.children.length > 0) {
+                let hr = document.createElement('hr');
+                hr.style.cssText = 'border: none; border-bottom: 1px solid var(--border-color); margin: 0 0 16px 0;';
+                mainCard.appendChild(hr);
+            }
+
+            mainCard.appendChild(contentFlow);
+            canvas.appendChild(mainCard);
+            
+            if (!document.getElementById('nako-scrollbar-override-rules')) {
+                const styles = document.createElement('style');
+                styles.id = 'nako-scrollbar-override-rules';
+                styles.innerHTML = `
+                    .output-box::-webkit-scrollbar, .output-box *::-webkit-scrollbar { display: none !important; }
+                    .output-box { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+                `;
+                document.head.appendChild(styles);
+            }
         }
 
-        function routeReturnHomeDashboard() {
+        function goHome() {
             window.location.hash = '';
-            renderHomeGrid();
+            renderGrid();
         }
 
-        function copyShareLink(fileHash, btn) {
-            navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#${fileHash}`);
-            btn.innerText = 'Copied!';
-            setTimeout(() => { btn.innerText = 'Share'; }, 1200);
-        }
-
-        function copyRowPayload(btnNode) {
-            const txt = btnNode.parentElement.querySelector('.view-cmd-payload-box').innerText;
+        function copyRow(btn) {
+            const linesNodes = btn.parentElement.querySelectorAll('.output-box .line-content-node');
+            const txt = Array.from(linesNodes).map(node => node.innerText).join('\n');
             navigator.clipboard.writeText(txt);
-            btnNode.style.background = 'var(--success-bg)';
-            btnNode.style.borderColor = 'var(--success-border)';
-            setTimeout(() => {
-                btnNode.style.background = '';
-                btnNode.style.borderColor = '';
-            }, 800);
+            btn.classList.add('copy-success');
+            setTimeout(() => { btn.classList.remove('copy-success'); }, 800);
         }
 
-        function escapeHtml(str) {
+        function escape(str) {
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
     </script>
