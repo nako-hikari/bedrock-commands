@@ -9,20 +9,20 @@
         img { color-scheme: only light !important; }
 
         body {
-            background: var(--bg-body);
-            color: var(--text-secondary);
-            font-family: var(--font-body);
-            font-size: var(--fs-sm);
-            line-height: var(--lh-normal);
+            background: var(--bg-body, #0f0f12);
+            color: var(--text-secondary, #a1a1aa);
+            font-family: var(--font-body, system-ui, -apple-system, sans-serif);
+            font-size: var(--fs-sm, 14px);
+            line-height: var(--lh-normal, 1.5);
             margin: 0;
-            padding: var(--space-6) var(--space-5);
+            padding: var(--space-6, 24px) var(--space-5, 20px);
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
         @media (max-width: 600px) {
-            body { padding: var(--space-5) var(--space-3); }
+            body { padding: var(--space-5, 20px) var(--space-3, 12px); }
         }
 
         .wrapper {
@@ -31,27 +31,27 @@
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: var(--space-6);
+            gap: var(--space-6, 24px);
         }
 
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border-subtle);
-            padding-bottom: var(--space-4);
+            border-bottom: 1px solid var(--border-subtle, #27272a);
+            padding-bottom: var(--space-4, 16px);
         }
 
         .title-block {
             display: flex;
             align-items: center;
-            gap: var(--space-4);
+            gap: var(--space-4, 16px);
         }
 
         h1 {
-            font-size: var(--fs-xl);
-            font-weight: var(--fw-semibold);
-            color: var(--text-primary);
+            font-size: var(--fs-xl, 20px);
+            font-weight: var(--fw-semibold, 600);
+            color: var(--text-primary, #f4f4f5);
             margin: 0;
             cursor: pointer;
         }
@@ -59,7 +59,7 @@
         .header-actions {
             display: flex;
             align-items: center;
-            gap: var(--space-3);
+            gap: var(--space-3, 12px);
         }
 
         .upload-btn-link {
@@ -68,14 +68,14 @@
             justify-content: center;
             width: 36px;
             height: 36px;
-            background: var(--bg-inset);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-md);
-            transition: border-color var(--duration-fast) var(--ease-standard), background var(--duration-fast) var(--ease-standard);
+            background: var(--bg-inset, #18181b);
+            border: 1px solid var(--border-default, #27272a);
+            border-radius: var(--radius-md, 8px);
+            transition: border-color 0.15s ease, background 0.15s ease;
         }
         .upload-btn-link:hover {
-            border-color: var(--border-strong);
-            background: var(--bg-surface);
+            border-color: var(--border-strong, #3f3f46);
+            background: var(--bg-surface, #18181b);
         }
         .upload-btn-link img {
             width: 20px;
@@ -90,109 +90,113 @@
 
         .search-box {
             width: 100%;
-            background: var(--bg-inset);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-md);
-            padding: var(--space-3) var(--space-4);
-            color: var(--text-primary);
-            font-family: var(--font-mono);
-            font-size: var(--fs-sm);
-            box-shadow: var(--shadow-sm);
+            background: var(--bg-inset, #18181b);
+            border: 1px solid var(--border-default, #27272a);
+            border-radius: var(--radius-md, 8px);
+            padding: var(--space-3, 12px) var(--space-4, 16px);
+            color: var(--text-primary, #f4f4f5);
+            font-family: var(--font-mono, monospace);
+            font-size: var(--fs-sm, 14px);
+            box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
             outline: none;
+            box-sizing: border-box;
         }
         .search-box:focus {
-            border-color: var(--brand-accent-2);
-            box-shadow: 0 0 0 3px var(--brand-focus-ring);
+            border-color: var(--brand-accent-2, #a855f7);
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
         }
 
         .creation-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: var(--space-4);
+            gap: var(--space-4, 16px);
         }
 
         .creation-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            padding: var(--space-4);
-            box-shadow: var(--shadow-sm);
+            background: var(--bg-surface, #18181b);
+            border: 1px solid var(--border-subtle, #27272a);
+            border-radius: var(--radius-lg, 12px);
+            padding: var(--space-4, 16px);
+            box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
             cursor: pointer;
-            transition: box-shadow var(--duration-fast) var(--ease-standard);
+            transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
             display: flex;
             flex-direction: column;
-            gap: var(--space-2);
+            gap: var(--space-2, 8px);
         }
-        .creation-card:hover { box-shadow: var(--shadow-md); }
+        .creation-card:hover {
+            box-shadow: var(--shadow-md, 0 4px 6px rgba(0,0,0,0.1));
+            border-color: var(--border-strong, #3f3f46);
+        }
         .creation-card:active {
-            border-color: var(--brand-accent-2);
-            background: var(--bg-inset);
+            border-color: var(--brand-accent-2, #a855f7);
+            background: var(--bg-inset, #121215);
             transform: scale(0.98);
         }
 
-        .card-title { font-size: var(--fs-base); font-weight: var(--fw-bold); color: var(--text-primary); }
-        .card-desc { font-size: var(--fs-sm); color: var(--text-secondary); flex: 1; }
-        .card-credit { font-size: var(--fs-xs); color: var(--text-muted); font-style: italic; }
+        .card-title { font-size: var(--fs-base, 16px); font-weight: var(--fw-bold, 700); color: var(--text-primary, #f4f4f5); }
+        .card-desc { font-size: var(--fs-sm, 14px); color: var(--text-secondary, #a1a1aa); flex: 1; }
+        .card-credit { font-size: var(--fs-xs, 12px); color: var(--text-muted, #71717a); font-style: italic; }
 
         .viewer-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            padding: var(--space-5);
-            box-shadow: var(--shadow-md);
+            background: var(--bg-surface, #18181b);
+            border: 1px solid var(--border-subtle, #27272a);
+            border-radius: var(--radius-lg, 12px);
+            padding: var(--space-5, 20px);
+            box-shadow: var(--shadow-md, 0 4px 6px rgba(0,0,0,0.1));
             display: flex;
             flex-direction: column;
-            gap: var(--space-4);
+            gap: var(--space-4, 16px);
         }
 
         .viewer-action-row {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: var(--space-4);
+            gap: var(--space-4, 16px);
         }
 
-        .render-title { font-size: var(--fs-2xl); color: var(--text-primary); font-weight: var(--fw-bold); margin: 0; }
-        .render-desc { font-size: var(--fs-sm); color: var(--text-secondary); margin: 0; }
+        .render-title { font-size: var(--fs-2xl, 24px); color: var(--text-primary, #f4f4f5); font-weight: var(--fw-bold, 700); margin: 0; }
+        .render-desc { font-size: var(--fs-sm, 14px); color: var(--text-secondary, #a1a1aa); margin: 0; }
         
-        .tag-pill-container { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+        .tag-pill-container { display: flex; flex-wrap: wrap; gap: var(--space-2, 8px); }
         .tag-pill {
-            background: var(--bg-inset);
-            border: 1px solid var(--border-default);
-            color: var(--text-link);
-            padding: 2px var(--space-2);
-            font-size: var(--fs-xs);
-            font-weight: var(--fw-semibold);
-            border-radius: var(--radius-sm);
+            background: var(--bg-inset, #0f0f12);
+            border: 1px solid var(--border-default, #27272a);
+            color: var(--text-link, #a855f7);
+            padding: 2px var(--space-2, 8px);
+            font-size: var(--fs-xs, 12px);
+            font-weight: var(--fw-semibold, 600);
+            border-radius: var(--radius-sm, 4px);
             text-transform: uppercase;
         }
-        .tag-flip-pill { background: var(--color-danger-bg); border-color: var(--color-danger-border); color: var(--color-danger); }
+        .tag-flip-pill { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444; }
 
-        .view-h1 { font-size: var(--fs-xl); color: var(--text-primary); font-weight: var(--fw-semibold); margin-top: var(--space-4); margin-bottom: var(--space-1); }
-        .view-h2 { font-size: var(--fs-md); color: var(--text-primary); font-weight: var(--fw-semibold); margin-top: var(--space-4); margin-bottom: var(--space-1); text-transform: uppercase; letter-spacing: var(--ls-wide); }
-        .view-text { font-size: var(--fs-sm); color: var(--text-secondary); line-height: var(--lh-normal); margin: 0; }
-        .view-note { font-style: italic; color: var(--text-muted); padding-left: var(--space-2); border-left: 2px solid var(--border-strong); margin: 0; }
+        .view-h1 { font-size: var(--fs-xl, 20px); color: var(--text-primary, #f4f4f5); font-weight: var(--fw-semibold, 600); margin-top: 16px; margin-bottom: 4px; }
+        .view-h2 { font-size: var(--fs-md, 16px); color: var(--text-primary, #f4f4f5); font-weight: var(--fw-semibold, 600); margin-top: 16px; margin-bottom: 4px; text-transform: uppercase; }
+        .view-text { font-size: var(--fs-sm, 14px); color: var(--text-secondary, #a1a1aa); line-height: 1.5; margin: 0; }
+        .view-note { font-style: italic; color: var(--text-muted, #71717a); padding-left: 8px; border-left: 2px solid var(--border-strong, #3f3f46); margin: 0; }
 
         .connected-chain-group {
             display: flex;
             flex-direction: column;
-            background: var(--bg-inset);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-md);
-            margin: var(--space-2) 0;
+            background: var(--bg-inset, #0f0f12);
+            border: 1px solid var(--border-default, #27272a);
+            border-radius: var(--radius-md, 8px);
+            margin: 8px 0;
             padding: 0;
         }
 
         .view-cmd-row {
             display: flex;
             align-items: center;
-            padding: var(--space-1) var(--space-2);
-            gap: var(--space-2);
+            padding: 4px 8px;
+            gap: 8px;
             position: relative;
             min-height: 40px;
         }
 
-        .view-row-idx { font-family: var(--font-mono); font-weight: var(--fw-bold); width: 22px; text-align: center; color: var(--text-muted); font-size: var(--fs-xs); }
+        .view-row-idx { font-family: var(--font-mono, monospace); font-weight: bold; width: 22px; text-align: center; color: var(--text-muted, #71717a); font-size: 12px; }
         
         .block-interactive-wrapper {
             position: relative;
@@ -211,7 +215,7 @@
             image-rendering: pixelated;
             flex-shrink: 0;
             z-index: 2;
-            transition: transform var(--duration-fast) var(--ease-standard), filter var(--duration-fast) var(--ease-standard);
+            transition: transform 0.15s ease, filter 0.15s ease;
         }
         .block-interactive-wrapper:hover .block-face-texture-node { filter: brightness(1.25); }
 
@@ -220,22 +224,22 @@
             bottom: calc(100% + 8px);
             left: 50%;
             transform: translateX(-50%) scale(0.9);
-            background: var(--bg-surface);
-            border: 1px solid var(--border-strong);
-            border-radius: var(--radius-sm);
-            padding: var(--space-2) var(--space-3);
-            color: var(--text-primary);
-            font-family: var(--font-mono);
-            font-size: var(--fs-xs);
-            font-weight: var(--fw-bold);
-            line-height: var(--lh-snug);
+            background: var(--bg-surface, #18181b);
+            border: 1px solid var(--border-strong, #3f3f46);
+            border-radius: var(--radius-sm, 4px);
+            padding: 8px 12px;
+            color: var(--text-primary, #f4f4f5);
+            font-family: var(--font-mono, monospace);
+            font-size: 12px;
+            font-weight: bold;
+            line-height: 1.3;
             white-space: pre;
             text-align: left;
             opacity: 0;
             pointer-events: none;
-            z-index: var(--z-tooltip);
-            box-shadow: var(--shadow-lg);
-            transition: opacity var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: opacity 0.15s ease, transform 0.15s ease;
         }
         .block-meta-tooltip::after {
             content: '';
@@ -244,10 +248,9 @@
             left: 50%;
             transform: translateX(-50%);
             border: 6px solid transparent;
-            border-top-color: var(--border-strong);
+            border-top-color: var(--border-strong, #3f3f46);
         }
-        .block-interactive-wrapper:hover .block-meta-tooltip,
-        .block-interactive-wrapper:focus-within .block-meta-tooltip {
+        .block-interactive-wrapper:hover .block-meta-tooltip {
             opacity: 1;
             pointer-events: auto;
             transform: translateX(-50%) scale(1);
@@ -255,16 +258,16 @@
 
         .view-cmd-payload-box {
             flex: 1;
-            font-family: var(--font-mono);
-            background: var(--bg-body);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-primary);
-            padding: var(--space-2);
-            border-radius: var(--radius-sm);
-            font-size: var(--fs-xs);
+            font-family: var(--font-mono, monospace);
+            background: var(--bg-body, #0f0f12);
+            border: 1px solid var(--border-subtle, #27272a);
+            color: var(--text-primary, #f4f4f5);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
             white-space: nowrap;
             overflow-x: auto;
-            line-height: var(--lh-snug);
+            line-height: 1.3;
             display: block;
             min-width: 0;
         }
@@ -275,7 +278,7 @@
             overflow-x: hidden !important;
         }
 
-        .enable-word-wrap-npc .npc-scroller-stack { gap: var(--space-1); }
+        .enable-word-wrap-npc .npc-scroller-stack { gap: 4px; }
         .enable-word-wrap-npc .npc-line-box {
             white-space: pre-wrap !important;
             word-break: break-all !important;
@@ -285,11 +288,11 @@
         .toggle-wrap-container {
             display: flex;
             align-items: center;
-            gap: var(--space-1);
-            font-size: var(--fs-xs);
-            font-weight: var(--fw-semibold);
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 600;
             text-transform: uppercase;
-            color: var(--text-muted);
+            color: var(--text-muted, #71717a);
             user-select: none;
             cursor: pointer;
         }
@@ -298,29 +301,29 @@
         .icon-copy-action-btn {
             width: 36px;
             height: 36px;
-            background: var(--bg-inset);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-sm);
+            background: var(--bg-inset, #0f0f12);
+            border: 1px solid var(--border-default, #27272a);
+            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             flex-shrink: 0;
-            transition: background var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+            transition: background 0.15s ease, border-color 0.15s ease;
         }
-        .icon-copy-action-btn:hover { border-color: var(--border-strong); background: var(--bg-surface); }
+        .icon-copy-action-btn:hover { border-color: var(--border-strong, #3f3f46); background: var(--bg-surface, #18181b); }
         .icon-copy-action-btn:active { transform: scale(0.9); }
         .icon-copy-action-btn img { width: 16px; height: 16px; image-rendering: pixelated; }
 
         .npc-compound-card {
-            background: var(--bg-inset);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-lg);
-            padding: var(--space-1) var(--space-2);
+            background: var(--bg-inset, #0f0f12);
+            border: 1px solid var(--border-default, #27272a);
+            border-radius: 12px;
+            padding: 4px 8px;
             display: flex;
-            gap: var(--space-2);
+            gap: 8px;
             align-items: center;
-            margin: var(--space-2) 0;
+            margin: 8px 0;
             min-height: 40px;
         }
 
@@ -328,174 +331,134 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: var(--space-1);
+            gap: 4px;
             min-width: 0;
         }
         .npc-line-box {
-            font-family: var(--font-mono);
-            background: var(--bg-body);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-primary);
-            padding: var(--space-2);
-            border-radius: var(--radius-sm);
-            font-size: var(--fs-xs);
+            font-family: var(--font-mono, monospace);
+            background: var(--bg-body, #0f0f12);
+            border: 1px solid var(--border-subtle, #27272a);
+            color: var(--text-primary, #f4f4f5);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
             white-space: pre;
             overflow-x: auto;
         }
 
         .npc-router-explainer-tag {
-            font-family: var(--font-mono);
-            font-size: var(--fs-xs);
-            color: var(--text-muted);
+            font-family: var(--font-mono, monospace);
+            font-size: 12px;
+            color: var(--text-muted, #71717a);
             text-align: center;
             cursor: pointer;
             user-select: none;
             display: block;
             margin-top: -4px;
-            margin-bottom: var(--space-4);
+            margin-bottom: 16px;
         }
-        .npc-router-explainer-tag:hover { color: var(--text-link); }
+        .npc-router-explainer-tag:hover { color: var(--text-link, #a855f7); }
 
         .structure-deck-panel {
-            background: var(--bg-inset);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-lg);
-            padding: var(--space-4);
+            background: var(--bg-inset, #0f0f12);
+            border: 1px solid var(--border-default, #27272a);
+            border-radius: 12px;
+            padding: 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: var(--space-4);
-            margin-top: var(--space-4);
+            gap: 16px;
+            margin-top: 16px;
         }
-        .structure-preview-meta { display: flex; align-items: center; gap: var(--space-4); }
+        .structure-preview-meta { display: flex; align-items: center; gap: 16px; }
         .structure-img-frame {
             width: 44px;
             height: 44px;
-            background: var(--bg-body);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-md);
+            background: var(--bg-body, #0f0f12);
+            border: 1px solid var(--border-default, #27272a);
+            border-radius: 8px;
             object-fit: cover;
             image-rendering: pixelated;
         }
-        .structure-label-title { font-weight: var(--fw-bold); color: var(--text-primary); font-size: var(--fs-sm); }
-        .structure-label-sub { font-size: var(--fs-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); }
+        .structure-label-title { font-weight: bold; color: var(--text-primary, #f4f4f5); font-size: 14px; }
+        .structure-label-sub { font-size: 12px; color: var(--text-muted, #71717a); text-transform: uppercase; }
 
         .btn {
-            background: var(--accent);
+            background: var(--accent, #8b5cf6);
             border: none;
-            color: var(--text-on-brand);
-            padding: var(--space-2) var(--space-4);
-            border-radius: var(--radius-sm);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 4px;
             cursor: pointer;
-            font-weight: var(--fw-semibold);
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: var(--ls-wide);
-            font-size: var(--fs-xs);
-            transition: background var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+            font-size: 12px;
+            transition: background 0.15s ease, transform 0.15s ease;
         }
-        .btn:hover { background: var(--accent-hover); }
+        .btn:hover { background: var(--accent-hover, #7c3aed); }
         .btn:active { transform: scale(0.96); }
-        .btn-secondary { background: var(--bg-inset); border: 1px solid var(--border-default); color: var(--text-secondary); }
-        .btn-secondary:hover { border-color: var(--border-strong); color: var(--text-primary); }
-        .btn:disabled { background: var(--bg-inset); color: var(--text-disabled); border: 1px solid var(--border-subtle); cursor: not-allowed; transform: none; }
+        .btn-secondary { background: var(--bg-inset, #0f0f12); border: 1px solid var(--border-default, #27272a); color: var(--text-secondary, #a1a1aa); }
+        .btn-secondary:hover { border-color: var(--border-strong, #3f3f46); color: var(--text-primary, #f4f4f5); }
+        .btn:disabled { background: var(--bg-inset, #0f0f12); color: var(--text-disabled, #52525b); border: 1px solid var(--border-subtle, #27272a); cursor: not-allowed; transform: none; }
 
-        /* External Author Notice Header Banner */
         .external-author-banner {
-            background: var(--bg-inset);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-md);
-            padding: var(--space-3) var(--space-4);
-            margin-bottom: var(--space-3);
+            background: var(--bg-inset, #0f0f12);
+            border: 1px solid var(--border-default, #27272a);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
-        .external-author-label {
-            font-size: var(--fs-xs);
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: var(--ls-wide);
-        }
-        .external-author-name {
-            font-size: var(--fs-md);
-            font-weight: var(--fw-bold);
-            color: var(--text-primary);
-        }
+        .external-author-label { font-size: 12px; color: var(--text-muted, #71717a); text-transform: uppercase; }
+        .external-author-name { font-size: 16px; font-weight: bold; color: var(--text-primary, #f4f4f5); }
 
-        /* External Disclaimer Box inside Viewer Layout */
         .external-disclaimer-box {
-            background: var(--bg-inset);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-md);
-            padding: var(--space-3) var(--space-4);
-            font-size: var(--fs-xs);
-            color: var(--text-muted);
-            line-height: var(--lh-normal);
+            background: var(--bg-inset, #0f0f12);
+            border: 1px solid var(--border-default, #27272a);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 12px;
+            color: var(--text-muted, #71717a);
+            line-height: 1.5;
         }
-        .external-disclaimer-box strong {
-            color: var(--text-secondary);
-        }
+        .external-disclaimer-box strong { color: var(--text-secondary, #a1a1aa); }
 
-        /* Footer Utilities */
         .footer {
-            margin-top: var(--space-8);
-            padding-bottom: var(--space-5);
+            margin-top: 32px;
+            padding-bottom: 20px;
             text-align: center;
             display: flex;
             flex-direction: column;
-            gap: var(--space-2);
+            gap: 8px;
             align-items: center;
             width: 100%;
         }
-        .footer-title {
-            font-size: var(--fs-xs);
-            color: var(--text-muted);
-            opacity: 0.75;
-            letter-spacing: var(--ls-wide);
-        }
-        .footer-links {
-            display: flex;
-            gap: var(--space-3);
-            flex-wrap: wrap;
-            justify-content: center;
-        }
+        .footer-title { font-size: 12px; color: var(--text-muted, #71717a); opacity: 0.75; }
+        .footer-links { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
         .footer-links a {
             display: flex;
             align-items: center;
             gap: 6px;
-            color: var(--brand-accent-2-300);
+            color: var(--brand-accent-2-300, #c084fc);
             text-decoration: none;
-            font-size: var(--fs-sm);
+            font-size: 14px;
             opacity: 0.85;
-            transition: opacity var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+            transition: opacity 0.15s ease, color 0.15s ease;
         }
-        .footer-links a:hover {
-            color: var(--brand-accent-1-300);
-            opacity: 1;
-        }
+        .footer-links a:hover { color: var(--brand-accent-1-300, #e879f9); opacity: 1; }
         .footer-links img {
             width: 16px;
             height: 16px;
-            color-scheme: dark !important;
             filter: brightness(0) invert(1) !important;
             opacity: 0.9;
         }
-        .footer-links a.kofi { color: #ff5fa2; font-weight: var(--fw-medium); }
+        .footer-links a.kofi { color: #ff5fa2; font-weight: 500; }
         .footer-links a.kofi:hover { color: #ff8fc0; }
-        .footer-links a.kofi img {
-            width: 20px;
-            height: 20px;
-            color-scheme: dark !important;
-            filter: brightness(0) invert(1) !important;
-            opacity: 0.95;
-        }
+        .footer-links a.kofi img { width: 20px; height: 20px; filter: brightness(0) invert(1) !important; opacity: 0.95; }
 
-        /* De-emphasized Footer Styles for Third-Party Works */
-        .footer-deemphasized {
-            opacity: 0.6;
-            filter: grayscale(0.5);
-            transition: opacity var(--duration-fast) var(--ease-standard);
-        }
+        .footer-deemphasized { opacity: 0.6; filter: grayscale(0.5); transition: opacity 0.15s ease; }
         .footer-deemphasized:hover { opacity: 0.9; }
     </style>
 </head>
@@ -514,7 +477,7 @@
         </header>
 
         <main id="app-view-router-canvas">
-             <div style="text-align: center; color: var(--text-muted); padding: var(--space-7);">Scanning workspace directories...</div>
+             <div style="text-align: center; color: var(--text-muted, #71717a); padding: 32px;">Loading commands...</div>
         </main>
 
         <div class="footer" id="global-page-footer">
@@ -537,6 +500,14 @@
     </div>
 
     <script>
+        // List of command text files relative to ./commands/ directory in current repository
+        const COMMAND_FILES = [
+            "something.txt",
+            "test.txt",
+            "throw-tnt.txt",
+            "yet-to-finish.txt"
+        ];
+
         let cachedParsedIndexDataset = [];
         const CDNBASESRC = "https://raw.githubusercontent.com/nako-hikari/nako-hikari.github.io/main/assets/images";
 
@@ -563,7 +534,7 @@
 
             if (isViewerPage) {
                 titleBlock.innerHTML = `
-                    <button class="btn btn-secondary" style="font-family: var(--font-mono);" onclick="handleIntegratedBackSequence()">←</button>
+                    <button class="btn btn-secondary" style="font-family: var(--font-mono, monospace);" onclick="handleIntegratedBackSequence()">←</button>
                     <h1 id="app-display-header" onclick="routeReturnHomeDashboard()">Command Block Creation</h1>
                 `;
             } else {
@@ -581,67 +552,39 @@
         }
 
         async function initializeApplicationRuntimePipeline() {
-            try {
-                // Fetch command files from current repository's /commands directory via relative API path
-                const repoPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-                const response = await fetch('commands/');
-                
-                // Fallback attempt to GitHub API for relative local repo structure if directory indexing isn't plain HTML
-                let targetFiles = [];
-                if (response.ok) {
-                    const textData = await response.text();
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(textData, 'text/html');
-                    const links = Array.from(doc.querySelectorAll('a'));
-                    targetFiles = links
-                        .map(l => l.getAttribute('href'))
-                        .filter(href => href && href.endsWith('.txt'))
-                        .map(href => ({ name: href.split('/').pop() }));
-                }
+            const fetchPromises = COMMAND_FILES.map(async (fileName) => {
+                try {
+                    const relativePath = `commands/${fileName}`;
+                    const fileContentResponse = await fetch(relativePath);
+                    if (!fileContentResponse.ok) throw new Error();
+                    const data = await fileContentResponse.text();
+                    
+                    let cleanName = fileName.substring(0, fileName.lastIndexOf('.')).replace(/_/g, ' ');
+                    let title = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+                    
+                    let desc = "No descriptor statement declared in source file.";
+                    let tags = [];
+                    let credit = null;
 
-                if (targetFiles.length === 0) {
-                    const ghResponse = await fetch('https://api.github.com/repos/nako-hikari/nako-hikari.github.io/contents/commands');
-                    if (ghResponse.ok) {
-                        const directoryItems = await ghResponse.json();
-                        targetFiles = directoryItems.filter(item => item.name.endsWith('.txt'));
+                    const segments = data.split('\n\n');
+                    if (segments[0]) {
+                        segments[0].split('\n').forEach(line => {
+                            if (line.startsWith('TITLE:')) title = line.replace('TITLE:', '').trim();
+                            if (line.startsWith('DESC:')) desc = line.replace('DESC:', '').trim();
+                            if (line.startsWith('TAG:')) tags = line.replace('TAG:', '').split(',').map(t => t.trim());
+                            if (line.startsWith('CREDIT:')) credit = line.replace('CREDIT:', '').trim();
+                        });
                     }
+
+                    return { file: fileName, parsedTitle: title, parsedDesc: desc, parsedTags: tags, parsedCredit: credit, rawPayload: data };
+                } catch (err) {
+                    let rawTitle = fileName.substring(0, fileName.lastIndexOf('.'));
+                    let cleanFallbackTitle = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1);
+                    return { file: fileName, parsedTitle: cleanFallbackTitle, parsedDesc: "Failed to download asset.", parsedTags: [], parsedCredit: null, rawPayload: null };
                 }
+            });
 
-                const fetchPromises = targetFiles.map(async (item) => {
-                    try {
-                        const fileContentResponse = await fetch(`commands/${item.name}`);
-                        if (!fileContentResponse.ok) throw new Error();
-                        const data = await fileContentResponse.text();
-                        
-                        let cleanName = item.name.substring(0, item.name.lastIndexOf('.')).replace(/_/g, ' ');
-                        let title = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
-                        
-                        let desc = "No descriptor statement declared in source file.";
-                        let tags = [];
-                        let credit = null;
-
-                        const segments = data.split('\n\n');
-                        if (segments[0]) {
-                            segments[0].split('\n').forEach(line => {
-                                if (line.startsWith('TITLE:')) title = line.replace('TITLE:', '').trim();
-                                if (line.startsWith('DESC:')) desc = line.replace('DESC:', '').trim();
-                                if (line.startsWith('TAG:')) tags = line.replace('TAG:', '').split(',').map(t => t.trim());
-                                if (line.startsWith('CREDIT:')) credit = line.replace('CREDIT:', '').trim();
-                            });
-                        }
-
-                        return { file: item.name, parsedTitle: title, parsedDesc: desc, parsedTags: tags, parsedCredit: credit, rawPayload: data };
-                    } catch (err) {
-                        let rawTitle = item.name.substring(0, item.name.lastIndexOf('.'));
-                        let cleanFallbackTitle = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1);
-                        return { file: item.name, parsedTitle: cleanFallbackTitle, parsedDesc: "Failed to download asset.", parsedTags: [], parsedCredit: null, rawPayload: null };
-                    }
-                });
-
-                cachedParsedIndexDataset = await Promise.all(fetchPromises);
-            } catch (err) {
-                console.warn("Commands Directory Engine connection fault.");
-            }
+            cachedParsedIndexDataset = await Promise.all(fetchPromises);
             readLocationHashRouteToken();
         }
 
@@ -655,46 +598,11 @@
                 });
                 
                 if (searchMatch) {
-                    if (searchMatch.rawPayload) {
-                        renderFocusedCreationDisplayPage(searchMatch);
-                        return;
-                    } else {
-                        attemptLiveOnDemandAssetRecovery(searchMatch);
-                        return;
-                    }
+                    renderFocusedCreationDisplayPage(searchMatch);
+                    return;
                 }
             }
             renderGlobalDashboardHomeGrid();
-        }
-
-        async function attemptLiveOnDemandAssetRecovery(matchedObject) {
-            updateHeaderTitleBlock(true);
-            const canvas = document.getElementById('app-view-router-canvas');
-            canvas.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: var(--space-7);">Fetching content payload on-demand...</div>`;
-            try {
-                const res = await fetch(`commands/${matchedObject.file}`);
-                if (!res.ok) throw new Error();
-                const textData = await res.text();
-                matchedObject.rawPayload = textData;
-                
-                const segments = textData.split('\n\n');
-                if (segments[0]) {
-                    segments[0].split('\n').forEach(line => {
-                        if (line.startsWith('TITLE:')) matchedObject.parsedTitle = line.replace('TITLE:', '').trim();
-                        if (line.startsWith('DESC:')) matchedObject.parsedDesc = line.replace('DESC:', '').trim();
-                        if (line.startsWith('TAG:')) matchedObject.parsedTags = line.replace('TAG:', '').split(',').map(t => t.trim());
-                        if (line.startsWith('CREDIT:')) matchedObject.parsedCredit = line.replace('CREDIT:', '').trim();
-                    });
-                }
-                renderFocusedCreationDisplayPage(matchedObject);
-            } catch (e) {
-                canvas.innerHTML = `
-                    <div style="text-align: center; padding: var(--space-7);">
-                        <p style="color: var(--color-danger); font-weight: bold;">Could not download ${matchedObject.file}</p>
-                        <button class="btn btn-secondary" onclick="routeReturnHomeDashboard()">Back to Dashboard</button>
-                    </div>
-                `;
-            }
         }
 
         function renderGlobalDashboardHomeGrid() {
@@ -726,9 +634,9 @@
 
                 card.innerHTML = `
                     <div class="card-title">${escapeHtmlEntities(item.parsedTitle)}</div>
-                    <div class="card-desc" style="${item.rawPayload ? '' : 'color: var(--color-danger);'}">${escapeHtmlEntities(item.parsedDesc)}</div>
+                    <div class="card-desc" style="${item.rawPayload ? '' : 'color: #ef4444;'}">${escapeHtmlEntities(item.parsedDesc)}</div>
                     ${creditDisplayStr}
-                    <div class="tag-pill-container" style="margin-top: var(--space-1);">${tagPillsStr}</div>
+                    <div class="tag-pill-container" style="margin-top: 4px;">${tagPillsStr}</div>
                 `;
                 gridContainer.appendChild(card);
             });
@@ -837,7 +745,7 @@
             };
 
             let rightActionGroup = document.createElement('div');
-            rightActionGroup.style.cssText = 'display: flex; align-items: center; gap: var(--space-4); flex-shrink: 0;';
+            rightActionGroup.style.cssText = 'display: flex; align-items: center; gap: 16px; flex-shrink: 0;';
             rightActionGroup.appendChild(wrapToggleLabel);
             rightActionGroup.appendChild(shareButtonEl);
 
@@ -937,8 +845,8 @@
                     functionalCopyBtn.onclick = () => {
                         const compoundingTextBuffer = macroPayloadLines.join('\n');
                         navigator.clipboard.writeText(compoundingTextBuffer);
-                        functionalCopyBtn.style.borderColor = 'var(--color-success-border)';
-                        functionalCopyBtn.style.background = 'var(--color-success-bg)';
+                        functionalCopyBtn.style.borderColor = '#10b981';
+                        functionalCopyBtn.style.background = 'rgba(16, 185, 129, 0.1)';
                         setTimeout(() => { 
                             functionalCopyBtn.style.borderColor = ''; 
                             functionalCopyBtn.style.background = '';
@@ -1011,7 +919,7 @@
             if (tagsContainer.children.length > 0) container.appendChild(tagsContainer);
             if (headerMetaContainer.children.length > 0 || tagsContainer.children.length > 0) {
                 let ruleSpacer = document.createElement('hr');
-                ruleSpacer.style.cssText = 'border: none; border-bottom: 1px solid var(--border-subtle); margin: 0;';
+                ruleSpacer.style.cssText = 'border: none; border-bottom: 1px solid var(--border-subtle, #27272a); margin: 0;';
                 container.appendChild(ruleSpacer);
             }
 
@@ -1054,7 +962,7 @@
                     <div class="structure-preview-meta">
                         <img src="${CDNBASESRC}/structure.png" class="structure-img-frame" style="opacity: 0.3;" alt="">
                         <div>
-                            <div class="structure-label-title" style="color: var(--text-muted);">Structure Unavailable</div>
+                            <div class="structure-label-title" style="color: var(--text-muted, #71717a);">Structure Unavailable</div>
                             <div class="structure-label-sub">No matching model structure found for deployment</div>
                         </div>
                     </div>
@@ -1074,8 +982,8 @@
         function copyInlinePayloadRowText(actionButtonNode) {
             const contentString = actionButtonNode.parentElement.querySelector('.view-cmd-payload-box').innerText;
             navigator.clipboard.writeText(contentString);
-            actionButtonNode.style.borderColor = 'var(--color-success-border)';
-            actionButtonNode.style.background = 'var(--color-success-bg)';
+            actionButtonNode.style.borderColor = '#10b981';
+            actionButtonNode.style.background = 'rgba(16, 185, 129, 0.1)';
             setTimeout(() => { 
                 actionButtonNode.style.borderColor = ''; 
                 actionButtonNode.style.background = '';
