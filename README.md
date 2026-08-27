@@ -1,2 +1,3 @@
 # bedrock-commands
-Library that contains fast collection of commands for bedrock
+Library that contains vast collection of commands for bedrock
+(maybe)
