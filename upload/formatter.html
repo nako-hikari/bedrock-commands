@@ -437,7 +437,7 @@
             border: var(--border-width) solid var(--border-color);
             border-radius: var(--radius-lg);
             padding: var(--space-lg);
-            max-width: 420px;
+            max-width: 460px;
             width: 100%;
             box-shadow: var(--shadow-deep);
             display: flex;
@@ -456,6 +456,9 @@
             font-size: 13px;
             color: var(--text-main);
             line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
         }
 
         .modal-actions {
@@ -497,6 +500,9 @@
         </header>
 
         <section class="meta-card">
+            <div>
+                <button class="btn btn-secondary" style="width: 100%; margin-bottom: 4px;" onclick="openEditImportModal()">✎ Edit Existing Creation</button>
+            </div>
             <div class="form-row">
                 <div class="form-group">
                     <label>Creation Title</label>
@@ -730,9 +736,10 @@
 
             canvas.appendChild(group);
             compilerCoreEngine();
+            return group;
         }
 
-        function addCommandRowToGroup(groupElement, targetCommandValue = '') {
+        function addCommandRowToGroup(groupElement, targetCommandValue = '', config = {}) {
             const stack = groupElement.querySelector('.connected-chain-stack');
             const bulkBox = groupElement.querySelector('.bulk-paste-zone');
             
@@ -740,7 +747,14 @@
 
             const rowIndex = stack.children.length + 1;
             const rowNode = document.createElement('div');
-            rowNode.className = 'cmd-row-node color-c';
+            
+            const mode = config.mode || 'C';
+            const cond = config.cond || 'U';
+            const active = config.active || 'AA';
+            const tick = config.tick !== undefined ? config.tick : '0';
+
+            rowNode.className = `cmd-row-node color-${mode.toLowerCase()}`;
+            if (cond === 'C') rowNode.classList.add('cond-border');
 
             rowNode.innerHTML = `
                 <div class="row-index-container">
@@ -751,31 +765,35 @@
                 <div class="row-controls-line">
                     <div class="inline-selector-set">
                         <select class="row-mode" onchange="updateRowColorTheme(this)">
-                            <option value="C" selected>C</option>
-                            <option value="I">I</option>
-                            <option value="R">R</option>
-                            <option value="CHAT">CHAT</option>
-                            <option value="NPC">NPC</option>
+                            <option value="C" ${mode === 'C' ? 'selected' : ''}>C</option>
+                            <option value="I" ${mode === 'I' ? 'selected' : ''}>I</option>
+                            <option value="R" ${mode === 'R' ? 'selected' : ''}>R</option>
+                            <option value="CHAT" ${mode === 'CHAT' ? 'selected' : ''}>CHAT</option>
+                            <option value="NPC" ${mode === 'NPC' ? 'selected' : ''}>NPC</option>
                         </select>
-                        <select class="row-cond" onchange="updateRowColorTheme(this)">
-                            <option value="U" selected>UN</option>
-                            <option value="C">CN</option>
+                        <select class="row-cond" style="${(mode === 'CHAT' || mode === 'NPC') ? 'display:none;' : ''}" onchange="updateRowColorTheme(this)">
+                            <option value="U" ${cond === 'U' ? 'selected' : ''}>UN</option>
+                            <option value="C" ${cond === 'C' ? 'selected' : ''}>CN</option>
                         </select>
-                        <select class="row-active" onchange="compilerCoreEngine()">
-                            <option value="AA" selected>AA</option>
-                            <option value="NR">NR</option>
+                        <select class="row-active" style="${(mode === 'CHAT' || mode === 'NPC') ? 'display:none;' : ''}" onchange="compilerCoreEngine()">
+                            <option value="AA" ${active === 'AA' ? 'selected' : ''}>AA</option>
+                            <option value="NR" ${active === 'NR' ? 'selected' : ''}>NR</option>
                         </select>
-                        <input type="text" class="row-tick" value="0" oninput="compilerCoreEngine()">
+                        <input type="text" class="row-tick" style="${(mode === 'CHAT' || mode === 'NPC') ? 'display:none;' : ''}" value="${tick}" oninput="compilerCoreEngine()">
                     </div>
                     <button class="btn btn-sm btn-danger" style="padding: 2px 8px;" onclick="confirmRemoveRowNode(this)">X</button>
                 </div>
                 <div class="cmd-input-container">
-                    <input type="text" class="cmd-input-field" placeholder="Enter command string..." value="${targetCommandValue.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
+                    ${mode === 'NPC' 
+                        ? `<textarea class="cmd-input-field" placeholder="Enter multi-line code execution sequences..." oninput="compilerCoreEngine()">${targetCommandValue}</textarea>`
+                        : `<input type="text" class="cmd-input-field" placeholder="Enter command string..." value="${targetCommandValue.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">`
+                    }
                 </div>
             `;
 
             stack.appendChild(rowNode);
             compilerCoreEngine();
+            return rowNode;
         }
 
         function confirmRemoveRowNode(buttonEl) {
@@ -853,8 +871,8 @@
             compilerCoreEngine();
         }
 
-        function addHeaderBlock() {
-            const type = document.getElementById('header-type-selector').value;
+        function addHeaderBlock(presetValue = '', tierPreset = 'H1') {
+            const type = presetValue ? tierPreset : document.getElementById('header-type-selector').value;
             const block = document.createElement('div');
             block.className = 'group-block';
             block.dataset.itemType = 'header';
@@ -862,39 +880,42 @@
 
             block.innerHTML = `
                 ${createStandardBlockHeader(`Header Block Element (${type})`, 'standard')}
-                <input type="text" class="header-input-val" placeholder="Enter layout header text label..." oninput="compilerCoreEngine()">
+                <input type="text" class="header-input-val" placeholder="Enter layout header text label..." value="${presetValue.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
             `;
             canvas.appendChild(block);
             compilerCoreEngine();
+            return block;
         }
 
-        function addBodyTextBlock() {
+        function addBodyTextBlock(presetValue = '') {
             const block = document.createElement('div');
             block.className = 'group-block';
             block.dataset.itemType = 'text';
 
             block.innerHTML = `
                 ${createStandardBlockHeader('Plain Body Text Block (TEXT)', 'standard')}
-                <textarea style="height: 60px; font-size: 13px; font-family: inherit; resize: vertical;" class="text-input-val" placeholder="Enter standard descriptive paragraph text content..." oninput="compilerCoreEngine()"></textarea>
+                <textarea style="height: 60px; font-size: 13px; font-family: inherit; resize: vertical;" class="text-input-val" placeholder="Enter standard descriptive paragraph text content..." oninput="compilerCoreEngine()">${presetValue}</textarea>
             `;
             canvas.appendChild(block);
             compilerCoreEngine();
+            return block;
         }
 
-        function addNoteBlock() {
+        function addNoteBlock(presetValue = '') {
             const block = document.createElement('div');
             block.className = 'group-block';
             block.dataset.itemType = 'note';
 
             block.innerHTML = `
                 ${createStandardBlockHeader('User Note Box (NOTE)', 'standard')}
-                <input type="text" class="note-input-val" placeholder="Enter gray dynamic italics info comment string..." oninput="compilerCoreEngine()">
+                <input type="text" class="note-input-val" placeholder="Enter gray dynamic italics info comment string..." value="${presetValue.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
             `;
             canvas.appendChild(block);
             compilerCoreEngine();
+            return block;
         }
 
-        function addLinkBlock() {
+        function addLinkBlock(presetTitle = '', presetUrl = '') {
             const block = document.createElement('div');
             block.className = 'group-block';
             block.dataset.itemType = 'link-group';
@@ -904,41 +925,181 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Pressable Link Title</label>
-                        <input type="text" class="link-title-val" placeholder="Enter the text that users click..." oninput="compilerCoreEngine()">
+                        <input type="text" class="link-title-val" placeholder="Enter the text that users click..." value="${presetTitle.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
                     </div>
                     <div class="form-group">
                         <label>Actual Link URL</label>
-                        <input type="text" class="link-url-val" placeholder="https://..." oninput="compilerCoreEngine()">
+                        <input type="text" class="link-url-val" placeholder="https://..." value="${presetUrl.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
                     </div>
                 </div>
             `;
             canvas.appendChild(block);
             compilerCoreEngine();
+            return block;
         }
 
-        function addImageBlock() {
+        function addImageBlock(presetUrl = '') {
             const block = document.createElement('div');
             block.className = 'group-block';
             block.dataset.itemType = 'img-group';
 
             block.innerHTML = `
                 ${createStandardBlockHeader('Image Asset Link (IMG)', 'standard')}
-                <input type="text" class="img-url-val" placeholder="Enter image URL or raw GitHub asset string..." oninput="compilerCoreEngine()">
+                <input type="text" class="img-url-val" placeholder="Enter image URL or raw GitHub asset string..." value="${presetUrl.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
             `;
             canvas.appendChild(block);
             compilerCoreEngine();
+            return block;
         }
 
-        function addEmbedBlock() {
+        function addEmbedBlock(presetUrl = '') {
             const block = document.createElement('div');
             block.className = 'group-block';
             block.dataset.itemType = 'embed-group';
 
             block.innerHTML = `
                 ${createStandardBlockHeader('Video Embed Resource (EMBED)', 'standard')}
-                <input type="text" class="embed-url-val" placeholder="Enter the source video file or hosting URL string..." oninput="compilerCoreEngine()">
+                <input type="text" class="embed-url-val" placeholder="Enter the source video file or hosting URL string..." value="${presetUrl.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
             `;
             canvas.appendChild(block);
+            compilerCoreEngine();
+            return block;
+        }
+
+        function openEditImportModal() {
+            displayCustomModal({
+                title: 'Import Creation Payload',
+                htmlContent: `
+                    <label>Paste your raw string payload below:</label>
+                    <textarea id="edit-import-textarea" style="height: 140px; font-size: 12px;" placeholder="Paste output formatted raw string here..."></textarea>
+                `,
+                actions: [
+                    { label: 'Cancel', class: 'btn-secondary' },
+                    {
+                        label: 'Process Raw String',
+                        class: 'btn',
+                        onClick: () => {
+                            const raw = document.getElementById('edit-import-textarea').value;
+                            if (!raw.trim()) return;
+                            confirmOverwriteExistingData(raw);
+                        }
+                    }
+                ]
+            });
+        }
+
+        function confirmOverwriteExistingData(rawText) {
+            displayModal({
+                title: 'Overwrite Warning',
+                message: 'Continuing will completely overwrite your current work in progress. Are you sure you want to replace it?',
+                actions: [
+                    {
+                        label: 'Go Back',
+                        class: 'btn-secondary',
+                        onClick: () => {
+                            openEditImportModal();
+                        }
+                    },
+                    {
+                        label: 'Yes, Overwrite',
+                        class: 'btn-danger',
+                        onClick: () => {
+                            executeRawStringImport(rawText);
+                        }
+                    }
+                ]
+            });
+        }
+
+        function executeRawStringImport(rawText) {
+            canvas.innerHTML = '';
+            document.getElementById('meta-title').value = '';
+            document.getElementById('meta-desc').value = '';
+            document.getElementById('meta-credit').value = 'Nako Hikari';
+            
+            const checkboxes = document.querySelectorAll('#tag-checkbox-list input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+
+            const blocks = rawText.split(/\n\s*\n/);
+            let activeChainGroup = null;
+
+            blocks.forEach(block => {
+                const trimmed = block.trim();
+                if (!trimmed) return;
+
+                const lines = trimmed.split('\n');
+
+                if (lines[0].startsWith('credit :')) {
+                    document.getElementById('meta-credit').value = lines[0].replace('credit :', '').trim() || 'Nako Hikari';
+                    return;
+                }
+
+                let isMetaBlock = false;
+                lines.forEach(line => {
+                    if (line.startsWith('TITLE:')) {
+                        document.getElementById('meta-title').value = line.replace('TITLE:', '').trim();
+                        isMetaBlock = true;
+                    } else if (line.startsWith('DESC:')) {
+                        document.getElementById('meta-desc').value = line.replace('DESC:', '').trim();
+                        isMetaBlock = true;
+                    } else if (line.startsWith('TAG:')) {
+                        const tags = line.replace('TAG:', '').split(',').map(t => t.trim());
+                        checkboxes.forEach(cb => {
+                            if (tags.includes(cb.value)) cb.checked = true;
+                        });
+                        isMetaBlock = true;
+                    }
+                });
+                if (isMetaBlock) return;
+
+                if (trimmed.startsWith('H1:')) {
+                    activeChainGroup = null;
+                    addHeaderBlock(trimmed.replace('H1:', '').trim(), 'H1');
+                } else if (trimmed.startsWith('H2:')) {
+                    activeChainGroup = null;
+                    addHeaderBlock(trimmed.replace('H2:', '').trim(), 'H2');
+                } else if (trimmed.startsWith('TEXT:')) {
+                    activeChainGroup = null;
+                    addBodyTextBlock(trimmed.replace('TEXT:', '').trim());
+                } else if (trimmed.startsWith('NOTE:')) {
+                    activeChainGroup = null;
+                    addNoteBlock(trimmed.replace('NOTE:', '').trim());
+                } else if (trimmed.startsWith('[link]')) {
+                    activeChainGroup = null;
+                    const match = trimmed.match(/\[link\]\[(.*?)\]\((.*?)\)/);
+                    if (match) addLinkBlock(match[1], match[2]);
+                } else if (trimmed.startsWith('[img]')) {
+                    activeChainGroup = null;
+                    const match = trimmed.match(/\[img\]\((.*?)\)/);
+                    if (match) addImageBlock(match[1]);
+                } else if (trimmed.startsWith('[embed]')) {
+                    activeChainGroup = null;
+                    const match = trimmed.match(/\[embed\]\((.*?)\)/);
+                    if (match) addEmbedBlock(match[1]);
+                } else if (trimmed.startsWith('CMD:')) {
+                    if (!activeChainGroup) {
+                        activeChainGroup = addChainGroup();
+                    }
+                    
+                    for (let i = 0; i < lines.length; i += 2) {
+                        if (lines[i] && lines[i].startsWith('CMD:')) {
+                            const headerParts = lines[i].split(':');
+                            const cmdVal = lines[i + 1] || '';
+                            const mode = headerParts[1] || 'C';
+
+                            if (mode === 'NPC' || mode === 'CHAT') {
+                                addCommandRowToGroup(activeChainGroup, cmdVal, { mode });
+                            } else {
+                                const active = headerParts[2] || 'AA';
+                                const cond = headerParts[3] || 'U';
+                                const tick = headerParts[4] || '0';
+                                addCommandRowToGroup(activeChainGroup, cmdVal, { mode, cond, active, tick });
+                            }
+                        }
+                    }
+                }
+            });
+
             compilerCoreEngine();
         }
 
@@ -1040,6 +1201,30 @@
             overlay.classList.add('active');
         }
 
+        function displayCustomModal({ title, htmlContent, actions }) {
+            const overlay = document.getElementById('app-modal-overlay');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const modalActions = document.getElementById('modal-actions');
+
+            modalTitle.innerText = title;
+            modalBody.innerHTML = htmlContent;
+            modalActions.innerHTML = '';
+
+            actions.forEach(act => {
+                const btn = document.createElement('button');
+                btn.className = `btn ${act.class || ''}`;
+                btn.innerText = act.label;
+                btn.onclick = () => {
+                    hideModal();
+                    if (act.onClick) act.onClick();
+                };
+                modalActions.appendChild(btn);
+            });
+
+            overlay.classList.add('active');
+        }
+
         function hideModal() {
             document.getElementById('app-modal-overlay').classList.remove('active');
         }
@@ -1050,7 +1235,6 @@
             const currentCredit = creditField.value.trim();
 
             if (currentCredit === 'Nako Hikari') {
-                // Step 2: Unchanged Credit Warning
                 displayModal({
                     title: 'Credit is still unchanged',
                     message: 'Your credit is still set to Nako Hikari. Continuing will result in this creation being credited to Nako Hikari.',
@@ -1076,7 +1260,6 @@
         }
 
         function showGeneralConfirmation() {
-            // Step 3: General Confirmation
             displayModal({
                 title: 'Confirm Upload',
                 message: 'Make sure everything is correct before uploading. You will not be able to edit the submission after uploading.',
@@ -1117,7 +1300,6 @@
 
                 const result = await response.json();
 
-                // Step 4: Success Modal
                 displayModal({
                     title: 'Upload Successful',
                     message: 'Command creation is on review and will show on the main page after approval.',
@@ -1126,7 +1308,6 @@
                     ]
                 });
             } catch (error) {
-                // Step 5: Failure Error Modal
                 displayModal({
                     title: 'Upload Failed',
                     message: 'Upload failed: ' + error.message,
