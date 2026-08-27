@@ -35,6 +35,7 @@
             --stripe-link: #3a7bd5;
             --stripe-img: #10b981;
             --stripe-embed: #ec4899;
+            --stripe-bullet: #38bdf8;
 
             --space-xs: 4px;
             --space-sm: 8px;
@@ -195,6 +196,7 @@
         .group-block[data-item-type="link-group"] { border-left: 4px solid var(--stripe-link); }
         .group-block[data-item-type="img-group"] { border-left: 4px solid var(--stripe-img); }
         .group-block[data-item-type="embed-group"] { border-left: 4px solid var(--stripe-embed); }
+        .group-block[data-item-type="bullet-group"] { border-left: 4px solid var(--stripe-bullet); }
 
         .block-moving-flash {
             background-color: rgba(167, 122, 153, 0.1) !important;
@@ -362,6 +364,31 @@
         }
 
         .bulk-paste-zone textarea { height: 55px; font-size: 12px; }
+
+        .bullet-item-stack {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .bullet-item-row {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-sm);
+        }
+
+        .bullet-item-row .bullet-item-val {
+            flex: 1;
+            height: 44px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .bullet-item-row .btn-danger {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
 
         .btn {
             background: var(--accent-dark);
@@ -540,15 +567,26 @@
             <select id="header-type-selector" class="header-type-select">
                 <option value="H1">H1</option>
                 <option value="H2">H2</option>
+                <option value="H3">H3</option>
+                <option value="H4">H4</option>
             </select>
             <button class="btn btn-secondary" onclick="addHeaderBlock()">+ Add Header</button>
             <button class="btn btn-secondary" onclick="addBodyTextBlock()">+ Add Body Text</button>
             <button class="btn btn-secondary" onclick="addNoteBlock()">+ Add Note</button>
+            <button class="btn btn-secondary" onclick="addBulletGroup()">+ Add Bullet List</button>
             
             <div style="border-left: 1px solid var(--border-color); height: 20px; margin: 0 var(--space-xs);"></div>
             <button class="btn btn-secondary" onclick="addLinkBlock()">+ Add Link</button>
             <button class="btn btn-secondary" onclick="addImageBlock()">+ Add Image</button>
             <button class="btn btn-secondary" onclick="addEmbedBlock()">+ Add Embed</button>
+
+            <div style="border-left: 1px solid var(--border-color); height: 20px; margin: 0 var(--space-xs);"></div>
+            <select id="linebreak-count-selector" class="header-type-select">
+                <option value="1">1x Break</option>
+                <option value="3">3x Break</option>
+                <option value="6">6x Break</option>
+            </select>
+            <button class="btn btn-secondary" onclick="insertLineBreak()" title="Click into a Body Text, Note or Bullet Item field first">+ Insert Line Break</button>
         </section>
 
         <main id="builder-canvas"></main>
@@ -705,6 +743,12 @@
         }
 
         function createStandardBlockHeader(titleText, belongsToGroup) {
+            let addBtn = '';
+            if (belongsToGroup === 'chain') {
+                addBtn = `<button class="btn btn-sm" onclick="addCommandRowToGroup(this.closest('.group-block'))">+ Add Row</button>`;
+            } else if (belongsToGroup === 'bullet') {
+                addBtn = `<button class="btn btn-sm" onclick="addBulletItem(this.closest('.group-block'))">+ Add Item</button>`;
+            }
             return `
                 <div class="group-header">
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -713,7 +757,7 @@
                     <div class="block-action-cluster">
                         <button class="btn btn-sm btn-secondary" onclick="shiftBlockPosition(this, -1)">▲ Up</button>
                         <button class="btn btn-sm btn-secondary" onclick="shiftBlockPosition(this, 1)">▼ Down</button>
-                        ${belongsToGroup === 'chain' ? `<button class="btn btn-sm" onclick="addCommandRowToGroup(this.closest('.group-block'))">+ Add Row</button>` : ''}
+                        ${addBtn}
                         <button class="btn btn-sm btn-danger" onclick="confirmDeleteBlock(this)">Remove</button>
                     </div>
                 </div>
@@ -901,18 +945,135 @@
             return block;
         }
 
-        function addNoteBlock(presetValue = '') {
+        function addNoteBlock(presetValue = '', presetColor = 'default') {
             const block = document.createElement('div');
             block.className = 'group-block';
             block.dataset.itemType = 'note';
+            block.dataset.noteColor = presetColor;
 
             block.innerHTML = `
                 ${createStandardBlockHeader('User Note Box (NOTE)', 'standard')}
-                <input type="text" class="note-input-val" placeholder="Enter gray dynamic italics info comment string..." value="${presetValue.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Note Color</label>
+                        <select class="note-color-select" onchange="updateNoteColor(this)">
+                            <option value="default" ${presetColor === 'default' ? 'selected' : ''}>Default</option>
+                            <option value="green" ${presetColor === 'green' ? 'selected' : ''}>Green</option>
+                            <option value="red" ${presetColor === 'red' ? 'selected' : ''}>Red</option>
+                            <option value="yellow" ${presetColor === 'yellow' ? 'selected' : ''}>Yellow</option>
+                        </select>
+                    </div>
+                </div>
+                <textarea class="note-input-val" style="height: 60px; font-size: 13px; font-family: inherit; resize: vertical;" placeholder="Enter gray dynamic italics info comment string... (supports multiple lines)" oninput="compilerCoreEngine()">${presetValue}</textarea>
             `;
             canvas.appendChild(block);
             compilerCoreEngine();
             return block;
+        }
+
+        function updateNoteColor(selectEl) {
+            const block = selectEl.closest('.group-block');
+            block.dataset.noteColor = selectEl.value;
+            compilerCoreEngine();
+        }
+
+        function addBulletGroup() {
+            const block = document.createElement('div');
+            block.className = 'group-block';
+            block.dataset.itemType = 'bullet-group';
+            block.dataset.bulletStyle = 'dot';
+
+            block.innerHTML = `
+                ${createStandardBlockHeader('Bullet List Block (BULLET)', 'bullet')}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Bullet Style</label>
+                        <select class="bullet-style-select" onchange="updateBulletStyle(this)">
+                            <option value="dot">• Dot</option>
+                            <option value="dash">- Dash</option>
+                            <option value="num">1. Numeral</option>
+                            <option value="abc">a. Alphabetic</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="bullet-item-stack"></div>
+            `;
+            canvas.appendChild(block);
+            addBulletItem(block);
+            compilerCoreEngine();
+            return block;
+        }
+
+        function addBulletItem(groupElement, presetValue = '') {
+            const stack = groupElement.querySelector('.bullet-item-stack');
+            const row = document.createElement('div');
+            row.className = 'bullet-item-row';
+            row.innerHTML = `
+                <textarea class="bullet-item-val" placeholder="Enter bullet item text..." oninput="compilerCoreEngine()">${presetValue}</textarea>
+                <button class="btn btn-sm btn-danger" onclick="removeBulletItem(this)">X</button>
+            `;
+            stack.appendChild(row);
+            compilerCoreEngine();
+            return row;
+        }
+
+        function removeBulletItem(buttonEl) {
+            const stack = buttonEl.closest('.bullet-item-stack');
+            const group = buttonEl.closest('.group-block');
+            buttonEl.closest('.bullet-item-row').remove();
+
+            // Fool-proof: never let a bullet block go fully empty, since an
+            // empty BULLET: block has nothing to render on the parser side.
+            if (stack.children.length === 0) {
+                addBulletItem(group);
+            } else {
+                compilerCoreEngine();
+            }
+        }
+
+        function updateBulletStyle(selectEl) {
+            const block = selectEl.closest('.group-block');
+            block.dataset.bulletStyle = selectEl.value;
+            compilerCoreEngine();
+        }
+
+        /* Manual line-break insertion (formatter side).
+           Real newline characters can't be used for this because the raw
+           output format uses a blank line (double newline) to separate
+           blocks, and some command types (tellraw/titleraw JSON) already
+           rely on literal characters that must stay untouched. Instead we
+           insert an inert marker token that the parser turns into a <br>
+           at render time, without ever touching real newlines. */
+        const LINE_BREAK_TOKEN = '[[br]]';
+        let lastFocusedField = null;
+
+        document.addEventListener('focusin', (e) => {
+            if (e.target.matches && e.target.matches('.text-input-val, .note-input-val, .bullet-item-val')) {
+                lastFocusedField = e.target;
+            }
+        });
+
+        function insertLineBreak() {
+            const count = parseInt(document.getElementById('linebreak-count-selector').value, 10) || 1;
+            const field = lastFocusedField;
+
+            if (!field || !document.body.contains(field)) {
+                displayModal({
+                    title: 'No Field Selected',
+                    message: 'Click into a Body Text, Note, or Bullet Item field first, then press this button again to insert a line break at your cursor.',
+                    actions: [{ label: 'OK' }]
+                });
+                return;
+            }
+
+            const token = LINE_BREAK_TOKEN.repeat(count);
+            const start = field.selectionStart ?? field.value.length;
+            const end = field.selectionEnd ?? field.value.length;
+            field.value = field.value.slice(0, start) + token + field.value.slice(end);
+            const newPos = start + token.length;
+            field.focus();
+            field.setSelectionRange(newPos, newPos);
+            compilerCoreEngine();
         }
 
         function addLinkBlock(presetTitle = '', presetUrl = '') {
@@ -1052,18 +1213,31 @@
                 });
                 if (isMetaBlock) return;
 
-                if (trimmed.startsWith('H1:')) {
+                if (/^H[1-4]:/.test(trimmed)) {
                     activeChainGroup = null;
-                    addHeaderBlock(trimmed.replace('H1:', '').trim(), 'H1');
-                } else if (trimmed.startsWith('H2:')) {
-                    activeChainGroup = null;
-                    addHeaderBlock(trimmed.replace('H2:', '').trim(), 'H2');
+                    const tier = trimmed.match(/^H[1-4]/)[0];
+                    addHeaderBlock(trimmed.replace(new RegExp('^' + tier + ':'), '').trim(), tier);
                 } else if (trimmed.startsWith('TEXT:')) {
                     activeChainGroup = null;
                     addBodyTextBlock(trimmed.replace('TEXT:', '').trim());
-                } else if (trimmed.startsWith('NOTE:')) {
+                } else if (/^NOTE\b/i.test(trimmed)) {
                     activeChainGroup = null;
-                    addNoteBlock(trimmed.replace('NOTE:', '').trim());
+                    const noteMatch = trimmed.match(/^NOTE(?:\s*:\s*(GREEN|RED|YELLOW))?\s*:\s*([\s\S]*)$/i);
+                    const noteColor = (noteMatch && noteMatch[1]) ? noteMatch[1].toLowerCase() : 'default';
+                    const noteText = noteMatch ? noteMatch[2] : '';
+                    addNoteBlock(noteText, noteColor);
+                } else if (/^BULLET:/i.test(trimmed)) {
+                    activeChainGroup = null;
+                    const styleMatch = trimmed.match(/^BULLET:(\w+)/i);
+                    const style = styleMatch ? styleMatch[1].toLowerCase() : 'dot';
+                    const group = addBulletGroup();
+                    group.dataset.bulletStyle = style;
+                    const styleSelect = group.querySelector('.bullet-style-select');
+                    if (styleSelect) styleSelect.value = style;
+                    const stack = group.querySelector('.bullet-item-stack');
+                    stack.innerHTML = '';
+                    lines.slice(1).forEach(ln => { if (ln.trim()) addBulletItem(group, ln); });
+                    if (stack.children.length === 0) addBulletItem(group);
                 } else if (trimmed.startsWith('[link]')) {
                     activeChainGroup = null;
                     const match = trimmed.match(/\[link\]\[(.*?)\]\((.*?)\)/);
@@ -1137,8 +1311,20 @@
                 }
                 else if (type === 'note') {
                     const val = el.querySelector('.note-input-val').value.trim();
-                    if (val) sections.push(`NOTE: ${val}`);
-                } 
+                    const color = el.dataset.noteColor || 'default';
+                    if (val) {
+                        sections.push(color === 'default' ? `NOTE: ${val}` : `NOTE:${color.toUpperCase()}: ${val}`);
+                    }
+                }
+                else if (type === 'bullet-group') {
+                    const style = el.dataset.bulletStyle || 'dot';
+                    const items = Array.from(el.querySelectorAll('.bullet-item-val'))
+                        .map(t => t.value.trim())
+                        .filter(v => v.length > 0);
+                    if (items.length > 0) {
+                        sections.push(`BULLET:${style}\n` + items.join('\n'));
+                    }
+                }
                 else if (type === 'link-group') {
                     const textTitle = el.querySelector('.link-title-val').value.trim();
                     const targetUrl = el.querySelector('.link-url-val').value.trim();
