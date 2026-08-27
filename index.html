@@ -76,7 +76,7 @@
         <header style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 20px;">
             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; position: relative;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <button id="back-btn" class="secondary" style="display: none; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; font-family: monospace; font-size: 20px; line-height: 1;" onclick="handleBack()">←</button>
+                    <button id="back-btn" class="secondary" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; font-family: monospace; font-size: 20px; line-height: 1;" onclick="handleBack()">←</button>
                 </div>
                 <h1 id="app-display-header" style="font-size: 1.5rem; margin: 0 auto; text-align: center; cursor: pointer;" onclick="goHome()">Command Block Creation</h1>
                 <div style="display: flex; align-items: center;">
@@ -132,6 +132,12 @@
             return re.test(ln) ? ln.replace(re, '').trim() : null;
         }
 
+        // Case-insensitive startsWith, for header tokens like "CMD:CHAT" that
+        // people type inconsistently (e.g. "CMD:Chat", "cmd:chat").
+        function headIs(str, prefix) {
+            return str.toUpperCase().startsWith(prefix.toUpperCase());
+        }
+
         // Scans every line of a creation file (not just the first paragraph,
         // since fields like CREDIT/TITLE/TAG can be split across separate
         // blank-line-delimited blocks) and pulls out the recognized metadata.
@@ -150,7 +156,7 @@
 
         function handleBack() {
             if (window.location.hash) goHome();
-            else window.location.href = '../index.html';
+            else window.location.href = 'https://nakohikari.vercel.app';
         }
 
         async function initApp() {
@@ -202,7 +208,7 @@
                     return;
                 }
             }
-            if (backBtn) backBtn.style.display = 'none';
+            if (backBtn) backBtn.style.display = 'flex';
             headerTitle.innerText = "Command Block Creation";
             renderGrid();
         }
@@ -235,12 +241,77 @@
 
             const canvas = document.getElementById('app-view-router-canvas');
             canvas.innerHTML = `
-                <div style="width: 100%; margin-bottom: 16px;">
-                    <input type="text" id="search" style="width: 100%; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; color: var(--text-bright);" placeholder="Search creations by title or tag keywords..." oninput="filterGrid(this.value)">
+                <div style="width: 100%; margin-bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <input type="text" id="search" style="flex: 1; min-width: 200px; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; color: var(--text-bright);" placeholder="Search creations by title or tag keywords..." oninput="filterGrid(this.value)">
+                    <select id="sort-select" style="background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; color: var(--text-bright);" onchange="handleSortChange(this.value)">
+                        <option value="title-asc">Title (A-Z)</option>
+                        <option value="title-desc">Title (Z-A)</option>
+                        <option value="date-desc">Date Added (Newest)</option>
+                        <option value="date-asc">Date Added (Oldest)</option>
+                    </select>
                 </div>
                 <div id="grid-box" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;"></div>
             `;
-            populateGrid(db);
+            document.getElementById('search').value = currentSearch;
+            document.getElementById('sort-select').value = currentSort;
+            refreshGrid();
+        }
+
+        // Sort/search state for the main grid, and a cache of resolved commit
+        // dates (GitHub's directory-listing API doesn't include dates, so
+        // "date added" is fetched lazily, per file, only the first time a
+        // date-based sort is actually used, and cached on the item afterward).
+        let currentSort = 'title-asc';
+        let currentSearch = '';
+
+        async function ensureDatesLoaded() {
+            const missing = db.filter(i => i.dateAdded === undefined);
+            if (missing.length === 0) return;
+            await Promise.all(missing.map(async (item) => {
+                try {
+                    const res = await fetch(`https://api.github.com/repos/nako-hikari/minecraft-bedrock/commits?path=bedrock-commands/${item.file}&per_page=1`);
+                    if (!res.ok) throw '';
+                    const commits = await res.json();
+                    item.dateAdded = (commits[0] && commits[0].commit && commits[0].commit.author) ? new Date(commits[0].commit.author.date).getTime() : null;
+                } catch {
+                    item.dateAdded = null;
+                }
+            }));
+        }
+
+        function sortList(list) {
+            const sorted = [...list];
+            switch (currentSort) {
+                case 'title-asc': sorted.sort((a, b) => a.title.localeCompare(b.title)); break;
+                case 'title-desc': sorted.sort((a, b) => b.title.localeCompare(a.title)); break;
+                case 'date-desc': sorted.sort((a, b) => (b.dateAdded || 0) - (a.dateAdded || 0)); break;
+                case 'date-asc': sorted.sort((a, b) => (a.dateAdded || 0) - (b.dateAdded || 0)); break;
+            }
+            return sorted;
+        }
+
+        async function refreshGrid() {
+            const container = document.getElementById('grid-box');
+            let list = db;
+            if (currentSearch) {
+                list = db.filter(i =>
+                    i.title.toLowerCase().includes(currentSearch) ||
+                    i.desc.toLowerCase().includes(currentSearch) ||
+                    i.tags.some(t => t.toLowerCase().includes(currentSearch))
+                );
+            }
+
+            if (currentSort === 'date-asc' || currentSort === 'date-desc') {
+                if (container) container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-main); padding: 20px;">Loading dates...</div>';
+                await ensureDatesLoaded();
+            }
+
+            populateGrid(sortList(list));
+        }
+
+        function handleSortChange(val) {
+            currentSort = val;
+            refreshGrid();
         }
 
         function populateGrid(list) {
@@ -269,17 +340,8 @@
         }
 
         function filterGrid(q) {
-            const term = q.toLowerCase().trim();
-            if (!term) {
-                populateGrid(db);
-                return;
-            }
-            const filtered = db.filter(i => 
-                i.title.toLowerCase().includes(term) || 
-                i.desc.toLowerCase().includes(term) || 
-                i.tags.some(t => t.toLowerCase().includes(term))
-            );
-            populateGrid(filtered);
+            currentSearch = q.toLowerCase().trim();
+            refreshGrid();
         }
 
         function parseMd(str) {
@@ -399,11 +461,145 @@
             const isFlipped = item.tags.some(t => t.toLowerCase() === 'flip');
             const rotation = isFlipped ? "0deg" : "180deg";
 
+            function renderChatNpcRow(isNpc, payloadLines, idxLabel) {
+                let npcRow = document.createElement('div');
+                npcRow.style.cssText = 'background: #0f0f12; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; display: flex; gap: 8px; align-items: center; margin: 8px 0; min-height: 40px; width: 100%; box-sizing: border-box;';
+
+                let img = document.createElement('img');
+                img.style.cssText = 'width: 32px; height: 32px; object-fit: contain; image-rendering: pixelated;';
+                img.src = isNpc ? `${ASSETS}/npc.png` : `${ASSETS}/chat.png`;
+
+                let idx = document.createElement('div');
+                idx.style.cssText = 'font-family: monospace; font-weight: bold; width: 22px; text-align: center; color: var(--text-main); font-size: 12px;';
+                idx.innerText = idxLabel;
+
+                let block = document.createElement('div');
+                block.className = 'output-box';
+                block.style.cssText = 'flex: 1; font-family: monospace; background: var(--bg-color); border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; font-size: 12.5px; overflow-x: hidden; min-width: 0; scrollbar-width: none;';
+                block.style.setProperty('-ms-overflow-style', 'none');
+                block.innerHTML = buildCodeWithLineNumbers(payloadLines, true);
+
+                let copy = document.createElement('button');
+                copy.className = 'secondary interactive';
+                copy.style.cssText = 'width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0;';
+                copy.innerHTML = `<img src="${ASSETS}/copy.png" style="width: 16px; height: 16px; image-rendering: pixelated;" alt="Copy">`;
+                copy.onclick = () => {
+                    navigator.clipboard.writeText(payloadLines.join('\n'));
+                    copy.classList.add('copy-success');
+                    setTimeout(() => { copy.classList.remove('copy-success'); }, 800);
+                };
+
+                npcRow.appendChild(idx);
+                npcRow.appendChild(img);
+                npcRow.appendChild(block);
+                npcRow.appendChild(copy);
+                contentFlow.appendChild(npcRow);
+
+                if (isNpc) {
+                    let linkTag = document.createElement('div');
+                    linkTag.style.cssText = 'font-family: monospace; font-size: 11px; color: var(--text-main); text-align: center; cursor: pointer; user-select: none; margin-top: -4px; margin-bottom: 12px;';
+                    linkTag.innerText = '--- click here to know how to use NPC as setup ---';
+                    linkTag.onclick = () => { window.location.href = 'npc-setup.html'; };
+                    contentFlow.appendChild(linkTag);
+                }
+            }
+
+            function renderChainRow(headerLine, payload) {
+                if (!currentChain) {
+                    currentChain = document.createElement('div');
+                    currentChain.style.cssText = 'display: flex; flex-direction: column; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; margin: 8px 0; width: 100%; box-sizing: border-box;';
+                    contentFlow.appendChild(currentChain);
+                    chainIdx = 0;
+                }
+
+                chainIdx++;
+                const tokens = headerLine.split(':');
+                const mode = (tokens[1] || 'C').toUpperCase();
+                const active = (tokens[2] || 'AA').toUpperCase();
+                const cond = (tokens[3] || 'U').toUpperCase();
+                const tick = tokens[4] || '0';
+
+                const bName = mode === 'I' ? 'Impulse' : mode === 'R' ? 'Repeat' : 'Chain';
+                const cText = cond.startsWith('C') ? 'Conditional' : 'Unconditional';
+                const aText = active === 'AA' ? 'Always Active' : 'Needs Redstone';
+
+                let graphic = `${ASSETS}/${mode.toLowerCase()}-${cond.toLowerCase().startsWith('c') ? 'cn' : 'un'}.png`;
+
+                let row = document.createElement('div');
+                row.style.cssText = 'display: flex; align-items: center; padding: 4px 8px; gap: 8px; position: relative; min-height: 40px; width: 100%; box-sizing: border-box;';
+
+                let tipStyles = `
+                    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) scale(0.9);
+                    background: #101015; border: 2px solid #2d2d3c; border-radius: 4px; padding: 8px 12px;
+                    color: #ffffff; font-family: monospace; font-size: 12px; font-weight: bold;
+                    line-height: 1.4; white-space: pre; text-align: left; opacity: 0; pointer-events: none; z-index: 99;
+                    box-shadow: 0 8px 20px rgba(0,0,0,0.8); transition: opacity 0.15s ease, transform 0.15s ease;
+                `;
+
+                let blockGraphicContainer = document.createElement('div');
+                blockGraphicContainer.className = 'interactive';
+                blockGraphicContainer.style.cssText = 'position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer;';
+                blockGraphicContainer.tabIndex = 0;
+
+                let blockImg = document.createElement('img');
+                blockImg.src = graphic;
+                blockImg.style.cssText = `width: 32px; height: 32px; object-fit: contain; image-rendering: pixelated; transform: rotate(${rotation});`;
+                blockImg.alt = "Block";
+
+                let tooltipNode = document.createElement('div');
+                tooltipNode.style.cssText = tipStyles;
+                tooltipNode.innerText = `${bName}\n${cText}\n${aText}\nTick = ${tick}`;
+
+                blockGraphicContainer.appendChild(blockImg);
+                blockGraphicContainer.appendChild(tooltipNode);
+
+                blockGraphicContainer.onmouseenter = () => {
+                    tooltipNode.style.opacity = '1';
+                    tooltipNode.style.transform = 'translateX(-50%) scale(1)';
+                };
+                blockGraphicContainer.onmouseleave = () => {
+                    tooltipNode.style.opacity = '0';
+                    tooltipNode.style.transform = 'translateX(-50%) scale(0.9)';
+                };
+                blockGraphicContainer.onfocus = () => {
+                    tooltipNode.style.opacity = '1';
+                    tooltipNode.style.transform = 'translateX(-50%) scale(1)';
+                };
+                blockGraphicContainer.onblur = () => {
+                    tooltipNode.style.opacity = '0';
+                    tooltipNode.style.transform = 'translateX(-50%) scale(0.9)';
+                };
+
+                let outputBox = document.createElement('div');
+                outputBox.className = 'output-box';
+                outputBox.style.cssText = 'flex: 1; margin: 0; font-size: 12.5px; padding: 8px; overflow-x: hidden; min-width: 0; scrollbar-width: none;';
+                outputBox.style.setProperty('-ms-overflow-style', 'none');
+
+                outputBox.innerHTML = buildCodeWithLineNumbers([payload], false);
+
+                let copyBtn = document.createElement('button');
+                copyBtn.className = 'secondary interactive';
+                copyBtn.style.cssText = 'width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0;';
+                copyBtn.innerHTML = `<img src="${ASSETS}/copy.png" style="width: 16px; height: 16px; image-rendering: pixelated;" alt="Copy">`;
+                copyBtn.onclick = () => { copyRow(copyBtn); };
+
+                let rowIdxNode = document.createElement('div');
+                rowIdxNode.style.cssText = 'font-family: monospace; font-weight: bold; width: 22px; text-align: center; color: var(--text-main); font-size: 12px;';
+                rowIdxNode.innerText = chainIdx;
+
+                row.appendChild(rowIdxNode);
+                row.appendChild(blockGraphicContainer);
+                row.appendChild(outputBox);
+                row.appendChild(copyBtn);
+                currentChain.appendChild(row);
+            }
+
             item.payload.split('\n\n').forEach(seg => {
                 const lines = seg.split('\n').filter(l => l.trim().length > 0);
                 if (lines.length === 0) return;
 
                 const head = lines[0].trim();
+                currentChain = null;
 
                 let v;
 
@@ -430,12 +626,12 @@
                     // Already applied via extractMeta() before this render; a
                     // CREDIT line in the body is metadata, not content, so skip it.
                 }
-                else if (/^H[1-5]:/.test(head)) {
+                else if (/^H[1-5]:/i.test(head)) {
                     currentChain = null;
-                    const tier = head.match(/^H[1-5]/)[0].toLowerCase();
+                    const tier = head.match(/^H[1-5]/i)[0].toLowerCase();
                     let h = document.createElement('div');
                     h.style.cssText = tier === 'h1' ? 'font-size: 1.6rem; color: var(--text-bright); font-weight: 600; margin-top: 12px;' : 'font-size: 1.1rem; color: var(--text-bright); font-weight: 600; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.5px;';
-                    h.innerText = head.replace(/^H[1-5]:/, '').trim();
+                    h.innerText = head.replace(/^H[1-5]:/i, '').trim();
                     contentFlow.appendChild(h);
                 }
                 else if ((v = matchMeta(head, 'TEXT')) !== null) {
@@ -456,178 +652,54 @@
                 }
                 else if ((v = matchMeta(head, 'VIDEO')) !== null || (v = matchMeta(head, 'YOUTUBE')) !== null) {
                     currentChain = null;
-                    const ytId = extractYouTubeId(v.trim());
+                    // The URL may be inline on the header line, or on its own
+                    // line(s) below the header — check both.
+                    const candidateText = [v, ...lines.slice(1)].join(' ').trim();
+                    const ytId = extractYouTubeId(candidateText);
                     if (ytId) {
                         let wrap = document.createElement('div');
                         wrap.style.cssText = 'position: relative; width: 100%; padding-top: 56.25%; border-radius: 8px; overflow: hidden; margin: 8px 0; background: #000;';
                         wrap.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${ytId}" title="YouTube video" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>`;
                         contentFlow.appendChild(wrap);
-                    } else {
+                    } else if (candidateText) {
                         let p = document.createElement('p');
                         p.style.cssText = 'font-size: 14px; color: var(--text-main); line-height: 1.5; margin: 0;';
-                        p.innerHTML = parseMd(`[Watch video](${v.trim()})`);
+                        p.innerHTML = parseMd(`[Watch video](${candidateText})`);
                         contentFlow.appendChild(p);
                     }
                 }
-                else if (head.startsWith('CMD:NPC') || head.startsWith('CMD:CHAT')) {
-                    currentChain = null;
-
-                    // A segment can contain several CMD:NPC / CMD:CHAT headers back to
-                    // back with no blank line between them. Split into one independent
-                    // block per header instead of dumping everything into one box.
-                    let blocks = [];
-                    let curBlock = null;
+                else if (headIs(head, 'CMD:')) {
+                    // A paragraph can freely mix CMD:CHAT/CMD:NPC rows with
+                    // generic CMD:<mode>:<active>:<cond>:<tick> chain rows,
+                    // with no blank line between them. Group by each CMD:
+                    // header (case-insensitive) and render every group as its
+                    // own box, in the order they appear, instead of assuming
+                    // the whole paragraph is one single type.
+                    let groups = [];
+                    let curGroup = null;
                     lines.forEach(ln => {
                         const t = ln.trim();
-                        if (t.startsWith('CMD:NPC') || t.startsWith('CMD:CHAT')) {
-                            curBlock = { isNpc: t.startsWith('CMD:NPC'), payload: [] };
-                            blocks.push(curBlock);
-                        } else if (curBlock) {
-                            curBlock.payload.push(ln);
+                        if (headIs(t, 'CMD:')) {
+                            curGroup = { header: t, payload: [] };
+                            groups.push(curGroup);
+                        } else if (curGroup) {
+                            curGroup.payload.push(ln);
                         }
                     });
 
-                    blocks.forEach((blk, blkIdx) => {
-                        const isNpc = blk.isNpc;
+                    let npcGroupCount = 0;
+                    groups.forEach(grp => {
+                        const isNpc = headIs(grp.header, 'CMD:NPC');
+                        const isChat = headIs(grp.header, 'CMD:CHAT');
 
-                        let npcRow = document.createElement('div');
-                        npcRow.style.cssText = 'background: #0f0f12; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; display: flex; gap: 8px; align-items: center; margin: 8px 0; min-height: 40px; width: 100%; box-sizing: border-box;';
-
-                        let img = document.createElement('img');
-                        img.style.cssText = 'width: 32px; height: 32px; object-fit: contain; image-rendering: pixelated;';
-                        img.src = isNpc ? `${ASSETS}/npc.png` : `${ASSETS}/chat.png`;
-
-                        let idx = document.createElement('div');
-                        idx.style.cssText = 'font-family: monospace; font-weight: bold; width: 22px; text-align: center; color: var(--text-main); font-size: 12px;';
-                        idx.innerText = blocks.length > 1 ? (blkIdx + 1) : '1';
-
-                        let block = document.createElement('div');
-                        block.className = 'output-box';
-                        block.style.cssText = 'flex: 1; font-family: monospace; background: var(--bg-color); border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; font-size: 12.5px; overflow-x: hidden; min-width: 0; scrollbar-width: none;';
-                        block.style.setProperty('-ms-overflow-style', 'none');
-
-                        const rawLinesPayload = blk.payload;
-                        block.innerHTML = buildCodeWithLineNumbers(rawLinesPayload, true);
-
-                        let copy = document.createElement('button');
-                        copy.className = 'secondary interactive';
-                        copy.style.cssText = 'width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0;';
-                        copy.innerHTML = `<img src="${ASSETS}/copy.png" style="width: 16px; height: 16px; image-rendering: pixelated;" alt="Copy">`;
-                        copy.onclick = () => {
-                            navigator.clipboard.writeText(rawLinesPayload.join('\n'));
-                            copy.classList.add('copy-success');
-                            setTimeout(() => { copy.classList.remove('copy-success'); }, 800);
-                        };
-
-                        npcRow.appendChild(idx);
-                        npcRow.appendChild(img);
-                        npcRow.appendChild(block);
-                        npcRow.appendChild(copy);
-                        contentFlow.appendChild(npcRow);
-
-                        if (isNpc) {
-                            let linkTag = document.createElement('div');
-                            linkTag.style.cssText = 'font-family: monospace; font-size: 11px; color: var(--text-main); text-align: center; cursor: pointer; user-select: none; margin-top: -4px; margin-bottom: 12px;';
-                            linkTag.innerText = '--- click here to know how to use NPC as setup ---';
-                            linkTag.onclick = () => { window.location.href = 'npc-setup.html'; };
-                            contentFlow.appendChild(linkTag);
+                        if (isNpc || isChat) {
+                            currentChain = null;
+                            npcGroupCount++;
+                            renderChatNpcRow(isNpc, grp.payload, String(npcGroupCount));
+                        } else {
+                            renderChainRow(grp.header, grp.payload[0] || '');
                         }
                     });
-                }
-                else if (head.startsWith('CMD:')) {
-                    if (!currentChain) {
-                        currentChain = document.createElement('div');
-                        currentChain.style.cssText = 'display: flex; flex-direction: column; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; margin: 8px 0; width: 100%; box-sizing: border-box;';
-                        contentFlow.appendChild(currentChain);
-                        chainIdx = 0;
-                    }
-
-                    for (let i = 0; i < lines.length; i += 2) {
-                        if (!lines[i] || !lines[i].trim().startsWith('CMD:')) continue;
-                        
-                        chainIdx++;
-                        const tokens = lines[i].split(':');
-                        const payload = lines[i+1] || '';
-
-                        const mode = (tokens[1] || 'C').toUpperCase();
-                        const active = (tokens[2] || 'AA').toUpperCase();
-                        const cond = (tokens[3] || 'U').toUpperCase();
-                        const tick = tokens[4] || '0';
-
-                        const bName = mode === 'I' ? 'Impulse' : mode === 'R' ? 'Repeat' : 'Chain';
-                        const cText = cond.startsWith('C') ? 'Conditional' : 'Unconditional';
-                        const aText = active === 'AA' ? 'Always Active' : 'Needs Redstone';
-
-                        let graphic = `${ASSETS}/${mode.toLowerCase()}-${cond.toLowerCase().startsWith('c') ? 'cn' : 'un'}.png`;
-
-                        let row = document.createElement('div');
-                        row.style.cssText = 'display: flex; align-items: center; padding: 4px 8px; gap: 8px; position: relative; min-height: 40px; width: 100%; box-sizing: border-box;';
-
-                        let tipStyles = `
-                            position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) scale(0.9);
-                            background: #101015; border: 2px solid #2d2d3c; border-radius: 4px; padding: 8px 12px;
-                            color: #ffffff; font-family: monospace; font-size: 12px; font-weight: bold;
-                            line-height: 1.4; white-space: pre; text-align: left; opacity: 0; pointer-events: none; z-index: 99;
-                            box-shadow: 0 8px 20px rgba(0,0,0,0.8); transition: opacity 0.15s ease, transform 0.15s ease;
-                        `;
-
-                        let blockGraphicContainer = document.createElement('div');
-                        blockGraphicContainer.className = 'interactive';
-                        blockGraphicContainer.style.cssText = 'position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer;';
-                        blockGraphicContainer.tabIndex = 0;
-
-                        let blockImg = document.createElement('img');
-                        blockImg.src = graphic;
-                        blockImg.style.cssText = `width: 32px; height: 32px; object-fit: contain; image-rendering: pixelated; transform: rotate(${rotation});`;
-                        blockImg.alt = "Block";
-
-                        let tooltipNode = document.createElement('div');
-                        tooltipNode.style.cssText = tipStyles;
-                        tooltipNode.innerText = `${bName}\n${cText}\n${aText}\nTick = ${tick}`;
-
-                        blockGraphicContainer.appendChild(blockImg);
-                        blockGraphicContainer.appendChild(tooltipNode);
-
-                        blockGraphicContainer.onmouseenter = () => {
-                            tooltipNode.style.opacity = '1';
-                            tooltipNode.style.transform = 'translateX(-50%) scale(1)';
-                        };
-                        blockGraphicContainer.onmouseleave = () => {
-                            tooltipNode.style.opacity = '0';
-                            tooltipNode.style.transform = 'translateX(-50%) scale(0.9)';
-                        };
-                        blockGraphicContainer.onfocus = () => {
-                            tooltipNode.style.opacity = '1';
-                            tooltipNode.style.transform = 'translateX(-50%) scale(1)';
-                        };
-                        blockGraphicContainer.onblur = () => {
-                            tooltipNode.style.opacity = '0';
-                            tooltipNode.style.transform = 'translateX(-50%) scale(0.9)';
-                        };
-
-                        let outputBox = document.createElement('div');
-                        outputBox.className = 'output-box';
-                        outputBox.style.cssText = 'flex: 1; margin: 0; font-size: 12.5px; padding: 8px; overflow-x: hidden; min-width: 0; scrollbar-width: none;';
-                        outputBox.style.setProperty('-ms-overflow-style', 'none');
-                        
-                        outputBox.innerHTML = buildCodeWithLineNumbers([payload], false);
-
-                        let copyBtn = document.createElement('button');
-                        copyBtn.className = 'secondary interactive';
-                        copyBtn.style.cssText = 'width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0;';
-                        copyBtn.innerHTML = `<img src="${ASSETS}/copy.png" style="width: 16px; height: 16px; image-rendering: pixelated;" alt="Copy">`;
-                        copyBtn.onclick = () => { copyRow(copyBtn); };
-
-                        let rowIdxNode = document.createElement('div');
-                        rowIdxNode.style.cssText = 'font-family: monospace; font-weight: bold; width: 22px; text-align: center; color: var(--text-main); font-size: 12px;';
-                        rowIdxNode.innerText = chainIdx;
-
-                        row.appendChild(rowIdxNode);
-                        row.appendChild(blockGraphicContainer);
-                        row.appendChild(outputBox);
-                        row.appendChild(copyBtn);
-                        currentChain.appendChild(row);
-                    }
                 }
                 else {
                     // No recognized header matched this paragraph. Rather than
@@ -670,7 +742,7 @@
         function goHome() {
             window.location.hash = '';
             const backBtn = document.getElementById('back-btn');
-            if (backBtn) backBtn.style.display = 'none';
+            if (backBtn) backBtn.style.display = 'flex';
             document.getElementById('app-display-header').innerText = "Command Block Creation";
             renderGrid();
         }
