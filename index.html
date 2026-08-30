@@ -68,13 +68,6 @@
             z-index: 50;
             background: var(--bg-color);
         }
-        .mc-obf {
-            animation: mcObfFlicker 0.7s steps(2, jump-none) infinite;
-        }
-        @keyframes mcObfFlicker {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.55; }
-        }
     </style>
 </head>
 <body>
@@ -129,48 +122,20 @@
         const RAW_BASE_URL = "https://raw.githubusercontent.com/nako-hikari/minecraft-bedrock/main/bedrock-commands";
         const ASSETS = "https://raw.githubusercontent.com/nako-hikari/nako-hikari.github.io/main/assets/images";
 
-        // Progressively smaller header tiers (H1 biggest down to H4 smallest).
-        const HEADER_STYLES = {
-            h1: 'font-size: 1.65rem; color: var(--text-bright); font-weight: 700; margin-top: 12px; line-height: 1.3;',
-            h2: 'font-size: 1.3rem; color: var(--text-bright); font-weight: 650; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.4px;',
-            h3: 'font-size: 1.05rem; color: var(--text-bright); font-weight: 600; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.3px;',
-            h4: 'font-size: 0.9rem; color: var(--text-main); font-weight: 600; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.2px;'
-        };
-
-        // Note box accent colors (border + left stripe) for the 3 non-default variants.
-        const NOTE_COLOR_HEX = { green: '#3ecf6e', red: '#ff5f56', yellow: '#f5c518' };
-
-        // Minecraft Bedrock "§" color/format codes. Only the first hex is used
-        // for codes that historically have two documented variants (§j, §v).
-        const MC_COLORS = {
-            '0': '#000000', '1': '#0000AA', '2': '#00AA00', '3': '#00AAAA',
-            '4': '#AA0000', '5': '#AA00AA', '6': '#FFAA00', '7': '#C6C6C6',
-            '8': '#555555', '9': '#447FFF', 'a': '#55FF55', 'b': '#55FFFF',
-            'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF',
-            'g': '#DDD605', 'h': '#D9CCB8', 'i': '#A0B4B7', 'j': '#443A3B',
-            'm': '#EE222C', 'n': '#C87363', 'p': '#FFBF1E', 'q': '#13A045',
-            's': '#5FECFF', 't': '#577BFF', 'u': '#B66CDD', 'v': '#EB7114'
-        };
-
         let db = [];
 
-        // Matches a metadata line like "TITLE:", "credit :", "Tag:" — tolerant
-        // of case and stray whitespace before the colon. Returns the trimmed
-        // value if the line matches `key`, otherwise null.
+        // Matches a metadata line case/whitespace-tolerantly; returns the trimmed value or null.
         function matchMeta(ln, key) {
             const re = new RegExp('^\\s*' + key + '\\s*:', 'i');
             return re.test(ln) ? ln.replace(re, '').trim() : null;
         }
 
-        // Case-insensitive startsWith, for header tokens like "CMD:CHAT" that
-        // people type inconsistently (e.g. "CMD:Chat", "cmd:chat").
+        // Case-insensitive startsWith, for header tokens like "CMD:CHAT".
         function headIs(str, prefix) {
             return str.toUpperCase().startsWith(prefix.toUpperCase());
         }
 
-        // Scans every line of a creation file (not just the first paragraph,
-        // since fields like CREDIT/TITLE/TAG can be split across separate
-        // blank-line-delimited blocks) and pulls out the recognized metadata.
+        // Scans every line of the file (not just the first paragraph) for metadata.
         function extractMeta(txt, target) {
             txt.split('\n').forEach(ln => {
                 let v;
@@ -227,6 +192,18 @@
             const hash = decodeURIComponent(window.location.hash.replace('#', '')).trim().toLowerCase();
             const headerTitle = document.getElementById('app-display-header');
             const backBtn = document.getElementById('back-btn');
+
+            if (hash === 'preview') {
+                const stored = sessionStorage.getItem('nako_preview_payload');
+                if (stored) {
+                    if (backBtn) backBtn.style.display = 'flex';
+                    let entry = { file: null, title: 'Preview', desc: '', tags: [], credit: null, payload: stored };
+                    extractMeta(stored, entry);
+                    headerTitle.innerText = entry.title;
+                    renderView(entry);
+                    return;
+                }
+            }
 
             if (hash && db.length > 0) {
                 const match = db.find(item => item.file.toLowerCase() === hash || item.file.toLowerCase() === hash + '.txt');
@@ -287,10 +264,7 @@
             refreshGrid();
         }
 
-        // Sort/search state for the main grid, and a cache of resolved commit
-        // dates (GitHub's directory-listing API doesn't include dates, so
-        // "date added" is fetched lazily, per file, only the first time a
-        // date-based sort is actually used, and cached on the item afterward).
+        // Sort/search state; commit dates are fetched lazily and cached on first use.
         let currentSort = 'title-asc';
         let currentSearch = '';
 
@@ -374,75 +348,70 @@
             refreshGrid();
         }
 
-        // Tokenizes a raw (unescaped) string on Minecraft Bedrock "§" codes and
-        // returns an array of already-escaped, already-styled HTML strings —
-        // one entry per literal newline in the input. The § codes themselves
-        // never appear in the output (they're invisible, not even a space),
-        // and any open color/bold/italic/obfuscated state only lives for the
-        // duration of this single call — it never leaks into a sibling block,
-        // since each block is rendered via its own separate call.
-        function mcColorize(raw) {
-            const lines = [''];
-            let color = null, bold = false, italic = false, obf = false;
+        const MC_COLORS = {
+            '0': '#000000', '1': '#0000AA', '2': '#00AA00', '3': '#00AAAA',
+            '4': '#AA0000', '5': '#AA00AA', '6': '#FFAA00', '7': '#AAAAAA',
+            '8': '#555555', '9': '#5555FF', 'a': '#55FF55', 'b': '#55FFFF',
+            'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
+        };
 
-            function appendText(text) {
-                const parts = text.split('\n');
-                parts.forEach((part, i) => {
-                    if (part) {
-                        const styles = [];
-                        if (color) styles.push(`color:${color}`);
-                        if (bold) styles.push('font-weight:700');
-                        if (italic) styles.push('font-style:italic');
-                        const cls = obf ? ' class="mc-obf"' : '';
-                        const esc = escape(part);
-                        if (styles.length || obf) {
-                            lines[lines.length - 1] += `<span${styles.length ? ` style="${styles.join(';')}"` : ''}${cls}>${esc}</span>`;
-                        } else {
-                            lines[lines.length - 1] += esc;
-                        }
-                    }
-                    if (i < parts.length - 1) lines.push('');
-                });
-            }
-
-            (raw || '').split(/(§.)/).forEach(tok => {
-                if (!tok) return;
-                const codeMatch = tok.match(/^§(.)$/i);
-                if (!codeMatch) { appendText(tok); return; }
-
-                const c = codeMatch[1].toLowerCase();
-                if (c === 'r') { color = null; bold = false; italic = false; obf = false; return; }
-                if (c === 'k') { obf = true; return; }
-                if (c === 'l') { bold = true; return; }
-                if (c === 'o') { italic = true; return; }
-                if (MC_COLORS[c]) {
-                    // Vanilla behavior: applying a color resets active formatting.
-                    color = MC_COLORS[c]; bold = false; italic = false; obf = false;
-                    return;
+        // Renders Minecraft "§" formatting codes in already-HTML-escaped text.
+        // The marker itself is fully hidden; only its effect shows, matching
+        // in-game rendering (contrast this with the formatter's live editor,
+        // which keeps the marker visible at half opacity instead).
+        function renderMcCodes(escapedStr) {
+            if (escapedStr.indexOf('§') === -1) return escapedStr;
+            let html = '', buffer = '', color = null, styles = [];
+            const flush = () => {
+                if (!buffer) return;
+                let styleAttr = (color ? `color:${color};` : '') + styles.join('');
+                html += styleAttr ? `<span style="${styleAttr}">${buffer}</span>` : buffer;
+                buffer = '';
+            };
+            for (let i = 0; i < escapedStr.length; i++) {
+                if (escapedStr[i] === '§' && i + 1 < escapedStr.length) {
+                    const code = escapedStr[i + 1].toLowerCase();
+                    if (MC_COLORS[code]) { flush(); color = MC_COLORS[code]; styles = []; i++; continue; }
+                    if (code === 'r') { flush(); color = null; styles = []; i++; continue; }
+                    if (code === 'l') { flush(); styles.push('font-weight:bold;'); i++; continue; }
+                    if (code === 'm') { flush(); styles.push('text-decoration:line-through;'); i++; continue; }
+                    if (code === 'n') { flush(); styles.push('text-decoration:underline;'); i++; continue; }
+                    if (code === 'o') { flush(); styles.push('font-style:italic;'); i++; continue; }
+                    i++; continue; // unknown/obfuscated code: swallow the marker, no styling
                 }
-                // Unrecognized code — not a real § sequence, keep it literal.
-                appendText(tok);
-            });
-
-            return lines;
+                buffer += escapedStr[i];
+            }
+            flush();
+            return html;
         }
 
         function parseMd(str) {
-            const colorized = mcColorize(str);
-            const processed = colorized.map(lineHtml => {
-                let out = lineHtml;
-                // Manual line break marker (formatter's "Insert Line Break" button).
-                out = out.replace(/\[\[br\]\]/g, '<br>');
-                // Image: [img](url)
-                out = out.replace(/\[img\]\((.*?)\)/g, '<img src="$1" style="max-width: 100%; height: auto; display: block; border-radius: 4px; margin: 8px 0;" alt="Asset">');
-                // Legacy explicit link syntax: [link][Label](url)
-                out = out.replace(/\[link\]\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color: var(--accent-light); text-decoration: none;">$1</a>');
-                // Standard markdown link: [Label](url) — runs after [img]/[link] are
-                // already consumed above, so it won't collide with those.
-                out = out.replace(/\[([^\[\]]+?)\]\((https?:\/\/[^\s)]+?)\)/g, '<a href="$2" target="_blank" style="color: var(--accent-light); text-decoration: none;">$1</a>');
-                return out;
+            let out = escape(str);
+            // Manual line break token inserted by the formatter
+            out = out.replace(/\[\[br\]\]/g, '<br>');
+            // Minecraft "§" color/format codes
+            out = renderMcCodes(out);
+            // Image: [img](url)
+            out = out.replace(/\[img\]\((.*?)\)/g, '<img src="$1" style="max-width: 100%; height: auto; display: block; border-radius: 4px; margin: 8px 0;" alt="Asset">');
+            // Video embed: [embed](url) — YouTube gets a responsive iframe;
+            // direct video files get a <video> tag; anything else falls back
+            // to a plain link.
+            out = out.replace(/\[embed\]\((.*?)\)/g, (match, url) => {
+                const ytId = extractYouTubeId(url);
+                if (ytId) {
+                    return `<div style="position: relative; width: 100%; padding-top: 56.25%; border-radius: 8px; overflow: hidden; margin: 8px 0; background: #000;"><iframe src="https://www.youtube-nocookie.com/embed/${ytId}" title="Video" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>`;
+                }
+                if (/\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url)) {
+                    return `<video controls style="max-width: 100%; border-radius: 8px; margin: 8px 0; display: block;"><source src="${url}"></video>`;
+                }
+                return `<a href="${url}" target="_blank" style="color: var(--accent-light); text-decoration: none;">Watch video</a>`;
             });
-            return processed.join('<br>');
+            // Legacy explicit link syntax: [link][Label](url)
+            out = out.replace(/\[link\]\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color: var(--accent-light); text-decoration: none;">$1</a>');
+            // Standard markdown link: [Label](url) — runs after [img]/[embed]/[link] are
+            // already consumed above, so it won't collide with those.
+            out = out.replace(/\[([^\[\]]+?)\]\((https?:\/\/[^\s)]+?)\)/g, '<a href="$2" target="_blank" style="color: var(--accent-light); text-decoration: none;">$1</a>');
+            return out;
         }
 
         function extractYouTubeId(url) {
@@ -451,10 +420,11 @@
         }
 
         function buildCodeWithLineNumbers(linesArray, isNpc = false) {
+            const showLineNumbers = linesArray.length > 1;
             return linesArray.map((line, idx) => {
                 return `<div style="display: flex; align-items: flex-start; line-height: 1.4; white-space: ${isNpc ? 'pre' : 'nowrap'};">` +
-                       `<span class="line-num-node" style="color: var(--accent-light); opacity: 0.5; font-family: monospace; padding-right: 8px; margin-right: 8px; border-right: 1px solid var(--border-color); min-width: 20px; text-align: right; user-select: none;">${idx + 1}</span>` +
-                       `<span class="line-content-node" style="color: var(--text-bright); font-family: monospace; flex: 1;">${escape(line)}</span>` +
+                       (showLineNumbers ? `<span class="line-num-node" style="color: var(--accent-light); opacity: 0.5; font-family: monospace; padding-right: 8px; margin-right: 8px; border-right: 1px solid var(--border-color); min-width: 20px; text-align: right; user-select: none;">${idx + 1}</span>` : '') +
+                       `<span class="line-content-node" style="color: var(--text-bright); font-family: monospace; flex: 1;">${renderMcCodes(escape(line))}</span>` +
                        `</div>`;
             }).join('');
         }
@@ -510,10 +480,7 @@
             shareBtn.className = 'primary';
             shareBtn.innerText = 'Share';
             shareBtn.onclick = () => {
-                // route() already resolves a hash with or without ".txt", so
-                // share the cleaner URL without the extension.
-                const shareSlug = item.file.replace(/\.txt$/i, '');
-                navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#${encodeURIComponent(shareSlug)}`);
+                navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#${encodeURIComponent(item.file)}`);
                 shareBtn.innerText = 'Copied!';
                 shareBtn.classList.add('copy-success');
                 setTimeout(() => { 
@@ -536,18 +503,10 @@
                 });
             };
 
-            let cbColorLabel = document.createElement('label');
-            cbColorLabel.style.cssText = 'display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; user-select: none; cursor: pointer; color: var(--text-main);';
-            cbColorLabel.innerHTML = `<input type="checkbox" id="cb-color-toggle" style="cursor: pointer;"> CB Color Code`;
-            cbColorLabel.querySelector('input').onchange = (e) => {
-                refreshColorCodeDisplay(e.target.checked);
-            };
-
             let actions = document.createElement('div');
             actions.style.cssText = 'display: flex; align-items: center; gap: 12px; flex-shrink: 0;';
             actions.appendChild(wrapLabel);
-            actions.appendChild(cbColorLabel);
-            actions.appendChild(shareBtn);
+            if (item.file) actions.appendChild(shareBtn);
 
             let tagBox = document.createElement('div');
             tagBox.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;';
@@ -557,35 +516,37 @@
 
             let currentChain = null;
             let chainIdx = 0;
-
-            // "CB Color Code" toggle support: every codeblock line registers
-            // its rendered node(s) here alongside its true raw text, so the
-            // toggle can re-render command text with/without § colorization
-            // without ever touching the underlying raw command used for copy.
-            let cbColorRegistry = [];
-
-            function registerColorGroup(container, linesArray) {
-                const nodes = Array.from(container.querySelectorAll('.line-content-node'));
-                cbColorRegistry.push({ nodes, rawLines: linesArray });
-            }
-
-            function refreshColorCodeDisplay(enabled) {
-                cbColorRegistry.forEach(group => {
-                    if (enabled) {
-                        const htmlLines = mcColorize(group.rawLines.join('\n'));
-                        group.nodes.forEach((node, i) => { node.innerHTML = htmlLines[i] !== undefined ? htmlLines[i] : ''; });
-                    } else {
-                        group.nodes.forEach((node, i) => { node.innerHTML = escape(group.rawLines[i]); });
-                    }
-                });
-            }
+            let currentChatBox = null; // { el, hasNpc } — shared container for consecutive CMD:CHAT/CMD:NPC rows
 
             const isFlipped = item.tags.some(t => t.toLowerCase() === 'flip');
             const rotation = isFlipped ? "0deg" : "180deg";
 
-            function renderChatNpcRow(isNpc, payloadLines, idxLabel) {
+            // Flushes the pending NPC link tag and clears the shared chat/npc container.
+            function closeChatBox() {
+                if (currentChatBox && currentChatBox.hasNpc) {
+                    let linkTag = document.createElement('div');
+                    linkTag.style.cssText = 'font-family: monospace; font-size: 11px; color: var(--text-main); text-align: center; cursor: pointer; user-select: none; margin-top: -4px; margin-bottom: 12px;';
+                    linkTag.innerText = '--- click here to know how to use NPC as setup ---';
+                    linkTag.onclick = () => { window.location.href = 'npc-setup.html'; };
+                    contentFlow.appendChild(linkTag);
+                }
+                currentChatBox = null;
+            }
+
+            function renderChatNpcRow(isNpc, payloadLines) {
+                currentChain = null; // a chat/npc row breaks any open chain box
+
+                if (!currentChatBox) {
+                    let el = document.createElement('div');
+                    el.style.cssText = 'display: flex; flex-direction: column; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 8px; margin: 8px 0; width: 100%; box-sizing: border-box;';
+                    contentFlow.appendChild(el);
+                    currentChatBox = { el, hasNpc: false, rowCount: 0 };
+                }
+                if (isNpc) currentChatBox.hasNpc = true;
+                currentChatBox.rowCount++;
+
                 let npcRow = document.createElement('div');
-                npcRow.style.cssText = 'background: #0f0f12; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; display: flex; gap: 8px; align-items: center; margin: 8px 0; min-height: 40px; width: 100%; box-sizing: border-box;';
+                npcRow.style.cssText = `display: flex; gap: 8px; align-items: center; padding: 8px; min-height: 40px; width: 100%; box-sizing: border-box;${currentChatBox.rowCount > 1 ? ' border-top: 1px solid var(--border-color);' : ''}`;
 
                 let img = document.createElement('img');
                 img.style.cssText = 'width: 32px; height: 32px; object-fit: contain; image-rendering: pixelated;';
@@ -593,14 +554,13 @@
 
                 let idx = document.createElement('div');
                 idx.style.cssText = 'font-family: monospace; font-weight: bold; width: 22px; text-align: center; color: var(--text-main); font-size: 12px;';
-                idx.innerText = idxLabel;
+                idx.innerText = String(currentChatBox.rowCount);
 
                 let block = document.createElement('div');
                 block.className = 'output-box';
                 block.style.cssText = 'flex: 1; font-family: monospace; background: var(--bg-color); border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; font-size: 12.5px; overflow-x: hidden; min-width: 0; scrollbar-width: none;';
                 block.style.setProperty('-ms-overflow-style', 'none');
-                block.innerHTML = buildCodeWithLineNumbers(payloadLines, isNpc);
-                registerColorGroup(block, payloadLines);
+                block.innerHTML = buildCodeWithLineNumbers(payloadLines, true);
 
                 let copy = document.createElement('button');
                 copy.className = 'secondary interactive';
@@ -616,18 +576,11 @@
                 npcRow.appendChild(img);
                 npcRow.appendChild(block);
                 npcRow.appendChild(copy);
-                contentFlow.appendChild(npcRow);
-
-                if (isNpc) {
-                    let linkTag = document.createElement('div');
-                    linkTag.style.cssText = 'font-family: monospace; font-size: 11px; color: var(--text-main); text-align: center; cursor: pointer; user-select: none; margin-top: -4px; margin-bottom: 12px;';
-                    linkTag.innerText = '--- click here to know how to use NPC as setup ---';
-                    linkTag.onclick = () => { window.location.href = 'npc-setup.html'; };
-                    contentFlow.appendChild(linkTag);
-                }
+                currentChatBox.el.appendChild(npcRow);
             }
 
             function renderChainRow(headerLine, payload) {
+                closeChatBox(); // a chain row breaks any open chat/npc box
                 if (!currentChain) {
                     currentChain = document.createElement('div');
                     currentChain.style.cssText = 'display: flex; flex-direction: column; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; margin: 8px 0; width: 100%; box-sizing: border-box;';
@@ -699,7 +652,6 @@
                 outputBox.style.setProperty('-ms-overflow-style', 'none');
 
                 outputBox.innerHTML = buildCodeWithLineNumbers([payload], false);
-                registerColorGroup(outputBox, [payload]);
 
                 let copyBtn = document.createElement('button');
                 copyBtn.className = 'secondary interactive';
@@ -728,6 +680,7 @@
 
                 const head = lines[0].trim();
                 currentChain = null;
+                closeChatBox();
 
                 let v;
 
@@ -751,14 +704,13 @@
                     });
                 }
                 else if (matchMeta(head, 'CREDIT') !== null) {
-                    // Already applied via extractMeta() before this render; a
-                    // CREDIT line in the body is metadata, not content, so skip it.
+                    // Already applied via extractMeta(); skip so it's not rendered as content.
                 }
                 else if (/^H[1-5]:/i.test(head)) {
                     currentChain = null;
                     const tier = head.match(/^H[1-5]/i)[0].toLowerCase();
                     let h = document.createElement('div');
-                    h.style.cssText = HEADER_STYLES[tier] || HEADER_STYLES.h4;
+                    h.style.cssText = tier === 'h1' ? 'font-size: 1.6rem; color: var(--text-bright); font-weight: 600; margin-top: 12px;' : 'font-size: 1.1rem; color: var(--text-bright); font-weight: 600; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.5px;';
                     h.innerText = head.replace(/^H[1-5]:/i, '').trim();
                     contentFlow.appendChild(h);
                 }
@@ -767,33 +719,43 @@
                     let p = document.createElement('p');
                     p.style.cssText = 'font-size: 14px; color: var(--text-main); line-height: 1.5; margin: 0;';
                     const bodyLines = [v, ...lines.slice(1)];
-                    // Joined into a single parseMd() call (not one call per line) so
-                    // a § color/format code stays active across the block's own
-                    // internal line breaks, only resetting on §r or at block end.
-                    p.innerHTML = parseMd(bodyLines.join('\n'));
+                    p.innerHTML = bodyLines.map(l => parseMd(l)).join('<br>');
                     contentFlow.appendChild(p);
                 }
-                else if (/^\s*NOTE\b/i.test(head)) {
+                else if ((v = matchMeta(head, 'NOTE')) !== null) {
                     currentChain = null;
-                    const noteMatch = head.match(/^\s*NOTE(?:\s*:\s*(GREEN|RED|YELLOW))?\s*:\s*(.*)$/i);
-                    const noteColor = (noteMatch && noteMatch[1]) ? noteMatch[1].toLowerCase() : 'default';
-                    const firstLineText = noteMatch ? noteMatch[2] : '';
-                    const bodyLines = [firstLineText, ...lines.slice(1)];
-
-                    let n = document.createElement('div');
-                    if (noteColor === 'default' || !NOTE_COLOR_HEX[noteColor]) {
-                        n.style.cssText = 'font-style: italic; color: var(--text-main); padding-left: 8px; border-left: 2px solid var(--border-color); margin: 0; font-size: 14px; line-height: 1.5;';
-                    } else {
-                        const hex = NOTE_COLOR_HEX[noteColor];
-                        n.style.cssText = `font-style: italic; color: var(--text-main); padding: 8px 10px; border: 1px solid ${hex}; border-left: 6px solid ${hex}; border-radius: 6px; background: ${hex}1a; margin: 0; font-size: 14px; line-height: 1.5;`;
-                    }
-                    n.innerHTML = parseMd(bodyLines.join('\n'));
+                    // NOTE: <text>  OR  NOTE:GREEN|RED|YELLOW: <text>
+                    const colorMatch = head.match(/^\s*NOTE\s*:\s*(GREEN|RED|YELLOW)\s*:\s*(.*)$/i);
+                    const noteColor = colorMatch ? colorMatch[1].toLowerCase() : 'default';
+                    const firstLine = colorMatch ? colorMatch[2] : v;
+                    const noteStyles = {
+                        green: '#3a7d44', red: '#8c3a3a', yellow: '#8c7a2e', default: 'var(--border-color)'
+                    };
+                    let n = document.createElement('p');
+                    n.style.cssText = `font-style: italic; color: var(--text-main); padding-left: 8px; border-left: 2px solid ${noteStyles[noteColor]}; margin: 0;`;
+                    const bodyLines = [firstLine, ...lines.slice(1)];
+                    n.innerHTML = bodyLines.map(l => parseMd(l)).join('<br>');
                     contentFlow.appendChild(n);
+                }
+                else if ((v = matchMeta(head, 'BULLET')) !== null) {
+                    currentChain = null;
+                    const style = (v || 'dot').toLowerCase();
+                    const items = lines.slice(1);
+                    const isOrdered = style === 'num' || style === 'abc';
+                    let list = document.createElement(isOrdered ? 'ol' : 'ul');
+                    const listStyleType = { dot: 'disc', dash: 'none', num: 'decimal', abc: 'lower-alpha' }[style] || 'disc';
+                    list.style.cssText = `list-style-type: ${listStyleType}; padding-left: 20px; margin: 0; display: flex; flex-direction: column; gap: 4px;`;
+                    items.forEach(itemLine => {
+                        let li = document.createElement('li');
+                        li.style.cssText = 'font-size: 14px; color: var(--text-main); line-height: 1.5;';
+                        li.innerHTML = (style === 'dash' ? '&ndash;&nbsp;' : '') + parseMd(itemLine);
+                        list.appendChild(li);
+                    });
+                    contentFlow.appendChild(list);
                 }
                 else if ((v = matchMeta(head, 'VIDEO')) !== null || (v = matchMeta(head, 'YOUTUBE')) !== null) {
                     currentChain = null;
-                    // The URL may be inline on the header line, or on its own
-                    // line(s) below the header — check both.
+                    // URL may be inline on the header line or on the line(s) below.
                     const candidateText = [v, ...lines.slice(1)].join(' ').trim();
                     const ytId = extractYouTubeId(candidateText);
                     if (ytId) {
@@ -809,12 +771,7 @@
                     }
                 }
                 else if (headIs(head, 'CMD:')) {
-                    // A paragraph can freely mix CMD:CHAT/CMD:NPC rows with
-                    // generic CMD:<mode>:<active>:<cond>:<tick> chain rows,
-                    // with no blank line between them. Group by each CMD:
-                    // header (case-insensitive) and render every group as its
-                    // own box, in the order they appear, instead of assuming
-                    // the whole paragraph is one single type.
+                    // Group by each CMD: header so mixed chat/chain content renders in order.
                     let groups = [];
                     let curGroup = null;
                     lines.forEach(ln => {
@@ -827,67 +784,27 @@
                         }
                     });
 
-                    let npcGroupCount = 0;
                     groups.forEach(grp => {
                         const isNpc = headIs(grp.header, 'CMD:NPC');
                         const isChat = headIs(grp.header, 'CMD:CHAT');
 
                         if (isNpc || isChat) {
-                            currentChain = null;
-                            npcGroupCount++;
-                            renderChatNpcRow(isNpc, grp.payload, String(npcGroupCount));
+                            renderChatNpcRow(isNpc, grp.payload);
                         } else {
                             renderChainRow(grp.header, grp.payload[0] || '');
                         }
                     });
                 }
-                else if (/^BULLET:/i.test(head)) {
-                    currentChain = null;
-                    const styleMatch = head.match(/^BULLET:(\w+)/i);
-                    const style = styleMatch ? styleMatch[1].toLowerCase() : 'dot';
-                    const items = lines.slice(1).filter(l => l.trim().length > 0);
-
-                    let listEl;
-                    if (style === 'num') {
-                        listEl = document.createElement('ol');
-                        listEl.style.cssText = 'margin: 0; padding-left: 22px; color: var(--text-main); font-size: 14px; line-height: 1.6;';
-                        listEl.setAttribute('type', '1');
-                    } else if (style === 'abc') {
-                        listEl = document.createElement('ol');
-                        listEl.style.cssText = 'margin: 0; padding-left: 22px; color: var(--text-main); font-size: 14px; line-height: 1.6;';
-                        listEl.setAttribute('type', 'a');
-                    } else if (style === 'dash') {
-                        listEl = document.createElement('ul');
-                        listEl.style.cssText = 'margin: 0; padding-left: 22px; color: var(--text-main); font-size: 14px; line-height: 1.6; list-style-type: "\u2013 ";';
-                    } else {
-                        // 'dot' and any unrecognized style safely fall back here.
-                        listEl = document.createElement('ul');
-                        listEl.style.cssText = 'margin: 0; padding-left: 22px; color: var(--text-main); font-size: 14px; line-height: 1.6; list-style-type: disc;';
-                    }
-
-                    items.forEach(itemText => {
-                        let li = document.createElement('li');
-                        // Each item gets its own parseMd() call — an independent,
-                        // self-contained § color scope per bullet, so colors never
-                        // bleed from one list item into the next.
-                        li.innerHTML = parseMd(itemText.trim());
-                        listEl.appendChild(li);
-                    });
-
-                    contentFlow.appendChild(listEl);
-                }
                 else {
-                    // No recognized header matched this paragraph. Rather than
-                    // silently dropping it, render it as plain text so stray
-                    // content (including bare [img](url) / [Label](url)
-                    // markdown not wrapped in a TEXT:/NOTE: block) still shows.
+                    // Unrecognized header: render as plain text instead of silently dropping it.
                     currentChain = null;
                     let p = document.createElement('p');
                     p.style.cssText = 'font-size: 14px; color: var(--text-main); line-height: 1.5; margin: 0;';
-                    p.innerHTML = parseMd(lines.join('\n'));
+                    p.innerHTML = lines.map(l => parseMd(l)).join('<br>');
                     contentFlow.appendChild(p);
                 }
             });
+            closeChatBox();
 
             if (meta.children.length > 0) topRow.appendChild(meta);
             topRow.appendChild(actions);
@@ -920,14 +837,6 @@
             if (backBtn) backBtn.style.display = 'flex';
             document.getElementById('app-display-header').innerText = "Command Block Creation";
             renderGrid();
-        }
-
-        function copyRow(btn) {
-            const linesNodes = btn.parentElement.querySelectorAll('.output-box .line-content-node');
-            const txt = Array.from(linesNodes).map(node => node.innerText).join('\n');
-            navigator.clipboard.writeText(txt);
-            btn.classList.add('copy-success');
-            setTimeout(() => { btn.classList.remove('copy-success'); }, 800);
         }
 
         function escape(str) {
