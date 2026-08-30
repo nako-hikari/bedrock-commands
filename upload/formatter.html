@@ -645,12 +645,12 @@
 
     <!-- Fullscreen field editor: for large-text editing of any field other
          than title/credit/description -->
-    <button id="fullscreen-edit-trigger" style="position: fixed; top: 12px; right: 12px; z-index: 900; display: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--accent-dark); border: var(--border-width) solid var(--border-color); cursor: pointer; padding: 0;">
+    <button id="fullscreen-edit-trigger" style="position: fixed; top: 20px; right: 12px; z-index: 900; display: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--accent-dark); border: var(--border-width) solid var(--border-color); cursor: pointer; padding: 0;">
         <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/eye_open.png" style="width: 20px; height: 20px;" alt="Expand editor">
     </button>
     <div id="fullscreen-editor-overlay" style="position: fixed; inset: 0; background: var(--bg-color); z-index: 1000; display: none; flex-direction: column;">
         <div style="display: flex; align-items: center; padding: 12px; border-bottom: var(--border-width) solid var(--border-color); flex-shrink: 0;">
-            <button id="fullscreen-editor-close" style="background: none; border: none; color: var(--text-bright); font-size: 30px; cursor: pointer; line-height: 1; padding: 0 8px;">&times;</button>
+            <button id="fullscreen-editor-close" class="btn btn-danger" style="padding: 6px 14px; font-size: 16px; line-height: 1;">X</button>
             <span style="margin-left: 12px; font-weight: 600; color: var(--text-main); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;">Editing</span>
         </div>
         <div id="fullscreen-editor-body" style="flex: 1; display: flex; min-height: 0;"></div>
@@ -794,6 +794,20 @@
         fsTriggerBtn.onclick = () => {
             if (activeEditField) openFullscreenEditor(activeEditField);
         };
+
+        // On mobile, opening the keyboard shrinks/shifts the *visual* viewport
+        // while position:fixed elements can stay anchored to the *layout*
+        // viewport, making the button appear to jump. Track visualViewport
+        // (when available) and reposition it to the actual visible top edge.
+        if (window.visualViewport) {
+            const repositionFsBtn = () => {
+                const vv = window.visualViewport;
+                fsTriggerBtn.style.top = (vv.offsetTop + 20) + 'px';
+            };
+            window.visualViewport.addEventListener('resize', repositionFsBtn);
+            window.visualViewport.addEventListener('scroll', repositionFsBtn);
+            repositionFsBtn();
+        }
 
         function openFullscreenEditor(fieldEl) {
             fsBody.innerHTML = '';
@@ -1710,6 +1724,27 @@
             });
         }
 
+        // Best-effort interception of the phone's own back button/gesture:
+        // keep a dummy history entry on top so a back-press triggers popstate
+        // instead of actually navigating, then re-push it and show the same
+        // confirm dialog. Not airtight on every mobile browser (e.g. iOS
+        // Safari's edge-swipe can occasionally bypass this), but covers the
+        // common case. Skipped once when returning from a Preview trip,
+        // since that's an expected round-trip, not a "leave formatter" action.
+        history.pushState({ nakoFormatterGuard: true }, '', location.href);
+        window.addEventListener('popstate', () => {
+            history.pushState({ nakoFormatterGuard: true }, '', location.href);
+            if (sessionStorage.getItem('nako_skip_back_guard_once') === '1') {
+                sessionStorage.removeItem('nako_skip_back_guard_once');
+                return;
+            }
+            if (fsOverlay.style.display === 'flex') {
+                closeFullscreenEditor();
+                return;
+            }
+            confirmBackToMain();
+        });
+
         function previewCreation() {
             const outputText = document.getElementById('raw-string-output').innerText;
             if (!outputText || outputText.startsWith('Your output')) {
@@ -1721,6 +1756,7 @@
                 return;
             }
             sessionStorage.setItem('nako_preview_payload', outputText);
+            sessionStorage.setItem('nako_skip_back_guard_once', '1');
             window.location.href = '../index.html#preview';
         }
 
