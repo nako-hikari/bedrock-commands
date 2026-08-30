@@ -256,7 +256,7 @@
             const canvas = document.getElementById('app-view-router-canvas');
             canvas.innerHTML = `
                 <div style="width: 100%; margin-bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
-                    <input type="text" id="search" style="flex: 1; min-width: 200px; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; color: var(--text-bright);" placeholder="Search creations by title or tag keywords..." oninput="filterGrid(this.value)">
+                    <input type="text" id="search" style="flex: 1; min-width: 200px; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; color: var(--text-bright);" placeholder="Search by title, tag, or creator..." oninput="filterGrid(this.value)">
                     <select id="sort-select" style="background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; color: var(--text-bright);" onchange="handleSortChange(this.value)">
                         <option value="title-asc">Title (A-Z)</option>
                         <option value="title-desc">Title (Z-A)</option>
@@ -272,7 +272,7 @@
         }
 
         // Sort/search state; commit dates are fetched lazily and cached on first use.
-        let currentSort = 'title-asc';
+        let currentSort = 'date-desc';
         let currentSearch = '';
 
         async function ensureDatesLoaded() {
@@ -308,7 +308,8 @@
                 list = db.filter(i =>
                     i.title.toLowerCase().includes(currentSearch) ||
                     i.desc.toLowerCase().includes(currentSearch) ||
-                    i.tags.some(t => t.toLowerCase().includes(currentSearch))
+                    i.tags.some(t => t.toLowerCase().includes(currentSearch)) ||
+                    (i.credit || 'Nako Hikari').toLowerCase().includes(currentSearch)
                 );
             }
 
@@ -503,7 +504,9 @@
             wrapLabel.querySelector('input').onchange = (e) => {
                 document.querySelectorAll('.output-box .line-content-node').forEach(node => {
                     node.style.whiteSpace = e.target.checked ? 'pre-wrap' : 'nowrap';
-                    node.style.wordBreak = e.target.checked ? 'break-all' : 'normal';
+                    node.style.wordBreak = 'normal';
+                    node.style.overflowWrap = e.target.checked ? 'break-word' : 'normal';
+                    node.style.hyphens = e.target.checked ? 'auto' : 'none';
                 });
                 document.querySelectorAll('.output-box').forEach(box => {
                     box.style.overflowX = e.target.checked ? 'hidden' : 'auto';
@@ -534,7 +537,7 @@
                     let linkTag = document.createElement('div');
                     linkTag.style.cssText = 'font-family: monospace; font-size: 11px; color: var(--text-main); text-align: center; cursor: pointer; user-select: none; margin-top: -4px; margin-bottom: 12px;';
                     linkTag.innerText = '--- click here to know how to use NPC as setup ---';
-                    linkTag.onclick = () => { window.location.href = 'npc-setup.html'; };
+                    linkTag.onclick = () => { window.open('https://github.com/nako-hikari/support-files/blob/main/npc-setup/npc-setup-tutorial.md', '_blank'); };
                     contentFlow.appendChild(linkTag);
                 }
                 currentChatBox = null;
@@ -565,7 +568,7 @@
 
                 let block = document.createElement('div');
                 block.className = 'output-box';
-                block.style.cssText = 'flex: 1; font-family: monospace; background: var(--bg-color); border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; font-size: 12.5px; overflow-x: hidden; min-width: 0; scrollbar-width: none;';
+                block.style.cssText = 'flex: 1; font-family: monospace; background: var(--bg-color); border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; font-size: 12.5px; overflow-x: auto; min-width: 0; scrollbar-width: none;';
                 block.style.setProperty('-ms-overflow-style', 'none');
                 block.innerHTML = buildCodeWithLineNumbers(payloadLines, true);
 
@@ -655,7 +658,7 @@
 
                 let outputBox = document.createElement('div');
                 outputBox.className = 'output-box';
-                outputBox.style.cssText = 'flex: 1; margin: 0; font-size: 12.5px; padding: 8px; overflow-x: hidden; min-width: 0; scrollbar-width: none;';
+                outputBox.style.cssText = 'flex: 1; margin: 0; font-size: 12.5px; padding: 8px; overflow-x: auto; min-width: 0; scrollbar-width: none;';
                 outputBox.style.setProperty('-ms-overflow-style', 'none');
 
                 outputBox.innerHTML = buildCodeWithLineNumbers([payload], false);
@@ -736,12 +739,12 @@
                     const noteColor = colorMatch ? colorMatch[1].toLowerCase() : 'default';
                     const firstLine = colorMatch ? colorMatch[2] : v;
                     const noteStyles = {
-                        green: '#3a7d44', red: '#8c3a3a', yellow: '#8c7a2e', default: 'var(--border-color)'
+                        green: '#00FF00', red: '#FF0000', yellow: '#FFFF00', default: 'var(--border-color)'
                     };
                     let n = document.createElement('p');
                     n.style.cssText = noteColor === 'default'
                         ? `font-style: italic; color: var(--text-main); padding-left: 8px; border-left: 2px solid ${noteStyles[noteColor]}; margin: 0;`
-                        : `font-style: italic; color: var(--text-main); padding: 8px; border: 1px solid ${noteStyles[noteColor]}; border-left: 3px solid ${noteStyles[noteColor]}; border-radius: 4px; margin: 0;`;
+                        : `font-style: italic; color: var(--text-main); padding: 8px; border: 1px solid ${noteStyles[noteColor]}; border-left: 6px solid ${noteStyles[noteColor]}; border-radius: 4px; margin: 0;`;
                     const bodyLines = [firstLine, ...lines.slice(1)];
                     n.innerHTML = bodyLines.map(l => parseMd(l)).join('<br>');
                     contentFlow.appendChild(n);
