@@ -522,7 +522,8 @@
 <body>
 
     <div class="wrapper">
-        <header>
+        <header style="display: flex; align-items: center; gap: 12px; justify-content: center; position: relative;">
+            <button id="back-btn" class="btn btn-secondary" style="position: absolute; left: 0; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; font-family: monospace; font-size: 26px; line-height: 1;" onclick="confirmBackToMain()">←</button>
             <h1>Command Chain Formatter</h1>
         </header>
 
@@ -676,7 +677,18 @@
                     flush();
                     const rawCode = escaped[i + 1];
                     const code = rawCode.toLowerCase();
-                    html += `<span style="opacity:0.5;">§${rawCode}</span>`;
+
+                    // The marker itself shows what it does (its own color/weight/etc.),
+                    // dimmed to half opacity — not just a flat gray marker.
+                    let markerColor = null, markerStyles = [];
+                    if (MC_COLORS[code]) markerColor = MC_COLORS[code];
+                    else if (code === 'l') markerStyles.push('font-weight:bold;');
+                    else if (code === 'm') markerStyles.push('text-decoration:line-through;');
+                    else if (code === 'n') markerStyles.push('text-decoration:underline;');
+                    else if (code === 'o') markerStyles.push('font-style:italic;');
+                    const markerStyleAttr = 'opacity:0.5;' + (markerColor ? `color:${markerColor};` : '') + markerStyles.join('');
+                    html += `<span style="${markerStyleAttr}">§${rawCode}</span>`;
+
                     if (MC_COLORS[code]) { color = MC_COLORS[code]; styles = []; }
                     else if (code === 'r') { color = null; styles = []; }
                     else if (code === 'l') styles.push('font-weight:bold;');
@@ -719,8 +731,8 @@
             `;
 
             fieldEl.style.position = 'relative';
-            fieldEl.style.background = 'transparent';
-            fieldEl.style.color = 'transparent';
+            fieldEl.style.setProperty('background', 'transparent', 'important');
+            fieldEl.style.setProperty('color', 'transparent', 'important');
             fieldEl.style.caretColor = origColor;
 
             const sync = () => {
@@ -1604,6 +1616,17 @@
                     ]
                 });
             }
+        }
+
+        function confirmBackToMain() {
+            displayModal({
+                title: 'Leave Formatter?',
+                message: 'Are you sure going back to main page? Your progress will be reset.',
+                actions: [
+                    { label: 'No, stay here', class: 'btn-secondary' },
+                    { label: 'Yes', class: 'btn-danger', onClick: () => { window.location.href = '../index.html'; } }
+                ]
+            });
         }
 
         function previewCreation() {
