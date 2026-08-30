@@ -556,6 +556,18 @@
                     <label class="tag-checkbox-label"><input type="checkbox" value="technique" onchange="compilerCoreEngine()"> technique</label>
                     <label class="tag-checkbox-label"><input type="checkbox" value="complex" onchange="compilerCoreEngine()"> complex</label>
                     <label class="tag-checkbox-label"><input type="checkbox" value="visual" onchange="compilerCoreEngine()"> visual</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="fun" onchange="compilerCoreEngine()"> fun</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="playanimation" onchange="compilerCoreEngine()"> playanimation</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="fmbe" onchange="compilerCoreEngine()"> fmbe</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="experimental" onchange="compilerCoreEngine()"> experimental</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="unique" onchange="compilerCoreEngine()"> unique</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="minigame" onchange="compilerCoreEngine()"> minigame</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="boss" onchange="compilerCoreEngine()"> boss</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="tools" onchange="compilerCoreEngine()"> tools</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="game-breaking" onchange="compilerCoreEngine()"> game breaking</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="text-score" onchange="compilerCoreEngine()"> text & score</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="quirks" onchange="compilerCoreEngine()"> quirks</label>
+                    <label class="tag-checkbox-label"><input type="checkbox" value="how-to-use" onchange="compilerCoreEngine()"> how to use</label>
                 </div>
             </div>
         </section>
@@ -597,6 +609,7 @@
                 <div style="display: flex; gap: 8px;">
                     <button class="btn btn-secondary" onclick="copyOutputToClipboard()">Copy Output</button>
                     <button class="btn btn-secondary" onclick="exportAsTxtFile()">Export as .txt</button>
+                    <button class="btn btn-secondary" onclick="previewCreation()">Preview</button>
                     <button class="btn" onclick="uploadContent()">UPLOAD</button>
                 </div>
             </div>
@@ -634,6 +647,91 @@
     <script>
         const canvas = document.getElementById('builder-canvas');
         const creditInput = document.getElementById('meta-credit');
+
+        /* Live "§" highlighting: a non-interactive backdrop overlay behind a
+           text-transparent field, since inputs/textareas can't style runs. */
+        const MC_COLORS = {
+            '0': '#000000', '1': '#0000AA', '2': '#00AA00', '3': '#00AAAA',
+            '4': '#AA0000', '5': '#AA00AA', '6': '#FFAA00', '7': '#AAAAAA',
+            '8': '#555555', '9': '#5555FF', 'a': '#55FF55', 'b': '#55FFFF',
+            'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
+        };
+
+        function escapeHtmlFmt(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function renderMcHighlightHtml(rawStr) {
+            if (!rawStr) return '';
+            const escaped = escapeHtmlFmt(rawStr);
+            let html = '', buffer = '', color = null, styles = [];
+            const flush = () => {
+                if (!buffer) return;
+                const styleAttr = (color ? `color:${color};` : '') + styles.join('');
+                html += styleAttr ? `<span style="${styleAttr}">${buffer}</span>` : buffer;
+                buffer = '';
+            };
+            for (let i = 0; i < escaped.length; i++) {
+                if (escaped[i] === '§' && i + 1 < escaped.length) {
+                    flush();
+                    const rawCode = escaped[i + 1];
+                    const code = rawCode.toLowerCase();
+                    html += `<span style="opacity:0.5;">§${rawCode}</span>`;
+                    if (MC_COLORS[code]) { color = MC_COLORS[code]; styles = []; }
+                    else if (code === 'r') { color = null; styles = []; }
+                    else if (code === 'l') styles.push('font-weight:bold;');
+                    else if (code === 'm') styles.push('text-decoration:line-through;');
+                    else if (code === 'n') styles.push('text-decoration:underline;');
+                    else if (code === 'o') styles.push('font-style:italic;');
+                    i++;
+                    continue;
+                }
+                buffer += escaped[i];
+            }
+            flush();
+            return html;
+        }
+
+        function attachMcHighlight(fieldEl) {
+            if (!fieldEl || fieldEl.dataset.mcHighlighted) return;
+            fieldEl.dataset.mcHighlighted = '1';
+
+            const cs = getComputedStyle(fieldEl);
+            const origColor = cs.color, origBg = cs.backgroundColor;
+            const fontFamily = cs.fontFamily, fontSize = cs.fontSize, lineHeight = cs.lineHeight;
+            const padding = cs.padding, borderRadius = cs.borderRadius, borderWidth = cs.borderWidth;
+            const origFlex = cs.flex;
+
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = `position: relative; width: 100%; min-width: 0; flex: ${origFlex};`;
+            fieldEl.parentNode.insertBefore(wrapper, fieldEl);
+            wrapper.appendChild(fieldEl);
+
+            const backdrop = document.createElement('div');
+            wrapper.insertBefore(backdrop, fieldEl);
+            backdrop.style.cssText = `
+                position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+                margin: 0; pointer-events: none; overflow: hidden; box-sizing: border-box;
+                font-family: ${fontFamily}; font-size: ${fontSize}; line-height: ${lineHeight};
+                padding: ${padding}; border: ${borderWidth} solid transparent;
+                white-space: ${fieldEl.tagName === 'TEXTAREA' ? 'pre-wrap' : 'pre'};
+                word-wrap: break-word; color: ${origColor}; background: ${origBg}; border-radius: ${borderRadius};
+            `;
+
+            fieldEl.style.position = 'relative';
+            fieldEl.style.background = 'transparent';
+            fieldEl.style.color = 'transparent';
+            fieldEl.style.caretColor = origColor;
+
+            const sync = () => {
+                backdrop.innerHTML = renderMcHighlightHtml(fieldEl.value);
+                backdrop.scrollTop = fieldEl.scrollTop;
+                backdrop.scrollLeft = fieldEl.scrollLeft;
+            };
+            fieldEl.addEventListener('input', sync);
+            fieldEl.addEventListener('scroll', sync);
+            sync();
+        }
 
         creditInput.addEventListener('focus', () => {
             if (creditInput.value === 'Nako Hikari') {
@@ -836,6 +934,9 @@
             `;
 
             stack.appendChild(rowNode);
+            if (mode === 'CHAT' || mode === 'NPC') {
+                attachMcHighlight(rowNode.querySelector('.cmd-input-field'));
+            }
             compilerCoreEngine();
             return rowNode;
         }
@@ -912,6 +1013,10 @@
                 if (condSelect.value === 'C') rowNode.classList.add('cond-border');
             }
 
+            if (type === 'CHAT' || type === 'NPC') {
+                attachMcHighlight(inputContainer.querySelector('.cmd-input-field'));
+            }
+
             compilerCoreEngine();
         }
 
@@ -941,6 +1046,7 @@
                 <textarea style="height: 60px; font-size: 13px; font-family: inherit; resize: vertical;" class="text-input-val" placeholder="Enter standard descriptive paragraph text content..." oninput="compilerCoreEngine()">${presetValue}</textarea>
             `;
             canvas.appendChild(block);
+            attachMcHighlight(block.querySelector('.text-input-val'));
             compilerCoreEngine();
             return block;
         }
@@ -967,6 +1073,7 @@
                 <textarea class="note-input-val" style="height: 60px; font-size: 13px; font-family: inherit; resize: vertical;" placeholder="Enter gray dynamic italics info comment string... (supports multiple lines)" oninput="compilerCoreEngine()">${presetValue}</textarea>
             `;
             canvas.appendChild(block);
+            attachMcHighlight(block.querySelector('.note-input-val'));
             compilerCoreEngine();
             return block;
         }
@@ -1013,6 +1120,7 @@
                 <button class="btn btn-sm btn-danger" onclick="removeBulletItem(this)">X</button>
             `;
             stack.appendChild(row);
+            attachMcHighlight(row.querySelector('.bullet-item-val'));
             compilerCoreEngine();
             return row;
         }
@@ -1022,8 +1130,7 @@
             const group = buttonEl.closest('.group-block');
             buttonEl.closest('.bullet-item-row').remove();
 
-            // Fool-proof: never let a bullet block go fully empty, since an
-            // empty BULLET: block has nothing to render on the parser side.
+            // Never let a bullet block go fully empty — nothing to render on the parser side.
             if (stack.children.length === 0) {
                 addBulletItem(group);
             } else {
@@ -1037,13 +1144,8 @@
             compilerCoreEngine();
         }
 
-        /* Manual line-break insertion (formatter side).
-           Real newline characters can't be used for this because the raw
-           output format uses a blank line (double newline) to separate
-           blocks, and some command types (tellraw/titleraw JSON) already
-           rely on literal characters that must stay untouched. Instead we
-           insert an inert marker token that the parser turns into a <br>
-           at render time, without ever touching real newlines. */
+        // Manual line-break token: real newlines can't be used here since blank lines
+        // separate blocks in the raw output; the parser turns this into a <br>.
         const LINE_BREAK_TOKEN = '[[br]]';
         let lastFocusedField = null;
 
@@ -1502,6 +1604,20 @@
                     ]
                 });
             }
+        }
+
+        function previewCreation() {
+            const outputText = document.getElementById('raw-string-output').innerText;
+            if (!outputText || outputText.startsWith('Your output')) {
+                displayModal({
+                    title: 'Nothing to Preview',
+                    message: 'Add some content first, then press Preview again.',
+                    actions: [{ label: 'OK' }]
+                });
+                return;
+            }
+            sessionStorage.setItem('nako_preview_payload', outputText);
+            window.location.href = '../index.html#preview';
         }
 
         function copyOutputToClipboard() {
