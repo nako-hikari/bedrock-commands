@@ -580,8 +580,6 @@
             <select id="header-type-selector" class="header-type-select">
                 <option value="H1">H1</option>
                 <option value="H2">H2</option>
-                <option value="H3">H3</option>
-                <option value="H4">H4</option>
             </select>
             <button class="btn btn-secondary" onclick="addHeaderBlock()">+ Add Header</button>
             <button class="btn btn-secondary" onclick="addBodyTextBlock()">+ Add Body Text</button>
@@ -643,6 +641,19 @@
             <div id="modal-body" class="modal-body">Modal body text goes here.</div>
             <div id="modal-actions" class="modal-actions"></div>
         </div>
+    </div>
+
+    <!-- Fullscreen field editor: for large-text editing of any field other
+         than title/credit/description -->
+    <button id="fullscreen-edit-trigger" style="position: fixed; top: 12px; right: 12px; z-index: 900; display: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--accent-dark); border: var(--border-width) solid var(--border-color); cursor: pointer; padding: 0;">
+        <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/eye_open.png" style="width: 20px; height: 20px;" alt="Expand editor">
+    </button>
+    <div id="fullscreen-editor-overlay" style="position: fixed; inset: 0; background: var(--bg-color); z-index: 1000; display: none; flex-direction: column;">
+        <div style="display: flex; align-items: center; padding: 12px; border-bottom: var(--border-width) solid var(--border-color); flex-shrink: 0;">
+            <button id="fullscreen-editor-close" style="background: none; border: none; color: var(--text-bright); font-size: 30px; cursor: pointer; line-height: 1; padding: 0 8px;">&times;</button>
+            <span style="margin-left: 12px; font-weight: 600; color: var(--text-main); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;">Editing</span>
+        </div>
+        <div id="fullscreen-editor-body" style="flex: 1; display: flex; min-height: 0;"></div>
     </div>
 
     <script>
@@ -744,6 +755,76 @@
             fieldEl.addEventListener('scroll', sync);
             sync();
         }
+
+        /* Fullscreen large-text editor: a floating button appears while
+           editing any field in the canvas (i.e. anything except the
+           title/credit/description meta fields), opening a fullscreen
+           textarea mirroring that field for easier editing of long text. */
+        const fsTriggerBtn = document.getElementById('fullscreen-edit-trigger');
+        const fsOverlay = document.getElementById('fullscreen-editor-overlay');
+        const fsBody = document.getElementById('fullscreen-editor-body');
+        const fsCloseBtn = document.getElementById('fullscreen-editor-close');
+        let activeEditField = null;
+
+        function isFullscreenEligible(el) {
+            return !!(el && el.matches && el.matches('input[type="text"], textarea'));
+        }
+
+        canvas.addEventListener('focusin', (e) => {
+            if (isFullscreenEligible(e.target)) {
+                activeEditField = e.target;
+                fsTriggerBtn.style.display = 'flex';
+            }
+        });
+
+        canvas.addEventListener('focusout', () => {
+            setTimeout(() => {
+                const overlayOpen = fsOverlay.style.display === 'flex';
+                if (overlayOpen) return; // editing inside the fullscreen view, keep the trigger as-is
+                if (document.activeElement === fsTriggerBtn) return;
+                if (isFullscreenEligible(document.activeElement) && canvas.contains(document.activeElement)) {
+                    activeEditField = document.activeElement;
+                    return;
+                }
+                fsTriggerBtn.style.display = 'none';
+                activeEditField = null;
+            }, 120);
+        });
+
+        fsTriggerBtn.onclick = () => {
+            if (activeEditField) openFullscreenEditor(activeEditField);
+        };
+
+        function openFullscreenEditor(fieldEl) {
+            fsBody.innerHTML = '';
+
+            const ta = document.createElement('textarea');
+            ta.value = fieldEl.value;
+            ta.style.cssText = 'flex: 1; width: 100%; height: 100%; border: none; outline: none; resize: none; background: var(--bg-color); color: var(--text-bright); font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace; font-size: 16px; padding: 16px; line-height: 1.6; box-sizing: border-box;';
+            fsBody.appendChild(ta);
+
+            ta.addEventListener('input', () => {
+                fieldEl.value = ta.value;
+                fieldEl.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+
+            // Mirror live "§" highlighting here too, if the small field has it.
+            if (fieldEl.dataset.mcHighlighted) {
+                attachMcHighlight(ta);
+            }
+
+            fsOverlay.style.display = 'flex';
+            ta.focus();
+        }
+
+        function closeFullscreenEditor() {
+            fsOverlay.style.display = 'none';
+            if (activeEditField) activeEditField.focus();
+        }
+        fsCloseBtn.onclick = closeFullscreenEditor;
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && fsOverlay.style.display === 'flex') closeFullscreenEditor();
+        });
 
         creditInput.addEventListener('focus', () => {
             if (creditInput.value === 'Nako Hikari') {
