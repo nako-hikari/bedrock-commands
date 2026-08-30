@@ -177,7 +177,7 @@
                         let label = f.name.replace('.txt', '').replace(/_/g, ' ');
                         let entry = {
                             title: label.charAt(0).toUpperCase() + label.slice(1),
-                            desc: "",
+                            desc: "No descriptor statement declared in source file.",
                             tags: [],
                             credit: null
                         };
@@ -488,7 +488,9 @@
             shareBtn.className = 'primary';
             shareBtn.innerText = 'Share';
             shareBtn.onclick = () => {
-                navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#${encodeURIComponent(item.file)}`);
+                const url = `${window.location.origin}${window.location.pathname}#${encodeURIComponent(item.file)}`;
+                const label = `${window.location.host}${window.location.pathname}#${encodeURIComponent(item.file.replace(/\.txt$/i, ''))}`;
+                navigator.clipboard.writeText(`[${label}](${url})`);
                 shareBtn.innerText = 'Copied!';
                 shareBtn.classList.add('copy-success');
                 setTimeout(() => { 
