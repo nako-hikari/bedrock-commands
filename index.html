@@ -76,7 +76,7 @@
         <header style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 20px;">
             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; position: relative;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <button id="back-btn" class="secondary" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; font-family: monospace; font-size: 20px; line-height: 1;" onclick="handleBack()">←</button>
+                    <button id="back-btn" class="secondary" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; font-family: monospace; font-size: 26px; line-height: 1;" onclick="handleBack()">←</button>
                 </div>
                 <h1 id="app-display-header" style="font-size: 1.5rem; margin: 0 auto; text-align: center; cursor: pointer;" onclick="goHome()">Command Block Creation</h1>
                 <div style="display: flex; align-items: center;">
@@ -150,6 +150,13 @@
         window.addEventListener('hashchange', route);
 
         function handleBack() {
+            const currentHash = window.location.hash.replace('#', '').toLowerCase();
+            if (currentHash === 'preview') {
+                // Go back to wherever the preview was opened from (the formatter),
+                // preserving its in-memory draft, instead of dropping to the grid.
+                history.back();
+                return;
+            }
             if (window.location.hash) goHome();
             else window.location.href = 'https://nakohikari.vercel.app';
         }
@@ -732,7 +739,9 @@
                         green: '#3a7d44', red: '#8c3a3a', yellow: '#8c7a2e', default: 'var(--border-color)'
                     };
                     let n = document.createElement('p');
-                    n.style.cssText = `font-style: italic; color: var(--text-main); padding-left: 8px; border-left: 2px solid ${noteStyles[noteColor]}; margin: 0;`;
+                    n.style.cssText = noteColor === 'default'
+                        ? `font-style: italic; color: var(--text-main); padding-left: 8px; border-left: 2px solid ${noteStyles[noteColor]}; margin: 0;`
+                        : `font-style: italic; color: var(--text-main); padding: 8px; border: 1px solid ${noteStyles[noteColor]}; border-left: 3px solid ${noteStyles[noteColor]}; border-radius: 4px; margin: 0;`;
                     const bodyLines = [firstLine, ...lines.slice(1)];
                     n.innerHTML = bodyLines.map(l => parseMd(l)).join('<br>');
                     contentFlow.appendChild(n);
