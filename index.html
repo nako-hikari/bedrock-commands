@@ -488,9 +488,8 @@
             shareBtn.className = 'primary';
             shareBtn.innerText = 'Share';
             shareBtn.onclick = () => {
-                const url = `${window.location.origin}${window.location.pathname}#${encodeURIComponent(item.file)}`;
                 const label = `${window.location.host}${window.location.pathname}#${encodeURIComponent(item.file.replace(/\.txt$/i, ''))}`;
-                navigator.clipboard.writeText(`[${label}](${url})`);
+                navigator.clipboard.writeText(label);
                 shareBtn.innerText = 'Copied!';
                 shareBtn.classList.add('copy-success');
                 setTimeout(() => { 
