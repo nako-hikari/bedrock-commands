@@ -399,8 +399,16 @@
             out = out.replace(/\[\[br\]\]/g, '<br>');
             // Minecraft "§" color/format codes
             out = renderMcCodes(out);
-            // Image: [img](url)
-            out = out.replace(/\[img\]\((.*?)\)/g, '<img src="$1" style="max-width: 100%; height: auto; display: block; border-radius: 4px; margin: 8px 0;" alt="Asset">');
+            // Image: [img](url) — or [img](url|linkUrl) for a clickable image.
+            // Old content never contains a pipe here, so this is a pure
+            // superset of the original behavior.
+            out = out.replace(/\[img\]\((.*?)\)/g, (match, inner) => {
+                const pipeIdx = inner.indexOf('|');
+                const src = pipeIdx === -1 ? inner : inner.slice(0, pipeIdx);
+                const link = pipeIdx === -1 ? '' : inner.slice(pipeIdx + 1);
+                const imgTag = `<img src="${src}" style="max-width: 100%; height: auto; display: block; border-radius: 4px; margin: 8px 0;" alt="Asset">`;
+                return link ? `<a href="${link}" target="_blank" style="display: block;">${imgTag}</a>` : imgTag;
+            });
             // Video embed: [embed](url) — YouTube gets a responsive iframe;
             // direct video files get a <video> tag; anything else falls back
             // to a plain link.
@@ -782,6 +790,22 @@
                         contentFlow.appendChild(p);
                     }
                 }
+                else if ((v = matchMeta(head, 'SOCIAL')) !== null) {
+                    currentChain = null;
+                    let url = '', avatar = '';
+                    const stats = [];
+                    lines.slice(1).forEach(ln => {
+                        let m2;
+                        if ((m2 = matchMeta(ln, 'URL')) !== null) url = m2;
+                        else if ((m2 = matchMeta(ln, 'AVATAR')) !== null) avatar = m2;
+                        else if ((m2 = matchMeta(ln, 'STAT')) !== null) {
+                            const parts = m2.split('|');
+                            const label = (parts[0] || '').trim();
+                            if (label) stats.push({ label, value: (parts[1] || '').trim() });
+                        }
+                    });
+                    contentFlow.appendChild(buildSocialCard(v, url, avatar, stats));
+                }
                 else if (headIs(head, 'CMD:')) {
                     // Group by each CMD: header so mixed chat/chain content renders in order.
                     let groups = [];
@@ -841,6 +865,57 @@
                 `;
                 document.head.appendChild(styles);
             }
+        }
+
+        // Renders a SOCIAL: block as a clickable profile card — avatar (if
+        // given), display name, and any STAT: entries as small badges.
+        function buildSocialCard(name, url, avatar, stats) {
+            const card = document.createElement(url ? 'a' : 'div');
+            if (url) {
+                card.href = url;
+                card.target = '_blank';
+            }
+            card.className = url ? 'card interactive' : 'card';
+            card.style.cssText = 'display: flex; align-items: center; gap: 12px; padding: 12px 16px; text-decoration: none; color: inherit; width: 100%; box-sizing: border-box;';
+
+            if (avatar) {
+                const img = document.createElement('img');
+                img.src = avatar;
+                img.alt = name;
+                img.style.cssText = 'width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0;';
+                card.appendChild(img);
+            }
+
+            const body = document.createElement('div');
+            body.style.cssText = 'display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1;';
+
+            const nameEl = document.createElement('div');
+            nameEl.style.cssText = 'font-size: 15px; font-weight: bold; color: var(--text-bright); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+            nameEl.innerText = name;
+            body.appendChild(nameEl);
+
+            if (stats.length > 0) {
+                const statRow = document.createElement('div');
+                statRow.style.cssText = 'display: flex; flex-wrap: wrap; gap: 10px;';
+                stats.forEach(s => {
+                    const statEl = document.createElement('span');
+                    statEl.style.cssText = 'font-size: 12px; color: var(--text-main);';
+                    statEl.innerHTML = `<strong style="color: var(--accent-light);">${escape(s.value)}</strong> ${escape(s.label)}`;
+                    statRow.appendChild(statEl);
+                });
+                body.appendChild(statRow);
+            }
+
+            card.appendChild(body);
+
+            if (url) {
+                const chevron = document.createElement('span');
+                chevron.style.cssText = 'color: var(--text-main); font-size: 18px; flex-shrink: 0;';
+                chevron.innerText = '›';
+                card.appendChild(chevron);
+            }
+
+            return card;
         }
 
         function goHome() {
