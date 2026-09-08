@@ -1,797 +1,810 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Command Submissions</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin</title>
+<link rel="stylesheet" href="/css/nako.css">
+<style>
+    #login-screen {
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-    <style>
-        :root {
-            --bg: #0e0e11;
-            --card: #18181f;
-            --input: #0f0f12;
-            --border: #2d2d38;
-            --text: #b4b4bc;
-            --bright: #ffffff;
-            --accent: #663657;
-            --accent-hover: #81456e;
-            --danger: #4a2323;
-            --danger-hover: #6e3333;
-        }
+    .login-card {
+        width: 100%;
+        max-width: 380px;
+    }
 
-        * {
-            box-sizing: border-box;
-        }
+    .login-card p {
+        margin-bottom: var(--space-md);
+    }
 
-        body {
-            margin: 0;
-            padding: 24px 16px;
-            background: var(--bg);
-            color: var(--text);
-            font-family:
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                Roboto,
-                Arial,
-                sans-serif;
-        }
+    #login-error {
+        margin-top: var(--space-sm);
+    }
 
-        .wrapper {
-            width: 100%;
-            max-width: 950px;
-            margin: auto;
-        }
+    button.login-button {
+        width: 100%;
+        margin-top: var(--space-sm);
+    }
 
-        h1 {
-            margin: 0 0 20px;
-            color: var(--bright);
-            font-size: 1.4rem;
-        }
+    #admin-screen {
+        display: none;
+    }
 
-        /* LOGIN */
+    .tab-bar {
+        display: flex;
+        gap: var(--space-xs);
+        border-bottom: var(--border-width) solid var(--border-color);
+        margin-bottom: var(--space-lg);
+    }
 
-        #login-screen {
-            min-height: 70vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    .tab-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-family: var(--font-body);
+        font-size: var(--fs-md);
+        font-weight: var(--fw-semibold);
+        padding: var(--space-sm) var(--space-md);
+        border-bottom: 2px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+        cursor: pointer;
+    }
 
-        .login-card {
-            width: 100%;
-            max-width: 380px;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-        }
+    .tab-btn.active {
+        color: var(--text-bright);
+        border-bottom-color: var(--accent-dark);
+    }
 
-        .login-card h1 {
-            margin-bottom: 8px;
-        }
+    .tab-content {
+        display: none;
+    }
 
-        .login-card p {
-            font-size: 13px;
-            margin: 0 0 16px;
-        }
+    .tab-content.active {
+        display: block;
+    }
 
-        .login-input {
-            width: 100%;
-            background: var(--input);
-            border: 1px solid var(--border);
-            border-radius: 5px;
-            padding: 10px;
-            color: var(--bright);
-            outline: none;
-            margin-bottom: 10px;
-        }
+    .submission {
+        border-left: 4px solid var(--accent-light);
+        margin-bottom: var(--space-md);
+    }
 
-        .login-input:focus {
-            border-color: #a77a99;
-        }
+    .submission-title {
+        margin: 0 0 var(--space-sm);
+    }
 
-        .login-button {
-            width: 100%;
-        }
+    .meta {
+        color: var(--text-muted);
+        font-size: var(--fs-sm);
+        line-height: var(--lh-relaxed);
+        margin-bottom: var(--space-sm);
+    }
 
-        .login-error {
-            color: #d47c7c;
-            font-size: 12px;
-            margin-top: 10px;
-        }
+    .actions {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        margin-top: var(--space-md);
+    }
 
-        /* ADMIN */
+    .sort-toolbar {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-sm) var(--space-md);
+        margin-bottom: var(--space-md);
+    }
 
-        #admin-screen {
-            display: none;
-        }
+    .sort-toolbar select {
+        width: auto;
+    }
 
-        .admin-toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+    .file-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
 
-        .admin-toolbar h1 {
-            margin: 0;
-        }
+    .file-button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        text-align: left;
+        background: var(--input-bg);
+        border: var(--border-width) solid var(--border-color);
+        color: var(--text-main);
+        padding: var(--space-md);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+    }
 
-        #submissions {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
+    .file-button:hover {
+        border-color: var(--accent-light);
+        color: var(--text-bright);
+    }
 
-        .submission {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
-        }
+    .file-name {
+        flex: 1;
+        font-weight: var(--fw-medium);
+    }
 
-        .submission-title {
-            margin: 0 0 10px;
-            color: var(--bright);
-            font-size: 1.1rem;
-        }
+    .file-date {
+        color: var(--text-muted);
+        font-size: var(--fs-xs);
+    }
 
-        .meta {
-            color: var(--text);
-            font-size: 13px;
-            line-height: 1.7;
-            margin-bottom: 12px;
-        }
+    #editor {
+        display: none;
+    }
 
-        .content {
-            background: var(--input);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 12px;
-            white-space: pre-wrap;
-            word-break: break-word;
-            font-family:
-                ui-monospace,
-                "SF Mono",
-                "JetBrains Mono",
-                monospace;
-            color: #c77e4f;
-            font-size: 13px;
-            line-height: 1.5;
-        }
+    #editor.active {
+        display: block;
+    }
 
-        .actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
+    .filename {
+        color: var(--text-bright);
+        font-weight: var(--fw-semibold);
+        margin-bottom: var(--space-md);
+    }
 
-        button {
-            border: none;
-            border-radius: 4px;
-            padding: 8px 14px;
-            color: white;
-            background: var(--accent);
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            cursor: pointer;
-        }
+    .command-textarea {
+        width: 100%;
+        min-height: 400px;
+        resize: vertical;
+        color: var(--text-codeblock);
+        font-family: var(--font-mono);
+        font-size: var(--fs-sm);
+        line-height: var(--lh-relaxed);
+    }
 
-        button:hover {
-            background: var(--accent-hover);
-        }
+    .status {
+        margin-top: var(--space-sm);
+        font-size: var(--fs-sm);
+        color: var(--text-muted);
+    }
 
-        button:disabled {
-            opacity: 0.5;
-            cursor: wait;
-        }
+    .empty {
+        text-align: center;
+        color: var(--text-muted);
+        padding: var(--space-2xl);
+    }
 
-        .reject-btn {
-            background: var(--danger);
-        }
+    .loading-state {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-sm);
+        color: var(--text-muted);
+        padding: var(--space-2xl);
+    }
 
-        .reject-btn:hover {
-            background: var(--danger-hover);
-        }
+    .spin {
+        animation: spin 0.8s linear infinite;
+    }
 
-        .logout-btn {
-            background: var(--input);
-            border: 1px solid var(--border);
-        }
-
-        .logout-btn:hover {
-            border-color: #a77a99;
-        }
-
-        .empty {
-            color: #5a5a66;
-            text-align: center;
-            padding: 30px;
-        }
-
-        .error {
-            color: #d47c7c;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 16px;
-        }
-    </style>
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
 </head>
-
 <body>
 
-<!-- LOGIN -->
+<div class="theme-toggle-row">
+    <button class="theme-toggle interactive" onclick="toggleTheme()" aria-label="Toggle theme">
+        <img id="theme-icon" class="icon" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/moon.png" alt="">
+    </button>
+    <button id="logout-button" class="secondary interactive" style="display:none;">Logout</button>
+</div>
 
 <div id="login-screen">
-
-    <div class="login-card">
-
+    <div class="card login-card">
         <h1>Admin Login</h1>
+        <p class="field-hint">Enter the admin key to manage command submissions.</p>
+        <input id="admin-key" type="password" placeholder="Admin key" autocomplete="current-password">
+        <button id="login-button" class="primary interactive login-button">Login</button>
+        <div id="login-error" class="field-error"></div>
+    </div>
+</div>
 
-        <p>
-            Enter the admin key to manage command submissions.
-        </p>
+<div id="admin-screen" class="wrapper">
 
-        <input
-            id="admin-key"
-            class="login-input"
-            type="password"
-            placeholder="Admin key"
-            autocomplete="current-password"
-        >
+    <h1>Admin</h1>
 
-        <button
-            id="login-button"
-            class="login-button"
-        >
-            LOGIN
+    <div class="tab-bar">
+        <button class="tab-btn interactive active" data-tab="submissions" onclick="switchTab('submissions')">
+            Pending
+            <span class="badge" id="pending-badge" style="display:none;">0</span>
         </button>
+        <button class="tab-btn interactive" data-tab="editing" onclick="switchTab('editing')">
+            <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/edit_pencil.png" alt="">
+            Editing
+        </button>
+    </div>
 
-        <div
-            id="login-error"
-            class="login-error"
-        ></div>
+    <div class="tab-content active" id="tab-submissions">
+        <div id="submissions"></div>
+    </div>
+
+    <div class="tab-content" id="tab-editing">
+
+        <div id="file-browser">
+            <div class="card sort-toolbar">
+                <img class="icon" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/sort.png" alt="">
+                <label for="sort-select" class="field-label">Sort by</label>
+                <select id="sort-select" onchange="onSortChange()">
+                    <option value="name-asc">Name (A–Z)</option>
+                    <option value="name-desc">Name (Z–A)</option>
+                    <option value="date-new" id="opt-date-new">Newest first</option>
+                    <option value="date-old" id="opt-date-old">Oldest first</option>
+                </select>
+            </div>
+
+            <div class="card">
+                <div class="file-list" id="file-list"></div>
+            </div>
+        </div>
+
+        <div class="card" id="editor">
+            <div class="filename" id="filename"></div>
+            <textarea id="content" class="command-textarea"></textarea>
+            <div class="actions">
+                <button class="secondary interactive" onclick="closeEditor()">Back to list</button>
+                <button class="danger interactive" onclick="requestOutdated()">Mark Outdated</button>
+                <button class="primary interactive" onclick="requestSave()">Save</button>
+            </div>
+            <div class="status" id="status"></div>
+        </div>
 
     </div>
 
 </div>
 
-
-<!-- ADMIN -->
-
-<div
-    id="admin-screen"
-    class="wrapper"
->
-
-    <div class="admin-toolbar">
-
-        <h1>Pending Command Submissions</h1>
-
-        <button
-            id="logout-button"
-            class="logout-btn"
-        >
-            LOGOUT
-        </button>
-
+<div class="modal-overlay" id="nakoModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title" id="nakoModalTitle"></h2>
+            <button class="modal-close interactive" onclick="closeNakoModal()" aria-label="Close">
+                <img class="icon" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/close.png" alt="">
+            </button>
+        </div>
+        <div class="modal-body" id="nakoModalBody"></div>
+        <div class="modal-footer" id="nakoModalFooter"></div>
     </div>
-
-    <div id="submissions">
-        Loading...
-    </div>
-
 </div>
 
+<div class="footer">
+    <div class="footer-title">Nako Hikari</div>
+    <div class="footer-links">
+        <a href="https://github.com/nako-hikari/" target="_blank" class="social">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+            GitHub
+        </a>
+        <a href="https://m.youtube.com/@NaCryst" target="_blank" class="social">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube">
+            YouTube
+        </a>
+        <a href="https://www.tiktok.com/@nako_hikari_mc" target="_blank" class="social">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok">
+            TikTok
+        </a>
+        <a href="https://ko-fi.com/arialicee" target="_blank" class="social kofi">
+            <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/kofi-icon.png" alt="Ko-fi">
+            Support me on Ko-fi
+        </a>
+    </div>
+</div>
 
 <script>
 
-async function checkAuthentication() {
+function toggleTheme() {
+    const root = document.documentElement;
+    const btn = document.querySelector('.theme-toggle');
+    const icon = document.getElementById('theme-icon');
+    const goingLight = root.getAttribute('data-theme') !== 'light';
 
-    try {
+    btn.classList.add('spinning');
+    setTimeout(() => btn.classList.remove('spinning'), 400);
 
-        const response =
-            await fetch("/api/admin-auth");
-
-        if (response.ok) {
-
-            showAdminScreen();
-            loadSubmissions();
-
-        } else {
-
-            showLoginScreen();
-
-        }
-
-    } catch {
-
-        showLoginScreen();
-
+    if (goingLight) {
+        root.setAttribute('data-theme', 'light');
+        icon.src = 'https://raw.githubusercontent.com/nako-hikari/assets/main/ui/sun.png';
+        localStorage.setItem('nako-theme', 'light');
+    } else {
+        root.removeAttribute('data-theme');
+        icon.src = 'https://raw.githubusercontent.com/nako-hikari/assets/main/ui/moon.png';
+        localStorage.setItem('nako-theme', 'dark');
     }
 }
 
+(function() {
+    if (localStorage.getItem('nako-theme') === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.getElementById('theme-icon').src = 'https://raw.githubusercontent.com/nako-hikari/assets/main/ui/sun.png';
+    }
+})();
+
+function showModal(title, message, options) {
+    options = options || {};
+    document.getElementById('nakoModalTitle').textContent = title;
+    document.getElementById('nakoModalBody').textContent = message;
+
+    const footer = document.getElementById('nakoModalFooter');
+    footer.innerHTML = '';
+
+    if (options.onConfirm) {
+        const cancel = document.createElement('button');
+        cancel.className = 'secondary interactive';
+        cancel.textContent = options.cancelText || 'Cancel';
+        cancel.onclick = closeNakoModal;
+        footer.appendChild(cancel);
+
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = options.danger ? 'danger interactive' : 'primary interactive';
+        confirmBtn.textContent = options.confirmText || (options.danger ? 'Delete' : 'Confirm');
+        confirmBtn.onclick = () => { closeNakoModal(); options.onConfirm(); };
+        footer.appendChild(confirmBtn);
+    } else {
+        const ok = document.createElement('button');
+        ok.className = 'secondary interactive';
+        ok.textContent = 'OK';
+        ok.onclick = closeNakoModal;
+        footer.appendChild(ok);
+    }
+
+    document.getElementById('nakoModal').classList.add('open');
+}
+
+function closeNakoModal() {
+    document.getElementById('nakoModal').classList.remove('open');
+}
+
+document.getElementById('nakoModal').addEventListener('click', e => {
+    if (e.target.id === 'nakoModal') closeNakoModal();
+});
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeNakoModal();
+});
+
+let adminKey = null;
+let filesLoaded = false;
+let allFiles = [];
+let sortMode = 'name-asc';
+let selectedFilename = null;
+
+async function checkAuthentication() {
+    try {
+        const response = await fetch('/api/admin-auth');
+        if (response.ok) {
+            showAdminScreen();
+            loadSubmissions();
+        } else {
+            showLoginScreen();
+        }
+    } catch {
+        showLoginScreen();
+    }
+}
 
 function showLoginScreen() {
-
-    document.getElementById(
-        "login-screen"
-    ).style.display = "flex";
-
-    document.getElementById(
-        "admin-screen"
-    ).style.display = "none";
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-screen').style.display = 'none';
+    document.getElementById('logout-button').style.display = 'none';
 }
-
 
 function showAdminScreen() {
-
-    document.getElementById(
-        "login-screen"
-    ).style.display = "none";
-
-    document.getElementById(
-        "admin-screen"
-    ).style.display = "block";
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'block';
+    document.getElementById('logout-button').style.display = 'inline-flex';
 }
 
-
-/*
- * LOGIN
- */
-
-document
-    .getElementById("login-button")
-    .addEventListener("click", login);
-
-
-document
-    .getElementById("admin-key")
-    .addEventListener("keydown", event => {
-
-        if (event.key === "Enter") {
-            login();
-        }
-
-    });
-
+document.getElementById('login-button').addEventListener('click', login);
+document.getElementById('admin-key').addEventListener('keydown', e => {
+    if (e.key === 'Enter') login();
+});
 
 async function login() {
-
-    const input =
-        document.getElementById("admin-key");
-
-    const button =
-        document.getElementById("login-button");
-
-    const error =
-        document.getElementById("login-error");
-
-    const key =
-        input.value;
+    const input = document.getElementById('admin-key');
+    const button = document.getElementById('login-button');
+    const error = document.getElementById('login-error');
+    const key = input.value;
 
     if (!key) {
-
-        error.textContent =
-            "Enter the admin key.";
-
+        error.textContent = 'Enter the admin key.';
         return;
     }
 
     button.disabled = true;
-    button.textContent = "LOGGING IN...";
-    error.textContent = "";
+    button.textContent = 'Logging in...';
+    error.textContent = '';
 
     try {
+        const response = await fetch('/api/admin-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key })
+        });
 
-        const response =
-            await fetch("/api/admin-login", {
-
-                method: "POST",
-
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
-
-                body: JSON.stringify({
-                    key: key
-                })
-
-            });
-
-        const result =
-            await response.json();
+        const result = await response.json();
 
         if (!response.ok) {
-
-            throw new Error(
-                result.error ||
-                "Login failed"
-            );
-
+            throw new Error(result.error || 'Login failed');
         }
 
-        input.value = "";
-
+        adminKey = key;
+        input.value = '';
         showAdminScreen();
-
         loadSubmissions();
 
     } catch (err) {
-
-        error.textContent =
-            err.message;
-
+        error.textContent = err.message;
     } finally {
-
         button.disabled = false;
-        button.textContent = "LOGIN";
-
+        button.textContent = 'Login';
     }
 }
 
+// session cookie is httpOnly, JS can't clear it — this just resets the UI,
+// the session itself still expires server-side
+document.getElementById('logout-button').addEventListener('click', () => {
+    adminKey = null;
+    filesLoaded = false;
+    showLoginScreen();
+});
 
-/*
- * LOAD SUBMISSIONS
- */
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    document.querySelectorAll('.tab-content').forEach(el => {
+        el.classList.toggle('active', el.id === 'tab-' + tab);
+    });
+
+    if (tab === 'editing' && !filesLoaded) {
+        loadFiles();
+    }
+}
 
 async function loadSubmissions() {
-
-    const container =
-        document.getElementById(
-            "submissions"
-        );
-
-    container.innerHTML =
-        "Loading...";
+    const container = document.getElementById('submissions');
+    container.innerHTML = `<div class="loading-state"><img class="icon icon-lg spin" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/spinner.png" alt="">Loading submissions...</div>`;
 
     try {
-
-        const response =
-            await fetch("/api/pending");
+        const response = await fetch('/api/pending');
 
         if (response.status === 401) {
-
             showLoginScreen();
-
             return;
         }
 
         if (!response.ok) {
-
-            throw new Error(
-                "Failed to load submissions"
-            );
-
+            throw new Error('Failed to load submissions');
         }
 
-        const submissions =
-            await response.json();
+        const submissions = await response.json();
+
+        const badge = document.getElementById('pending-badge');
+        if (submissions.length > 0) {
+            badge.textContent = submissions.length;
+            badge.style.display = 'inline-flex';
+        } else {
+            badge.style.display = 'none';
+        }
 
         if (submissions.length === 0) {
-
-            container.innerHTML =
-                '<div class="empty">No pending submissions.</div>';
-
+            container.innerHTML = `
+                <div class="empty">
+                    <img class="icon icon-xl" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/folder.png" alt="">
+                    <p>No pending submissions.</p>
+                </div>`;
             return;
         }
 
-        container.innerHTML = "";
+        container.innerHTML = '';
 
-        submissions.forEach(
-            submission => {
+        submissions.forEach(submission => {
+            const card = document.createElement('div');
+            card.className = 'card submission';
 
-                const card =
-                    document.createElement(
-                        "div"
-                    );
+            const titleMatch = submission.content.match(/^TITLE: (.*)$/m);
+            const title = titleMatch ? titleMatch[1] : 'Untitled';
 
-                card.className =
-                    "submission";
+            card.innerHTML = `
+                <h2 class="submission-title">${escapeHtml(title)}</h2>
+                <div class="meta">
+                    <strong>Author:</strong> ${escapeHtml(submission.author)}<br>
+                    <strong>ID:</strong> ${escapeHtml(submission.id)}<br>
+                    <strong>Submitted:</strong> ${escapeHtml(submission.submittedAt)}
+                </div>
+                <pre class="output-box"></pre>
+                <div class="actions">
+                    <button class="primary interactive approve-btn">Approve</button>
+                    <button class="icon-button danger interactive reject-btn" data-tooltip="Reject" aria-label="Reject submission">
+                        <img class="icon icon-on-brand" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/trash.png" alt="Reject">
+                    </button>
+                </div>
+            `;
 
-                const titleMatch =
-                    submission.content.match(
-                        /^TITLE: (.*)$/m
-                    );
+            card.querySelector('.output-box').textContent = submission.content;
 
-                const title =
-                    titleMatch
-                        ? titleMatch[1]
-                        : "Untitled";
+            const approveBtn = card.querySelector('.approve-btn');
+            const rejectBtn = card.querySelector('.reject-btn');
 
-                card.innerHTML = `
+            approveBtn.addEventListener('click', async () => {
+                approveBtn.disabled = true;
+                rejectBtn.disabled = true;
+                approveBtn.textContent = 'Approving...';
 
-                    <h2 class="submission-title">
-                        ${escapeHtml(title)}
-                    </h2>
+                try {
+                    const response = await fetch('/api/approve', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: submission.filename })
+                    });
 
-                    <div class="meta">
+                    const result = await response.json();
+                    if (!response.ok) {
+                        throw new Error(result.details || result.error || 'Approval failed');
+                    }
 
-                        <strong>Author:</strong>
-                        ${escapeHtml(
-                            submission.author
-                        )}
+                    card.remove();
+                    filesLoaded = false;
+                    updatePendingBadge(-1);
 
-                        <br>
+                } catch (error) {
+                    showModal('Approval failed', error.message);
+                    approveBtn.disabled = false;
+                    rejectBtn.disabled = false;
+                    approveBtn.textContent = 'Approve';
+                }
+            });
 
-                        <strong>ID:</strong>
-                        ${escapeHtml(
-                            submission.id
-                        )}
-
-                        <br>
-
-                        <strong>Submitted:</strong>
-                        ${escapeHtml(
-                            submission.submittedAt
-                        )}
-
-                    </div>
-
-                    <div class="content"></div>
-
-                    <div class="actions">
-
-                        <button class="approve-btn">
-                            APPROVE
-                        </button>
-
-                        <button class="reject-btn">
-                            REJECT
-                        </button>
-
-                    </div>
-                `;
-
-                card.querySelector(
-                    ".content"
-                ).textContent =
-                    submission.content;
-
-
-                /*
-                 * APPROVE
-                 */
-
-                card.querySelector(
-                    ".approve-btn"
-                ).addEventListener(
-                    "click",
-                    async () => {
-
-                        const approveButton =
-                            card.querySelector(
-                                ".approve-btn"
-                            );
-
-                        const rejectButton =
-                            card.querySelector(
-                                ".reject-btn"
-                            );
-
-                        approveButton.disabled =
-                            true;
-
-                        rejectButton.disabled =
-                            true;
-
-                        approveButton.textContent =
-                            "APPROVING...";
+            rejectBtn.addEventListener('click', () => {
+                showModal('Reject this submission?', `"${title}" will be permanently rejected.`, {
+                    danger: true,
+                    confirmText: 'Reject',
+                    onConfirm: async () => {
+                        approveBtn.disabled = true;
+                        rejectBtn.disabled = true;
 
                         try {
+                            const response = await fetch('/api/reject', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ filename: submission.filename })
+                            });
 
-                            const response =
-                                await fetch(
-                                    "/api/approve",
-                                    {
-                                        method: "POST",
-
-                                        headers: {
-                                            "Content-Type":
-                                                "application/json"
-                                        },
-
-                                        body:
-                                            JSON.stringify({
-                                                filename:
-                                                    submission.filename
-                                            })
-                                    }
-                                );
-
-                            const result =
-                                await response.json();
-
+                            const result = await response.json();
                             if (!response.ok) {
-
-                                throw new Error(
-                                    result.details ||
-                                    result.error ||
-                                    "Approval failed"
-                                );
-
+                                throw new Error(result.details || result.error || 'Rejection failed');
                             }
 
                             card.remove();
+                            updatePendingBadge(-1);
 
                         } catch (error) {
-
-                            alert(
-                                "Approval failed: " +
-                                error.message
-                            );
-
-                            approveButton.disabled =
-                                false;
-
-                            rejectButton.disabled =
-                                false;
-
-                            approveButton.textContent =
-                                "APPROVE";
-
+                            showModal('Rejection failed', error.message);
+                            approveBtn.disabled = false;
+                            rejectBtn.disabled = false;
                         }
-
                     }
-                );
+                });
+            });
 
-
-                /*
-                 * REJECT
-                 */
-
-                card.querySelector(
-                    ".reject-btn"
-                ).addEventListener(
-                    "click",
-                    async () => {
-
-                        const approveButton =
-                            card.querySelector(
-                                ".approve-btn"
-                            );
-
-                        const rejectButton =
-                            card.querySelector(
-                                ".reject-btn"
-                            );
-
-                        const confirmed =
-                            confirm(
-                                "Reject this command submission?"
-                            );
-
-                        if (!confirmed) {
-                            return;
-                        }
-
-                        approveButton.disabled =
-                            true;
-
-                        rejectButton.disabled =
-                            true;
-
-                        rejectButton.textContent =
-                            "REJECTING...";
-
-                        try {
-
-                            const response =
-                                await fetch(
-                                    "/api/reject",
-                                    {
-                                        method: "POST",
-
-                                        headers: {
-                                            "Content-Type":
-                                                "application/json"
-                                        },
-
-                                        body:
-                                            JSON.stringify({
-                                                filename:
-                                                    submission.filename
-                                            })
-                                    }
-                                );
-
-                            const result =
-                                await response.json();
-
-                            if (!response.ok) {
-
-                                throw new Error(
-                                    result.details ||
-                                    result.error ||
-                                    "Rejection failed"
-                                );
-
-                            }
-
-                            card.remove();
-
-                        } catch (error) {
-
-                            alert(
-                                "Rejection failed: " +
-                                error.message
-                            );
-
-                            approveButton.disabled =
-                                false;
-
-                            rejectButton.disabled =
-                                false;
-
-                            rejectButton.textContent =
-                                "REJECT";
-
-                        }
-
-                    }
-                );
-
-
-                container.appendChild(
-                    card
-                );
-
-            }
-        );
+            container.appendChild(card);
+        });
 
     } catch (error) {
-
-        container.innerHTML = `
-            <div class="error">
-                Error:
-                ${escapeHtml(error.message)}
-            </div>
-        `;
-
+        container.innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
     }
 }
 
-
-/*
- * LOGOUT
- *
- * The session cookie is HttpOnly,
- * so JavaScript cannot directly delete it.
- *
- * For now this simply returns to
- * the login screen. The session itself
- * expires after 24 hours.
- */
-
-document
-    .getElementById("logout-button")
-    .addEventListener("click", () => {
-
-        showLoginScreen();
-
-    });
-
-
-function escapeHtml(value) {
-
-    const div =
-        document.createElement("div");
-
-    div.textContent =
-        value ?? "";
-
-    return div.innerHTML;
+function updatePendingBadge(delta) {
+    const badge = document.getElementById('pending-badge');
+    const next = Math.max(0, parseInt(badge.textContent || '0', 10) + delta);
+    if (next > 0) {
+        badge.textContent = next;
+        badge.style.display = 'inline-flex';
+    } else {
+        badge.style.display = 'none';
+    }
 }
 
+async function loadFiles() {
+    const container = document.getElementById('file-list');
+    container.innerHTML = `<div class="loading-state"><img class="icon icon-lg spin" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/spinner.png" alt="">Loading approved creations...</div>`;
 
-/*
- * START
- */
+    try {
+        const response = await fetch('/api/files');
+
+        if (response.status === 401) {
+            showLoginScreen();
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to load approved creations');
+        }
+
+        allFiles = await response.json();
+        filesLoaded = true;
+
+        const hasDate = allFiles.some(f => getFileDate(f) !== null);
+        document.getElementById('opt-date-new').disabled = !hasDate;
+        document.getElementById('opt-date-old').disabled = !hasDate;
+
+        renderFileList();
+
+    } catch (error) {
+        container.innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
+    }
+}
+
+function getFileDate(file) {
+    const raw = file.modifiedAt || file.updatedAt || file.mtime || file.date || file.createdAt;
+    return raw ? new Date(raw) : null;
+}
+
+function onSortChange() {
+    sortMode = document.getElementById('sort-select').value;
+    renderFileList();
+}
+
+function renderFileList() {
+    const container = document.getElementById('file-list');
+
+    if (!allFiles.length) {
+        container.innerHTML = `
+            <div class="empty">
+                <img class="icon icon-xl" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/folder.png" alt="">
+                <p>No approved creations.</p>
+            </div>`;
+        return;
+    }
+
+    const sorted = [...allFiles].sort((a, b) => {
+        if (sortMode === 'name-asc') return a.name.localeCompare(b.name);
+        if (sortMode === 'name-desc') return b.name.localeCompare(a.name);
+        const dateA = getFileDate(a);
+        const dateB = getFileDate(b);
+        const diff = (dateB ? dateB.getTime() : 0) - (dateA ? dateA.getTime() : 0);
+        return sortMode === 'date-new' ? diff : -diff;
+    });
+
+    container.innerHTML = '';
+
+    sorted.forEach(file => {
+        const date = getFileDate(file);
+        const btn = document.createElement('button');
+        btn.className = 'file-button interactive';
+        btn.innerHTML = `
+            <img class="icon" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/edit_pencil.png" alt="">
+            <span class="file-name">${escapeHtml(file.name)}</span>
+            ${date ? `<span class="file-date">${date.toLocaleDateString()}</span>` : ''}
+        `;
+        btn.onclick = () => openEditor(file.name);
+        container.appendChild(btn);
+    });
+}
+
+async function openEditor(filename) {
+    try {
+        const response = await fetch('/api/file?filename=' + encodeURIComponent(filename));
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to open file');
+        }
+
+        selectedFilename = filename;
+        document.getElementById('filename').textContent = filename;
+        document.getElementById('content').value = result.content;
+        document.getElementById('status').textContent = '';
+
+        document.getElementById('file-browser').style.display = 'none';
+        document.getElementById('editor').classList.add('active');
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (error) {
+        showModal('Could not open file', error.message);
+    }
+}
+
+function closeEditor() {
+    selectedFilename = null;
+    document.getElementById('editor').classList.remove('active');
+    document.getElementById('file-browser').style.display = 'block';
+}
+
+function requestSave() {
+    if (!selectedFilename) return;
+
+    showModal(
+        'Save changes?',
+        'Make sure everything is correct before saving. This will replace the current version of this creation.',
+        { confirmText: 'Save', onConfirm: confirmSave }
+    );
+}
+
+async function confirmSave() {
+    const content = document.getElementById('content').value;
+    const status = document.getElementById('status');
+    status.textContent = 'Saving...';
+
+    try {
+        const response = await fetch('/api/edit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                adminKey,
+                filename: selectedFilename,
+                content
+            })
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.details || result.error || 'Save failed');
+        }
+
+        status.textContent = 'Saved successfully.';
+        showModal('Saved successfully', 'The command creation has been updated.');
+
+    } catch (error) {
+        status.textContent = 'Save failed.';
+        showModal('Save failed', error.message);
+    }
+}
+
+function requestOutdated() {
+    if (!selectedFilename) return;
+
+    showModal(
+        'Mark as outdated?',
+        'This will move this command creation to the outdated folder and remove it from the main command list.',
+        { danger: true, confirmText: 'Mark Outdated', onConfirm: confirmOutdated }
+    );
+}
+
+async function confirmOutdated() {
+    const status = document.getElementById('status');
+    status.textContent = 'Moving to outdated...';
+
+    try {
+        const response = await fetch('/api/outdated', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminKey, filename: selectedFilename })
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.details || result.error || 'Failed to mark as outdated');
+        }
+
+        filesLoaded = false;
+        showModal('Marked as outdated', 'The command creation has been moved to the outdated folder.');
+        closeEditor();
+        loadFiles();
+
+    } catch (error) {
+        status.textContent = 'Failed to move to outdated.';
+        showModal('Failed', error.message);
+    }
+}
+
+function escapeHtml(value) {
+    const div = document.createElement('div');
+    div.textContent = value ?? '';
+    return div.innerHTML;
+}
 
 checkAuthentication();
 
