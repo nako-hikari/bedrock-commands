@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Command Block Creation</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/nako-hikari/support-files@main/css/nako.css">
+    <link rel="stylesheet" href="/css/nako.css">
     <style>
         .footer-links a.social {
             opacity: 0.85;
@@ -21,14 +21,14 @@
             opacity: 0.5;
         }
         .author-credit-bar {
-            background: #0f0f12;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 8px 12px;
-            font-size: 13px;
+            background: var(--input-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: var(--space-sm) var(--space-md);
+            font-size: var(--fs-sm);
             color: var(--accent-light);
-            font-weight: 600;
-            margin-bottom: 12px;
+            font-weight: var(--fw-bold, var(--fw-semibold));
+            margin-bottom: var(--space-md);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -36,19 +36,19 @@
         .author-credit-bar.with-disclaimer {
             flex-direction: column;
             align-items: flex-start;
-            gap: 6px;
+            gap: var(--space-xs);
         }
         .author-credit-disclaimer {
-            font-size: 12px;
+            font-size: var(--fs-xs);
             color: var(--text-main);
             font-weight: normal;
             font-style: italic;
-            line-height: 1.4;
+            line-height: var(--lh-normal);
         }
         .grid-card-credit {
-            font-size: 12px;
+            font-size: var(--fs-xs);
             color: var(--accent-light);
-            font-weight: 600;
+            font-weight: var(--fw-bold, var(--fw-semibold));
         }
         /* Force the page to lay out from the top instead of vertically
            centering short content, so the header never drifts down. */
@@ -65,31 +65,57 @@
         .wrapper header {
             position: sticky;
             top: 0;
-            z-index: 50;
+            z-index: var(--z-sticky, 50);
             background: var(--bg-color);
+        }
+        .hero-banner-wrap {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin: var(--space-xs) 0 var(--space-lg);
+        }
+        .hero-banner-wrap img {
+            width: 160px;
+            max-width: 40%;
+            height: auto;
+            aspect-ratio: 3 / 10;
+            object-fit: contain;
         }
     </style>
 </head>
 <body>
 
     <div class="wrapper">
-        <header style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 20px;">
+        <div class="theme-toggle-row">
+            <button class="theme-toggle interactive" onclick="toggleTheme()" aria-label="Toggle theme">
+                <img id="theme-icon" class="icon" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/moon.png" alt="">
+            </button>
+        </div>
+
+        <header style="border-bottom: var(--border-width) solid var(--border-color); padding-bottom: var(--space-md); margin-bottom: var(--space-lg);">
             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; position: relative;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <button id="back-btn" class="secondary" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; font-family: monospace; font-size: 26px; line-height: 1;" onclick="handleBack()">←</button>
+                <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                    <button id="back-btn" class="icon-button interactive" onclick="handleBack()" aria-label="Back">
+                        <img class="icon icon-lg" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/back_arrow.png" alt="Back">
+                    </button>
                 </div>
                 <h1 id="app-display-header" style="font-size: 1.5rem; margin: 0 auto; text-align: center; cursor: pointer;" onclick="goHome()">Command Block Creation</h1>
                 <div style="display: flex; align-items: center;">
-                    <a href="upload/formatter.html" class="upload-btn-link" title="Upload Formatter" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; text-decoration: none;">
-                        <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/upload.png" alt="Upload" style="width: 18px; height: 18px; object-fit: contain;">
+                    <a href="upload/formatter.html" class="icon-button interactive" title="Upload Formatter" style="text-decoration: none;">
+                        <img class="icon icon-lg" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/upload.png" alt="Upload">
                     </a>
                 </div>
             </div>
         </header>
 
+        <div class="hero-banner-wrap">
+            <img src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/bedrock-commands.png" alt="Bedrock Commands">
+        </div>
+
         <main id="app-view-router-canvas" style="width: 100%;">
              <div style="text-align: center; color: var(--text-main); padding: 40px;">Scanning workspace directories...</div>
         </main>
+
 
         <div class="footer">
             <div id="bottom-author-credit"></div>
@@ -123,6 +149,35 @@
         const ASSETS = "https://raw.githubusercontent.com/nako-hikari/nako-hikari.github.io/main/assets/images";
 
         let db = [];
+
+        /* THEME TOGGLE — shares the same localStorage key as the formatter
+           page, so the preference carries over when navigating between them. */
+        function toggleTheme() {
+            const root = document.documentElement;
+            const btn = document.querySelector('.theme-toggle');
+            const icon = document.getElementById('theme-icon');
+            const goingLight = root.getAttribute('data-theme') !== 'light';
+
+            btn.classList.add('spinning');
+            setTimeout(() => btn.classList.remove('spinning'), 400);
+
+            if (goingLight) {
+                root.setAttribute('data-theme', 'light');
+                icon.src = 'https://raw.githubusercontent.com/nako-hikari/assets/main/ui/sun.png';
+                localStorage.setItem('nako-theme', 'light');
+            } else {
+                root.removeAttribute('data-theme');
+                icon.src = 'https://raw.githubusercontent.com/nako-hikari/assets/main/ui/moon.png';
+                localStorage.setItem('nako-theme', 'dark');
+            }
+        }
+
+        (function() {
+            if (localStorage.getItem('nako-theme') === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                document.getElementById('theme-icon').src = 'https://raw.githubusercontent.com/nako-hikari/assets/main/ui/sun.png';
+            }
+        })();
 
         // Matches a metadata line case/whitespace-tolerantly; returns the trimmed value or null.
         function matchMeta(ln, key) {
@@ -256,8 +311,8 @@
             const canvas = document.getElementById('app-view-router-canvas');
             canvas.innerHTML = `
                 <div style="width: 100%; margin-bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
-                    <input type="text" id="search" style="flex: 1; min-width: 200px; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; color: var(--text-bright);" placeholder="Search by title, tag, or creator..." oninput="filterGrid(this.value)">
-                    <select id="sort-select" style="background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; color: var(--text-bright);" onchange="handleSortChange(this.value)">
+                    <input type="text" id="search" style="flex: 1; min-width: 200px;" placeholder="Search by title, tag, or creator..." oninput="filterGrid(this.value)">
+                    <select id="sort-select" style="width: auto;" onchange="handleSortChange(this.value)">
                         <option value="title-asc">Title (A-Z)</option>
                         <option value="title-desc">Title (Z-A)</option>
                         <option value="date-desc">Date Added (Newest)</option>
@@ -337,7 +392,7 @@
                 card.style.cssText = 'cursor: pointer; display: flex; flex-direction: column; gap: 4px; padding: 16px;';
                 card.onclick = () => { window.location.hash = encodeURIComponent(item.file); };
                 
-                let pills = item.tags.map(t => `<span style="background: #0f0f12; border: 1px solid var(--border-color); color: var(--accent-light); padding: 2px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; text-transform: uppercase;">${escape(t)}</span>`).join(' ');
+                let pills = item.tags.map(t => `<span style="background: var(--input-bg); border: var(--border-width) solid var(--border-color); color: var(--accent-light); padding: 2px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; text-transform: uppercase;">${escape(t)}</span>`).join(' ');
 
                 const creditName = item.credit ? item.credit : 'Nako Hikari';
 
@@ -556,7 +611,7 @@
 
                 if (!currentChatBox) {
                     let el = document.createElement('div');
-                    el.style.cssText = 'display: flex; flex-direction: column; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 8px; margin: 8px 0; width: 100%; box-sizing: border-box;';
+                    el.style.cssText = 'display: flex; flex-direction: column; background: var(--input-bg); border: var(--border-width) solid var(--border-color); border-radius: 8px; margin: 8px 0; width: 100%; box-sizing: border-box;';
                     contentFlow.appendChild(el);
                     currentChatBox = { el, hasNpc: false, rowCount: 0 };
                 }
@@ -601,7 +656,7 @@
                 closeChatBox(); // a chain row breaks any open chat/npc box
                 if (!currentChain) {
                     currentChain = document.createElement('div');
-                    currentChain.style.cssText = 'display: flex; flex-direction: column; background: #0f0f12; border: 1px solid var(--border-color); border-radius: 6px; margin: 8px 0; width: 100%; box-sizing: border-box;';
+                    currentChain.style.cssText = 'display: flex; flex-direction: column; background: var(--input-bg); border: var(--border-width) solid var(--border-color); border-radius: 6px; margin: 8px 0; width: 100%; box-sizing: border-box;';
                     contentFlow.appendChild(currentChain);
                     chainIdx = 0;
                 }
@@ -624,10 +679,10 @@
 
                 let tipStyles = `
                     position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) scale(0.9);
-                    background: #101015; border: 2px solid #2d2d3c; border-radius: 4px; padding: 8px 12px;
-                    color: #ffffff; font-family: monospace; font-size: 12px; font-weight: bold;
+                    background: var(--bg-color); border: 2px solid var(--border-color); border-radius: 4px; padding: 8px 12px;
+                    color: var(--text-bright); font-family: monospace; font-size: 12px; font-weight: bold;
                     line-height: 1.4; white-space: pre; text-align: left; opacity: 0; pointer-events: none; z-index: 99;
-                    box-shadow: 0 8px 20px rgba(0,0,0,0.8); transition: opacity 0.15s ease, transform 0.15s ease;
+                    box-shadow: var(--shadow-soft, 0 8px 20px rgba(0,0,0,0.4)); transition: opacity 0.15s ease, transform 0.15s ease;
                 `;
 
                 let blockGraphicContainer = document.createElement('div');
@@ -716,7 +771,9 @@
                     v.split(',').forEach(t => {
                         let pill = document.createElement('span');
                         let isFlipTag = t.trim().toLowerCase() === 'flip';
-                        pill.style.cssText = `background: ${isFlipTag ? '#4a2323' : '#0f0f12'}; border: 1px solid ${isFlipTag ? '#6e3333' : 'var(--border-color)'}; color: ${isFlipTag ? '#ff8fc0' : 'var(--accent-light)'}; padding: 2px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; text-transform: uppercase;`;
+                        pill.style.cssText = isFlipTag
+                            ? `background: color-mix(in srgb, var(--red) 18%, var(--input-bg)); border: var(--border-width) solid var(--red); color: var(--red); padding: 2px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; text-transform: uppercase;`
+                            : `background: var(--input-bg); border: var(--border-width) solid var(--border-color); color: var(--accent-light); padding: 2px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; text-transform: uppercase;`;
                         pill.innerText = t.trim();
                         tagBox.appendChild(pill);
                     });
@@ -747,7 +804,7 @@
                     const noteColor = colorMatch ? colorMatch[1].toLowerCase() : 'default';
                     const firstLine = colorMatch ? colorMatch[2] : v;
                     const noteStyles = {
-                        green: '#00FF00', red: '#FF0000', yellow: '#FFFF00', default: 'var(--border-color)'
+                        green: 'var(--green)', red: 'var(--red)', yellow: 'var(--yellow)', default: 'var(--border-color)'
                     };
                     let n = document.createElement('p');
                     n.style.cssText = noteColor === 'default'
