@@ -4,101 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Command Chain Formatter</title>
+    <link rel="stylesheet" href="/css/nako.css">
     <style>
-        :root {
-            --bg-color: #0e0e11;
-            --container-bg: #18181f;
-            --input-bg: #0f0f12;
-            --box-bg: #0f0f12;
-            --border-color: #2d2d38;
-            --accent-dark: #663657;
-            --accent-dark-hover: #81456e;
-            --accent-light: #A77A99;
-            --accent-light-hover: #c5a4bc;
-            --text-bright: #ffffff;
-            --text-main: #b4b4bc;
-            --text-muted: #5a5a66;
-            --text-codeblock: #C77E4F;
-            
-            /* Minecraft Block Palette */
-            --mc-impulse: #C77E4F;
-            --mc-chain: #76B297;
-            --mc-repeat: #6A4FC7;
-            --mc-chat: #BFBFBF;
-            --mc-npc: #111111;
+        body { align-items: center; justify-content: flex-start; }
 
-            /* Stripe Left Colors */
-            --stripe-header: #ffffff;
-            --stripe-body: #5a5a66;
-            --stripe-note: #d47c34;
-            --stripe-command: #2b8c83;
-            --stripe-link: #3a7bd5;
-            --stripe-img: #10b981;
-            --stripe-embed: #ec4899;
-            --stripe-bullet: #38bdf8;
-
-            --space-xs: 4px;
-            --space-sm: 8px;
-            --space-md: 12px;
-            --space-lg: 16px;
-            --space-xl: 20px;
-            --space-2xl: 24px;
-            --max-width: 950px;
-            --radius-sm: 4px;
-            --radius-md: 6px;
-            --radius-lg: 8px;
-            --border-width: 1px;
-            --shadow-deep: 0 6px 16px rgba(0, 0, 0, 0.6);
-            --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.3);
-            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-move: 0.6s cubic-bezier(0.2, 1, 0.2, 1);
-            color-scheme: dark;
-        }
-
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            margin: 0;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            line-height: 1.5;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: var(--space-2xl) var(--space-lg);
-        }
-
-        .wrapper {
-            width: 100%;
-            max-width: var(--max-width);
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-lg);
-        }
-
-        h1 {
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: var(--text-bright);
-            margin: 0;
-        }
-
-        .meta-card {
-            background: var(--container-bg);
-            border: var(--border-width) solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: var(--space-md);
-            box-shadow: var(--shadow-deep);
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-sm);
-        }
+        .select-inline { width: auto; }
 
         .form-row {
             display: flex;
@@ -114,12 +24,10 @@
             gap: var(--space-xs);
         }
 
-        label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-bright);
-            font-weight: 600;
+        .meta-card {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
         }
 
         .tag-grid {
@@ -136,71 +44,49 @@
             display: flex;
             align-items: center;
             gap: var(--space-sm);
-            font-size: 12px;
+            font-size: var(--fs-xs);
             color: var(--text-main);
             cursor: pointer;
             user-select: none;
-        }
-
-        .tag-checkbox-label input {
-            margin: 0;
-            width: auto;
-            cursor: pointer;
-        }
-
-        input[type="text"], textarea, select {
-            background: var(--input-bg);
-            border: var(--border-width) solid var(--border-color);
-            border-radius: var(--radius-sm);
-            padding: 6px var(--space-sm);
-            color: var(--text-bright);
-            font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
-            font-size: 13px;
-            width: 100%;
-            outline: none;
-            transition: border-color var(--transition-fast);
-        }
-
-        input:focus, textarea:focus, select:focus {
-            border-color: var(--accent-light);
         }
 
         .controls-toolbar {
             display: flex;
             gap: var(--space-sm);
             flex-wrap: wrap;
-            background: var(--container-bg);
-            padding: var(--space-sm) var(--space-md);
-            border-radius: var(--radius-lg);
-            border: var(--border-width) solid var(--border-color);
             align-items: center;
+            padding: var(--space-sm) var(--space-md);
+        }
+
+        .toolbar-divider {
+            border-left: var(--border-width) solid var(--border-color);
+            height: 20px;
+            margin: 0 var(--space-xs);
         }
 
         .group-block {
-            background: var(--container-bg);
-            border: var(--border-width) solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: var(--space-md);
             display: flex;
             flex-direction: column;
             gap: var(--space-sm);
-            box-shadow: var(--shadow-soft);
             position: relative;
-            transition: transform var(--transition-move), box-shadow var(--transition-move), background-color 0.4s ease;
+            transition: transform var(--transition-slow), box-shadow var(--transition-slow), background-color var(--transition-normal);
         }
 
-        .group-block[data-item-type="header"] { border-left: 4px solid var(--stripe-header); }
-        .group-block[data-item-type="text"] { border-left: 4px solid var(--stripe-body); }
-        .group-block[data-item-type="note"] { border-left: 4px solid var(--stripe-note); }
-        .group-block[data-item-type="chain-group"] { border-left: 4px solid var(--stripe-command); }
-        .group-block[data-item-type="link-group"] { border-left: 4px solid var(--stripe-link); }
-        .group-block[data-item-type="img-group"] { border-left: 4px solid var(--stripe-img); }
-        .group-block[data-item-type="embed-group"] { border-left: 4px solid var(--stripe-embed); }
-        .group-block[data-item-type="bullet-group"] { border-left: 4px solid var(--stripe-bullet); }
+        .group-block[data-item-type="header"] { border-left: 4px solid var(--accent-light); }
+        .group-block[data-item-type="text"] { border-left: 4px solid var(--accent-dark-300); }
+        .group-block[data-item-type="note"] { border-left: 4px solid var(--accent-light); }
+        .group-block[data-item-type="note"][data-note-color="green"] { border-left-color: var(--green); }
+        .group-block[data-item-type="note"][data-note-color="red"] { border-left-color: var(--red); }
+        .group-block[data-item-type="note"][data-note-color="yellow"] { border-left-color: var(--yellow); }
+        .group-block[data-item-type="chain-group"] { border-left: 4px solid var(--accent-dark); }
+        .group-block[data-item-type="link-group"] { border-left: 4px solid var(--accent-dark-700); }
+        .group-block[data-item-type="img-group"] { border-left: 4px solid var(--accent-dark-300); }
+        .group-block[data-item-type="embed-group"] { border-left: 4px solid var(--accent-dark-700); }
+        .group-block[data-item-type="bullet-group"] { border-left: 4px solid var(--accent-dark-100); }
 
         .block-moving-flash {
-            background-color: rgba(167, 122, 153, 0.1) !important;
-            box-shadow: 0 0 14px rgba(167, 122, 153, 0.3);
+            background-color: var(--accent-dark-50) !important;
+            box-shadow: var(--shadow-soft);
         }
 
         .group-header {
@@ -209,19 +95,23 @@
             align-items: center;
             border-bottom: var(--border-width) solid var(--border-color);
             padding-bottom: var(--space-xs);
+            gap: var(--space-sm);
         }
 
         .group-title {
-            font-size: 11px;
+            font-size: var(--fs-xs);
             text-transform: uppercase;
-            font-weight: bold;
+            letter-spacing: var(--ls-wide);
+            font-weight: var(--fw-bold, var(--fw-semibold));
             color: var(--accent-light);
         }
+
+        .group-block.is-collapsed > *:not(.group-header) { display: none; }
 
         .block-action-cluster {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
 
         .connected-chain-stack {
@@ -241,17 +131,17 @@
             border-bottom: var(--border-width) solid var(--border-color);
             position: relative;
             padding-left: 36px;
-            transition: transform var(--transition-move), background-color 0.4s ease;
+            transition: transform var(--transition-slow), background-color var(--transition-normal);
         }
 
         .cmd-row-node:last-child { border-bottom: none; }
 
-        .cmd-row-node.color-c { background-color: rgba(118, 178, 151, 0.04); }
-        .cmd-row-node.color-i { background-color: rgba(199, 126, 79, 0.04); }
-        .cmd-row-node.color-r { background-color: rgba(106, 79, 199, 0.04); }
-        .cmd-row-node.color-chat { background-color: rgba(191, 191, 191, 0.04); }
-        .cmd-row-node.color-npc { background-color: rgba(17, 17, 17, 0.2); }
-        .cmd-row-node.cond-border { box-shadow: inset 0 0 0 1px #ffffff; }
+        .cmd-row-node.color-c { background-color: color-mix(in srgb, var(--chain) 6%, transparent); }
+        .cmd-row-node.color-i { background-color: color-mix(in srgb, var(--impulse) 6%, transparent); }
+        .cmd-row-node.color-r { background-color: color-mix(in srgb, var(--repeat) 6%, transparent); }
+        .cmd-row-node.color-chat { background-color: color-mix(in srgb, var(--accent-light) 6%, transparent); }
+        .cmd-row-node.color-npc { background-color: color-mix(in srgb, var(--accent-dark) 10%, transparent); }
+        .cmd-row-node.cond-border { box-shadow: inset 0 0 0 var(--border-width) var(--text-bright); }
 
         .row-index-container {
             position: absolute;
@@ -263,38 +153,37 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            background-color: var(--mc-chain); 
+            background-color: var(--chain);
             padding: 4px 0;
         }
 
         .row-index {
-            font-family: monospace;
-            font-weight: bold;
-            color: var(--text-bright);
-            font-size: 11px;
+            font-family: var(--font-mono);
+            font-weight: var(--fw-bold, var(--fw-semibold));
+            color: var(--text-on-brand);
+            font-size: var(--fs-xs);
             user-select: none;
         }
 
         .row-nav-btn {
             background: none;
             border: none;
-            color: var(--text-bright);
+            color: var(--text-on-brand);
             font-size: 9px;
             cursor: pointer;
             padding: 2px;
             line-height: 1;
-            opacity: 0.6;
+            opacity: 0.7;
             transition: opacity var(--transition-fast);
             user-select: none;
         }
         .row-nav-btn:hover { opacity: 1; }
 
-        .cmd-row-node.color-c .row-index-container { background-color: var(--mc-chain); }
-        .cmd-row-node.color-i .row-index-container { background-color: var(--mc-impulse); }
-        .cmd-row-node.color-r .row-index-container { background-color: var(--mc-repeat); }
-        .cmd-row-node.color-chat .row-index-container { background-color: var(--mc-chat); }
-        .cmd-row-node.color-chat .row-index, .cmd-row-node.color-chat .row-nav-btn { color: #111111; }
-        .cmd-row-node.color-npc .row-index-container { background-color: var(--mc-npc); border-right: 1px solid var(--border-color); }
+        .cmd-row-node.color-c .row-index-container { background-color: var(--chain); }
+        .cmd-row-node.color-i .row-index-container { background-color: var(--impulse); }
+        .cmd-row-node.color-r .row-index-container { background-color: var(--repeat); }
+        .cmd-row-node.color-chat .row-index-container { background-color: var(--accent-light); }
+        .cmd-row-node.color-npc .row-index-container { background-color: var(--accent-dark); }
 
         .row-controls-line {
             display: flex;
@@ -313,10 +202,8 @@
 
         .inline-selector-set select {
             padding: 4px var(--space-xs);
-            font-size: 11px;
-            font-weight: bold;
-            border-radius: var(--radius-sm);
-            background: var(--bg-color);
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-bold, var(--fw-semibold));
             height: 28px;
             width: auto;
         }
@@ -325,9 +212,7 @@
             width: 32px;
             text-align: center;
             padding: 4px var(--space-xs);
-            font-size: 11px;
-            border-radius: var(--radius-sm);
-            background: var(--bg-color);
+            font-size: var(--fs-xs);
             height: 28px;
         }
 
@@ -337,24 +222,16 @@
             gap: var(--space-sm);
         }
 
-        .cmd-input-field {
-            flex: 1;
-            border: var(--border-width) solid var(--border-color) !important;
-            background: var(--bg-color) !important;
-            padding: 4px var(--space-sm) !important;
-            border-radius: var(--radius-sm);
-            height: 32px;
-        }
+        .cmd-input-field { flex: 1; }
 
         textarea.cmd-input-field {
             height: 72px;
             resize: vertical;
-            padding: var(--space-xs) var(--space-sm) !important;
-            line-height: 1.4;
+            line-height: var(--lh-normal);
         }
 
         .bulk-paste-zone {
-            background: rgba(255, 255, 255, 0.02);
+            background: var(--accent-dark-50);
             border: var(--border-width) dashed var(--border-color);
             padding: var(--space-sm);
             border-radius: var(--radius-md);
@@ -363,15 +240,15 @@
             gap: var(--space-xs);
         }
 
-        .bulk-paste-zone textarea { height: 55px; font-size: 12px; }
+        .bulk-paste-zone textarea { height: 55px; font-size: var(--fs-xs); }
 
-        .bullet-item-stack {
+        .bullet-item-stack, .social-stat-stack {
             display: flex;
             flex-direction: column;
             gap: var(--space-sm);
         }
 
-        .bullet-item-row {
+        .bullet-item-row, .social-stat-row {
             display: flex;
             align-items: flex-start;
             gap: var(--space-sm);
@@ -380,139 +257,95 @@
         .bullet-item-row .bullet-item-val {
             flex: 1;
             height: 44px;
-            font-size: 13px;
             font-family: inherit;
             resize: vertical;
         }
 
-        .bullet-item-row .btn-danger {
-            margin-top: 2px;
-            flex-shrink: 0;
-        }
-
-        .btn {
-            background: var(--accent-dark);
-            border: none;
-            color: var(--text-bright);
-            padding: var(--space-sm) var(--space-md);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 11px;
-            transition: var(--transition-fast);
-        }
-        .btn:hover { background: var(--accent-dark-hover); }
-        .btn:active { transform: scale(0.98); }
-
-        .btn-sm { padding: var(--space-xs) var(--space-sm); font-size: 10px; }
-        .btn-danger { background: #4a2323; }
-        .btn-danger:hover { background: #6e3333; }
-        .btn-secondary { background: var(--box-bg); border: var(--border-width) solid var(--border-color); color: var(--text-main); }
-        .btn-secondary:hover { border-color: var(--accent-light); color: var(--text-bright); }
-
-        .header-type-select {
-            padding: var(--space-xs) var(--space-sm);
-            font-size: 11px;
-            background: var(--box-bg);
-            color: var(--text-bright);
-            border: var(--border-width) solid var(--border-color);
-            border-radius: var(--radius-sm);
-            width: auto;
-        }
-
-        .output-box {
-            background: var(--input-bg);
-            border: var(--border-width) solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: var(--space-md);
-            font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
-            color: var(--text-codeblock);
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-height: 220px;
-            overflow-y: auto;
-            font-size: 13px;
-        }
-
-        /* Modal Overlay System */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity var(--transition-fast);
-            padding: var(--space-md);
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-card {
-            background: var(--container-bg);
-            border: var(--border-width) solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: var(--space-lg);
-            max-width: 460px;
-            width: 100%;
-            box-shadow: var(--shadow-deep);
+        .social-extra-fields {
             display: flex;
             flex-direction: column;
+            gap: var(--space-sm);
+            padding: var(--space-sm);
+            background: var(--input-bg);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+
+        .social-stat-row .stat-label-val { max-width: 140px; }
+        .social-stat-row .stat-value-val { flex: 1; }
+
+        .conditional-field-row {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .output-container-actions {
+            display: flex;
+            gap: var(--space-sm);
+            flex-wrap: wrap;
+        }
+
+        .fs-trigger-btn {
+            position: fixed;
+            top: var(--space-lg);
+            right: calc(var(--space-lg) + 48px);
+            z-index: var(--z-sticky);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            background: var(--accent-dark);
+            border: var(--border-width) solid var(--border-color);
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .fs-editor-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-color);
+            z-index: calc(var(--z-modal) - 1);
+            display: none;
+            flex-direction: column;
+        }
+
+        .fs-editor-header {
+            display: flex;
+            align-items: center;
+            padding: var(--space-md);
+            border-bottom: var(--border-width) solid var(--border-color);
+            flex-shrink: 0;
             gap: var(--space-md);
         }
 
-        .modal-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-bright);
-            margin: 0;
+        .fs-editor-body {
+            flex: 1;
+            display: flex;
+            min-height: 0;
         }
 
-        .modal-body {
-            font-size: 13px;
-            color: var(--text-main);
-            line-height: 1.5;
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-sm);
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: var(--space-sm);
-            justify-content: flex-end;
-            margin-top: var(--space-xs);
-        }
-
-        .footer {
-            margin-top: 32px;
-            padding-bottom: 16px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            align-items: center;
+        .fs-editor-body textarea {
+            flex: 1;
             width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            resize: none;
+            background: var(--bg-color);
+            color: var(--text-bright);
+            font-family: var(--font-mono);
+            font-size: var(--fs-lg);
+            padding: var(--space-lg);
+            line-height: var(--lh-relaxed);
         }
-        .footer-title { font-size: 12px; color: var(--text-muted); opacity: 0.75; letter-spacing: 0.5px; }
-        .footer-links { display: flex; gap: var(--space-md); flex-wrap: wrap; justify-content: center; }
-        .footer-links a { display: flex; align-items: center; gap: 6px; color: var(--accent-light); text-decoration: none; font-size: 13px; opacity: 0.85; transition: opacity var(--transition-fast), color var(--transition-fast); }
-        .footer-links a:hover { color: var(--accent-light-hover); opacity: 1; }
-        .footer-links img { width: 16px; height: 16px; filter: brightness(0) invert(1) !important; opacity: 0.9; }
-        .footer-links a.kofi { color: #ff5fa2; font-weight: 500; }
-        .footer-links a.kofi:hover { color: #ff8fc0; }
-        .footer-links a.kofi img { width: 20px; height: 20px; filter: brightness(0) invert(1) !important; opacity: 0.95; }
+
+        .draft-restore-note {
+            font-size: var(--fs-xs);
+            color: var(--text-muted);
+        }
 
         @media (max-width: 600px) {
             body { padding: var(--space-lg) var(--space-sm); }
@@ -522,33 +355,44 @@
 <body>
 
     <div class="wrapper">
-        <header style="display: flex; align-items: center; gap: 12px; justify-content: center; position: relative;">
-            <button id="back-btn" class="btn btn-secondary" style="position: absolute; left: 0; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; font-family: monospace; font-size: 26px; line-height: 1;" onclick="confirmBackToMain()">←</button>
+        <div class="theme-toggle-row">
+            <button class="fs-trigger-btn interactive" id="fullscreen-edit-trigger" aria-label="Expand editor">
+                <img class="icon icon-on-brand" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/expand.png" alt="">
+            </button>
+            <button class="theme-toggle interactive" onclick="toggleTheme()" aria-label="Toggle theme">
+                <img id="theme-icon" class="icon" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/moon.png" alt="">
+            </button>
+        </div>
+
+        <header style="display: flex; align-items: center; gap: var(--space-md); justify-content: center; position: relative;">
+            <button class="icon-button interactive" style="position: absolute; left: 0;" onclick="confirmBackToMain()" aria-label="Back">
+                <img class="icon icon-lg" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/back_arrow.png" alt="Back">
+            </button>
             <h1>Command Chain Formatter</h1>
         </header>
 
-        <section class="meta-card">
-            <div>
-                <button class="btn btn-secondary" style="width: 100%; margin-bottom: 4px;" onclick="openEditImportModal()">✎ Edit Existing Creation</button>
-            </div>
+        <section class="card meta-card">
+            <button class="secondary interactive" style="width: 100%;" onclick="openEditImportModal()">
+                <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/edit_pencil.png" alt=""> Edit Existing Creation
+            </button>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Creation Title</label>
+                    <label class="field-label">Creation Title</label>
                     <input type="text" id="meta-title" placeholder="yo cmd name here..">
                 </div>
                 <div class="form-group">
-                    <label>Credit</label>
+                    <label class="field-label">Credit</label>
                     <input type="text" id="meta-credit" value="Nako Hikari" placeholder="Nako Hikari">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Description</label>
+                    <label class="field-label">Description</label>
                     <input type="text" id="meta-desc" placeholder="desc if u ain't lazy here..">
                 </div>
             </div>
             <div class="form-group">
-                <label>Tags Selection</label>
+                <label class="field-label">Tags Selection</label>
                 <div class="tag-grid" id="tag-checkbox-list">
                     <label class="tag-checkbox-label"><input type="checkbox" value="particle" onchange="compilerCoreEngine()"> particle</label>
                     <label class="tag-checkbox-label"><input type="checkbox" value="functional" onchange="compilerCoreEngine()"> functional</label>
@@ -573,92 +417,222 @@
             </div>
         </section>
 
-        <section class="controls-toolbar">
-            <button class="btn" onclick="addChainGroup()">+ Add Command Block</button>
-            <div style="border-left: 1px solid var(--border-color); height: 20px; margin: 0 var(--space-xs);"></div>
-            
-            <select id="header-type-selector" class="header-type-select">
+        <section class="card controls-toolbar">
+            <button class="primary interactive" onclick="addChainGroup()">
+                <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/command_block.png" alt=""> Add Command Block
+            </button>
+            <div class="toolbar-divider"></div>
+
+            <select id="header-type-selector" class="select-inline">
                 <option value="H1">H1</option>
                 <option value="H2">H2</option>
+                <option value="H3">H3</option>
+                <option value="H4">H4</option>
+                <option value="H5">H5</option>
             </select>
-            <button class="btn btn-secondary" onclick="addHeaderBlock()">+ Add Header</button>
-            <button class="btn btn-secondary" onclick="addBodyTextBlock()">+ Add Body Text</button>
-            <button class="btn btn-secondary" onclick="addNoteBlock()">+ Add Note</button>
-            <button class="btn btn-secondary" onclick="addBulletGroup()">+ Add Bullet List</button>
-            
-            <div style="border-left: 1px solid var(--border-color); height: 20px; margin: 0 var(--space-xs);"></div>
-            <button class="btn btn-secondary" onclick="addLinkBlock()">+ Add Link</button>
-            <button class="btn btn-secondary" onclick="addImageBlock()">+ Add Image</button>
-            <button class="btn btn-secondary" onclick="addEmbedBlock()">+ Add Embed</button>
+            <button class="secondary interactive" onclick="addHeaderBlock()">
+                <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/header_text.png" alt=""> Add Header
+            </button>
+            <button class="secondary interactive" onclick="addBodyTextBlock()">
+                <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/paragraph_text.png" alt=""> Add Body Text
+            </button>
+            <button class="secondary interactive" onclick="addNoteBlock()">
+                <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/note.png" alt=""> Add Note
+            </button>
+            <button class="secondary interactive" onclick="addBulletGroup()">
+                <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/bullet_list.png" alt=""> Add Bullet List
+            </button>
 
-            <div style="border-left: 1px solid var(--border-color); height: 20px; margin: 0 var(--space-xs);"></div>
-            <select id="linebreak-count-selector" class="header-type-select">
-                <option value="1">1x Break</option>
-                <option value="3">3x Break</option>
-                <option value="6">6x Break</option>
-            </select>
-            <button class="btn btn-secondary" onclick="insertLineBreak()" title="Click into a Body Text, Note or Bullet Item field first">+ Insert Line Break</button>
+            <div class="toolbar-divider"></div>
+            <button class="secondary interactive" onclick="addLinkBlock()">
+                <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/link_chain.png" alt=""> Add Link
+            </button>
+            <button class="secondary interactive" onclick="addImageBlock()">
+                <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/image.png" alt=""> Add Image
+            </button>
+            <button class="secondary interactive" onclick="addEmbedBlock()">
+                <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/video_embed.png" alt=""> Add Embed
+            </button>
+
+            <div class="toolbar-divider"></div>
+            <button class="secondary interactive" onclick="insertLineBreak()" title="Click into a Body Text, Note or Bullet Item field first, then press this to drop in a break at your cursor">
+                <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/plus.png" alt=""> Insert Line Break
+            </button>
         </section>
 
         <main id="builder-canvas"></main>
 
-        <section class="meta-card">
+        <section class="card">
             <div class="group-header">
                 <span class="group-title">Formatted Raw Text String Output</span>
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-secondary" onclick="copyOutputToClipboard()">Copy Output</button>
-                    <button class="btn btn-secondary" onclick="exportAsTxtFile()">Export as .txt</button>
-                    <button class="btn btn-secondary" onclick="previewCreation()">Preview</button>
-                    <button class="btn" onclick="uploadContent()">UPLOAD</button>
-                </div>
             </div>
-            <div class="output-box" id="raw-string-output">Your output lines are generated automatically...</div>
+            <div class="output-box output-container" id="raw-string-output">Your output lines are generated automatically...</div>
+            <div class="output-container-actions">
+                <button class="secondary interactive" onclick="copyOutputToClipboard()">
+                    <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/copy.png" alt=""> Copy Output
+                </button>
+                <button class="secondary interactive" onclick="exportAsTxtFile()">
+                    <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/download.png" alt=""> Export as .txt
+                </button>
+                <button class="secondary interactive" onclick="previewCreation()">
+                    <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/eye_open.png" alt=""> Preview
+                </button>
+                <button class="primary interactive" onclick="uploadContent()">
+                    <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/upload.png" alt=""> Upload
+                </button>
+            </div>
         </section>
 
         <div class="footer">
-            <div class="footer-title">By Nako Hikari</div>
+            <div class="footer-title">Nako Hikari</div>
             <div class="footer-links">
-                <a href="https://github.com/nako-hikari/" target="_blank">
-                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub"> GitHub
+                <a href="https://github.com/nako-hikari/" target="_blank" class="social">
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+                    GitHub
                 </a>
-                <a href="https://m.youtube.com/@NaCryst" target="_blank">
-                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube"> YouTube
+                <a href="https://m.youtube.com/@NaCryst" target="_blank" class="social">
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube">
+                    YouTube
                 </a>
-                <a href="https://www.tiktok.com/@nako_hikari_mc" target="_blank">
-                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"> TikTok
+                <a href="https://www.tiktok.com/@nako_hikari_mc" target="_blank" class="social">
+                    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok">
+                    TikTok
                 </a>
                 <a href="https://ko-fi.com/arialicee" target="_blank" class="social kofi">
-                    <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/kofi-icon.png" alt="Ko-fi"> Support me on Ko-fi
+                    <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/kofi-icon.png" alt="Ko-fi">
+                    Support me on Ko-fi
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Reusable Confirmation / Info Modal -->
-    <div id="app-modal-overlay" class="modal-overlay">
-        <div class="modal-card">
-            <h3 id="modal-title" class="modal-title">Notice</h3>
-            <div id="modal-body" class="modal-body">Modal body text goes here.</div>
-            <div id="modal-actions" class="modal-actions"></div>
+    <div class="modal-overlay" id="nakoModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="nakoModalTitle"></h2>
+                <button class="modal-close interactive" onclick="closeNakoModal()" aria-label="Close">
+                    <img class="icon" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/close.png" alt="">
+                </button>
+            </div>
+            <div class="modal-body" id="nakoModalBody"></div>
+            <div class="modal-footer" id="nakoModalFooter"></div>
         </div>
     </div>
 
-    <!-- Fullscreen field editor: for large-text editing of any field other
-         than title/credit/description -->
-    <button id="fullscreen-edit-trigger" style="position: fixed; top: 20px; right: 12px; z-index: 900; display: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--accent-dark); border: var(--border-width) solid var(--border-color); cursor: pointer; padding: 0;">
-        <img src="https://raw.githubusercontent.com/nako-hikari/support-files/main/assets/eye_open.png" style="width: 20px; height: 20px;" alt="Expand editor">
-    </button>
-    <div id="fullscreen-editor-overlay" style="position: fixed; inset: 0; background: var(--bg-color); z-index: 1000; display: none; flex-direction: column;">
-        <div style="display: flex; align-items: center; padding: 12px; border-bottom: var(--border-width) solid var(--border-color); flex-shrink: 0;">
-            <button id="fullscreen-editor-close" class="btn btn-danger" style="padding: 6px 14px; font-size: 16px; line-height: 1;">X</button>
-            <span style="margin-left: 12px; font-weight: 600; color: var(--text-main); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;">Editing</span>
+    <div class="fs-editor-overlay" id="fullscreen-editor-overlay">
+        <div class="fs-editor-header">
+            <button class="icon-button interactive" id="fullscreen-editor-close" aria-label="Close editor">
+                <img class="icon icon-lg" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/close.png" alt="">
+            </button>
+            <span class="group-title">Editing</span>
         </div>
-        <div id="fullscreen-editor-body" style="flex: 1; display: flex; min-height: 0;"></div>
+        <div class="fs-editor-body" id="fullscreen-editor-body"></div>
     </div>
 
     <script>
         const canvas = document.getElementById('builder-canvas');
         const creditInput = document.getElementById('meta-credit');
+        const DRAFT_KEY = 'nako_formatter_draft';
+
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        /* THEME TOGGLE */
+        function toggleTheme() {
+            const root = document.documentElement;
+            const btn = document.querySelector('.theme-toggle');
+            const icon = document.getElementById('theme-icon');
+            const goingLight = root.getAttribute('data-theme') !== 'light';
+
+            btn.classList.add('spinning');
+            setTimeout(() => btn.classList.remove('spinning'), 400);
+
+            if (goingLight) {
+                root.setAttribute('data-theme', 'light');
+                icon.src = 'https://raw.githubusercontent.com/nako-hikari/assets/main/ui/sun.png';
+                localStorage.setItem('nako-theme', 'light');
+            } else {
+                root.removeAttribute('data-theme');
+                icon.src = 'https://raw.githubusercontent.com/nako-hikari/assets/main/ui/moon.png';
+                localStorage.setItem('nako-theme', 'dark');
+            }
+        }
+
+        (function() {
+            if (localStorage.getItem('nako-theme') === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                document.getElementById('theme-icon').src = 'https://raw.githubusercontent.com/nako-hikari/assets/main/ui/sun.png';
+            }
+        })();
+
+        /* MODAL SYSTEM */
+        function showModal(title, message, options) {
+            options = options || {};
+            document.getElementById('nakoModalTitle').textContent = title;
+            document.getElementById('nakoModalBody').textContent = message;
+
+            const footer = document.getElementById('nakoModalFooter');
+            footer.innerHTML = '';
+
+            if (options.onConfirm) {
+                const cancel = document.createElement('button');
+                cancel.className = 'secondary interactive';
+                cancel.textContent = options.cancelText || 'Cancel';
+                cancel.onclick = () => { closeNakoModal(); if (options.onCancel) options.onCancel(); };
+                footer.appendChild(cancel);
+
+                const confirmBtn = document.createElement('button');
+                confirmBtn.className = options.danger ? 'danger interactive' : 'primary interactive';
+                confirmBtn.textContent = options.confirmText || (options.danger ? 'Delete' : 'Confirm');
+                confirmBtn.onclick = () => { closeNakoModal(); options.onConfirm(); };
+                footer.appendChild(confirmBtn);
+            } else {
+                const ok = document.createElement('button');
+                ok.className = 'secondary interactive';
+                ok.textContent = 'OK';
+                ok.onclick = () => { closeNakoModal(); if (options.onOk) options.onOk(); };
+                footer.appendChild(ok);
+            }
+
+            document.getElementById('nakoModal').classList.add('open');
+        }
+
+        // Same shared modal shell, but the body takes real markup (e.g. the
+        // raw-string import textarea) instead of plain text.
+        function showModalHtml(title, bodyHtml, options) {
+            options = options || {};
+            document.getElementById('nakoModalTitle').textContent = title;
+            document.getElementById('nakoModalBody').innerHTML = bodyHtml;
+
+            const footer = document.getElementById('nakoModalFooter');
+            footer.innerHTML = '';
+
+            (options.buttons || []).forEach(btnDef => {
+                const btn = document.createElement('button');
+                btn.className = (btnDef.class || 'secondary') + ' interactive';
+                btn.textContent = btnDef.label;
+                btn.onclick = () => { closeNakoModal(); if (btnDef.onClick) btnDef.onClick(); };
+                footer.appendChild(btn);
+            });
+
+            document.getElementById('nakoModal').classList.add('open');
+        }
+
+        function closeNakoModal() {
+            document.getElementById('nakoModal').classList.remove('open');
+        }
+
+        document.getElementById('nakoModal').addEventListener('click', e => {
+            if (e.target.id === 'nakoModal') closeNakoModal();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeNakoModal();
+        });
 
         /* Live "§" highlighting: a non-interactive backdrop overlay behind a
            text-transparent field, since inputs/textareas can't style runs. */
@@ -669,13 +643,9 @@
             'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
         };
 
-        function escapeHtmlFmt(str) {
-            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        }
-
         function renderMcHighlightHtml(rawStr) {
             if (!rawStr) return '';
-            const escaped = escapeHtmlFmt(rawStr);
+            const escaped = escapeHtml(rawStr);
             let html = '', buffer = '', color = null, styles = [];
             const flush = () => {
                 if (!buffer) return;
@@ -689,8 +659,6 @@
                     const rawCode = escaped[i + 1];
                     const code = rawCode.toLowerCase();
 
-                    // The marker itself shows what it does (its own color/weight/etc.),
-                    // dimmed to half opacity — not just a flat gray marker.
                     let markerColor = null, markerStyles = [];
                     if (MC_COLORS[code]) markerColor = MC_COLORS[code];
                     else if (code === 'l') markerStyles.push('font-weight:bold;');
@@ -756,10 +724,13 @@
             sync();
         }
 
-        /* Fullscreen large-text editor: a floating button appears while
-           editing any field in the canvas (i.e. anything except the
-           title/credit/description meta fields), opening a fullscreen
-           textarea mirroring that field for easier editing of long text. */
+        /* FULLSCREEN FIELD EDITOR — works for any input/textarea in the
+           canvas so long text (chat lines, NPC scripts, notes) isn't
+           cramped into a tiny box. Bug fix: CHAT rows used to be a
+           single-line <input>, which silently ate newlines the moment you
+           opened this editor and typed more than one line — CHAT is now a
+           textarea (see addCommandRowToGroup/updateRowColorTheme) so real
+           multi-line entry actually sticks here. */
         const fsTriggerBtn = document.getElementById('fullscreen-edit-trigger');
         const fsOverlay = document.getElementById('fullscreen-editor-overlay');
         const fsBody = document.getElementById('fullscreen-editor-body');
@@ -780,7 +751,7 @@
         canvas.addEventListener('focusout', () => {
             setTimeout(() => {
                 const overlayOpen = fsOverlay.style.display === 'flex';
-                if (overlayOpen) return; // editing inside the fullscreen view, keep the trigger as-is
+                if (overlayOpen) return;
                 if (document.activeElement === fsTriggerBtn) return;
                 if (isFullscreenEligible(document.activeElement) && canvas.contains(document.activeElement)) {
                     activeEditField = document.activeElement;
@@ -795,10 +766,6 @@
             if (activeEditField) openFullscreenEditor(activeEditField);
         };
 
-        // On mobile, opening the keyboard shrinks/shifts the *visual* viewport
-        // while position:fixed elements can stay anchored to the *layout*
-        // viewport, making the button appear to jump. Track visualViewport
-        // (when available) and reposition it to the actual visible top edge.
         if (window.visualViewport) {
             const repositionFsBtn = () => {
                 const vv = window.visualViewport;
@@ -814,7 +781,6 @@
 
             const ta = document.createElement('textarea');
             ta.value = fieldEl.value;
-            ta.style.cssText = 'flex: 1; width: 100%; height: 100%; border: none; outline: none; resize: none; background: var(--bg-color); color: var(--text-bright); font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace; font-size: 16px; padding: 16px; line-height: 1.6; box-sizing: border-box;';
             fsBody.appendChild(ta);
 
             ta.addEventListener('input', () => {
@@ -822,7 +788,6 @@
                 fieldEl.dispatchEvent(new Event('input', { bubbles: true }));
             });
 
-            // Mirror live "§" highlighting here too, if the small field has it.
             if (fieldEl.dataset.mcHighlighted) {
                 attachMcHighlight(ta);
             }
@@ -859,7 +824,7 @@
 
         function shiftBlockPosition(button, offsetDirection) {
             const currentBlock = button.closest('.group-block');
-            
+
             if (offsetDirection === -1) {
                 const targetSibling = currentBlock.previousElementSibling;
                 if (targetSibling) {
@@ -887,7 +852,7 @@
         function shiftRowPosition(button, offsetDirection) {
             const currentRow = button.closest('.cmd-row-node');
             const stack = currentRow.parentNode;
-            
+
             if (offsetDirection === -1) {
                 const prevRow = currentRow.previousElementSibling;
                 if (prevRow) {
@@ -930,29 +895,62 @@
 
         function confirmDeleteBlock(buttonEl) {
             const block = buttonEl.closest('.group-block');
-            displayModal({
-                title: 'Confirm Deletion',
-                message: 'Are you sure you want to remove this element block?',
-                actions: [
-                    { label: 'Cancel', class: 'btn-secondary' },
-                    {
-                        label: 'Delete',
-                        class: 'btn-danger',
-                        onClick: () => {
-                            block.remove();
-                            compilerCoreEngine();
-                        }
-                    }
-                ]
+            showModal('Confirm Deletion', 'Are you sure you want to remove this element block?', {
+                danger: true,
+                confirmText: 'Delete',
+                onConfirm: () => {
+                    block.remove();
+                    compilerCoreEngine();
+                }
             });
+        }
+
+        function duplicateBlock(buttonEl) {
+            const block = buttonEl.closest('.group-block');
+            const clone = block.cloneNode(true);
+
+            // The clone carries copies of the §-highlight backdrop divs, but
+            // attachMcHighlight() wraps a field the first time it's called —
+            // doing that again on an already-wrapped clone would double-wrap
+            // it. Unwind the highlight wrapper back to a plain field first,
+            // then let attachMcHighlight rebuild it cleanly with its own
+            // live listeners.
+            clone.querySelectorAll('[data-mc-highlighted]').forEach(field => {
+                const wrapper = field.closest('div');
+                delete field.dataset.mcHighlighted;
+                field.style.removeProperty('background');
+                field.style.removeProperty('color');
+                if (wrapper && wrapper.parentNode) {
+                    wrapper.parentNode.insertBefore(field, wrapper);
+                    wrapper.remove();
+                }
+            });
+
+            block.after(clone);
+            clone.querySelectorAll('.text-input-val, .note-input-val, .bullet-item-val').forEach(f => attachMcHighlight(f));
+            clone.querySelectorAll('.cmd-row-node').forEach(row => {
+                const mode = row.querySelector('.row-mode').value;
+                if (mode === 'CHAT' || mode === 'NPC') attachMcHighlight(row.querySelector('.cmd-input-field'));
+            });
+            applyVisualFlashFeedback(clone);
+            compilerCoreEngine();
+        }
+
+        function toggleBlockCollapse(buttonEl) {
+            const block = buttonEl.closest('.group-block');
+            block.classList.toggle('is-collapsed');
+            const icon = buttonEl.querySelector('img');
+            icon.src = block.classList.contains('is-collapsed')
+                ? 'https://raw.githubusercontent.com/nako-hikari/assets/main/ui/expand.png'
+                : 'https://raw.githubusercontent.com/nako-hikari/assets/main/ui/collapse.png';
         }
 
         function createStandardBlockHeader(titleText, belongsToGroup) {
             let addBtn = '';
             if (belongsToGroup === 'chain') {
-                addBtn = `<button class="btn btn-sm" onclick="addCommandRowToGroup(this.closest('.group-block'))">+ Add Row</button>`;
+                addBtn = `<button class="secondary interactive" onclick="addCommandRowToGroup(this.closest('.group-block'))"><img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/plus.png" alt=""> Add Row</button>`;
             } else if (belongsToGroup === 'bullet') {
-                addBtn = `<button class="btn btn-sm" onclick="addBulletItem(this.closest('.group-block'))">+ Add Item</button>`;
+                addBtn = `<button class="secondary interactive" onclick="addBulletItem(this.closest('.group-block'))"><img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/plus.png" alt=""> Add Item</button>`;
             }
             return `
                 <div class="group-header">
@@ -960,10 +958,22 @@
                         <span class="group-title">${titleText}</span>
                     </div>
                     <div class="block-action-cluster">
-                        <button class="btn btn-sm btn-secondary" onclick="shiftBlockPosition(this, -1)">▲ Up</button>
-                        <button class="btn btn-sm btn-secondary" onclick="shiftBlockPosition(this, 1)">▼ Down</button>
+                        <button class="icon-button interactive" onclick="toggleBlockCollapse(this)" aria-label="Collapse">
+                            <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/collapse.png" alt="">
+                        </button>
+                        <button class="icon-button interactive" onclick="shiftBlockPosition(this, -1)" aria-label="Move up">
+                            <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/chevron_up.png" alt="">
+                        </button>
+                        <button class="icon-button interactive" onclick="shiftBlockPosition(this, 1)" aria-label="Move down">
+                            <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/chevron_down.png" alt="">
+                        </button>
+                        <button class="icon-button interactive" onclick="duplicateBlock(this)" aria-label="Duplicate">
+                            <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/duplicate.png" alt="">
+                        </button>
                         ${addBtn}
-                        <button class="btn btn-sm btn-danger" onclick="confirmDeleteBlock(this)">Remove</button>
+                        <button class="icon-button danger interactive" onclick="confirmDeleteBlock(this)" aria-label="Remove">
+                            <img class="icon icon-sm icon-on-brand" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/trash.png" alt="">
+                        </button>
                     </div>
                 </div>
             `;
@@ -971,13 +981,13 @@
 
         function addChainGroup() {
             const group = document.createElement('div');
-            group.className = 'group-block';
+            group.className = 'card group-block';
             group.dataset.itemType = 'chain-group';
 
             group.innerHTML = `
                 ${createStandardBlockHeader('Command Block Group', 'chain')}
                 <div class="bulk-paste-zone">
-                    <label>Bulk Paste Multi-Line Split Input Tool</label>
+                    <label class="field-label">Bulk Paste Multi-Line Split Input Tool</label>
                     <textarea placeholder="Paste lines of commands directly here. Each line auto-creates a linked sub-row entry block..." oninput="handleBulkPasteEngine(this)"></textarea>
                 </div>
                 <div class="connected-chain-stack"></div>
@@ -991,16 +1001,17 @@
         function addCommandRowToGroup(groupElement, targetCommandValue = '', config = {}) {
             const stack = groupElement.querySelector('.connected-chain-stack');
             const bulkBox = groupElement.querySelector('.bulk-paste-zone');
-            
+
             if (bulkBox) bulkBox.style.display = 'none';
 
             const rowIndex = stack.children.length + 1;
             const rowNode = document.createElement('div');
-            
+
             const mode = config.mode || 'C';
             const cond = config.cond || 'U';
             const active = config.active || 'AA';
             const tick = config.tick !== undefined ? config.tick : '0';
+            const isMultiline = (mode === 'NPC' || mode === 'CHAT');
 
             rowNode.className = `cmd-row-node color-${mode.toLowerCase()}`;
             if (cond === 'C') rowNode.classList.add('cond-border');
@@ -1020,28 +1031,30 @@
                             <option value="CHAT" ${mode === 'CHAT' ? 'selected' : ''}>CHAT</option>
                             <option value="NPC" ${mode === 'NPC' ? 'selected' : ''}>NPC</option>
                         </select>
-                        <select class="row-cond" style="${(mode === 'CHAT' || mode === 'NPC') ? 'display:none;' : ''}" onchange="updateRowColorTheme(this)">
+                        <select class="row-cond" style="${isMultiline ? 'display:none;' : ''}" onchange="updateRowColorTheme(this)">
                             <option value="U" ${cond === 'U' ? 'selected' : ''}>UN</option>
                             <option value="C" ${cond === 'C' ? 'selected' : ''}>CN</option>
                         </select>
-                        <select class="row-active" style="${(mode === 'CHAT' || mode === 'NPC') ? 'display:none;' : ''}" onchange="compilerCoreEngine()">
+                        <select class="row-active" style="${isMultiline ? 'display:none;' : ''}" onchange="compilerCoreEngine()">
                             <option value="AA" ${active === 'AA' ? 'selected' : ''}>AA</option>
                             <option value="NR" ${active === 'NR' ? 'selected' : ''}>NR</option>
                         </select>
-                        <input type="text" class="row-tick" style="${(mode === 'CHAT' || mode === 'NPC') ? 'display:none;' : ''}" value="${tick}" oninput="compilerCoreEngine()">
+                        <input type="text" class="row-tick" style="${isMultiline ? 'display:none;' : ''}" value="${escapeHtml(tick)}" oninput="compilerCoreEngine()">
                     </div>
-                    <button class="btn btn-sm btn-danger" style="padding: 2px 8px;" onclick="confirmRemoveRowNode(this)">X</button>
+                    <button class="icon-button danger interactive" style="width: 28px; height: 28px;" onclick="confirmRemoveRowNode(this)" aria-label="Remove row">
+                        <img class="icon icon-sm icon-on-brand" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/trash.png" alt="">
+                    </button>
                 </div>
                 <div class="cmd-input-container">
-                    ${mode === 'NPC' 
-                        ? `<textarea class="cmd-input-field" placeholder="Enter multi-line code execution sequences..." oninput="compilerCoreEngine()">${targetCommandValue}</textarea>`
-                        : `<input type="text" class="cmd-input-field" placeholder="Enter command string..." value="${targetCommandValue.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">`
+                    ${isMultiline
+                        ? `<textarea class="cmd-input-field" placeholder="${mode === 'NPC' ? 'Enter multi-line code execution sequences...' : 'Enter one or more chat lines...'}" oninput="compilerCoreEngine()">${escapeHtml(targetCommandValue)}</textarea>`
+                        : `<input type="text" class="cmd-input-field" placeholder="Enter command string..." value="${escapeHtml(targetCommandValue)}" oninput="compilerCoreEngine()">`
                     }
                 </div>
             `;
 
             stack.appendChild(rowNode);
-            if (mode === 'CHAT' || mode === 'NPC') {
+            if (isMultiline) {
                 attachMcHighlight(rowNode.querySelector('.cmd-input-field'));
             }
             compilerCoreEngine();
@@ -1049,19 +1062,10 @@
         }
 
         function confirmRemoveRowNode(buttonEl) {
-            displayModal({
-                title: 'Confirm Deletion',
-                message: 'Are you sure you want to remove this command row?',
-                actions: [
-                    { label: 'Cancel', class: 'btn-secondary' },
-                    {
-                        label: 'Delete',
-                        class: 'btn-danger',
-                        onClick: () => {
-                            removeRowNodeElement(buttonEl);
-                        }
-                    }
-                ]
+            showModal('Confirm Deletion', 'Are you sure you want to remove this command row?', {
+                danger: true,
+                confirmText: 'Delete',
+                onConfirm: () => { removeRowNodeElement(buttonEl); }
             });
         }
 
@@ -1096,31 +1100,27 @@
             const activeSelect = rowNode.querySelector('.row-active');
             const tickInput = rowNode.querySelector('.row-tick');
             const inputContainer = rowNode.querySelector('.cmd-input-container');
-            
+            const isMultiline = (type === 'NPC' || type === 'CHAT');
+
             const currentVal = rowNode.querySelector('.cmd-input-field').value;
 
             rowNode.className = 'cmd-row-node';
             rowNode.classList.add(`color-${type.toLowerCase()}`);
 
-            if (type === 'NPC') {
+            if (isMultiline) {
                 condSelect.style.display = 'none';
                 activeSelect.style.display = 'none';
                 tickInput.style.display = 'none';
-                inputContainer.innerHTML = `<textarea class="cmd-input-field" placeholder="Enter multi-line code execution sequences..." oninput="compilerCoreEngine()">${currentVal}</textarea>`;
-            } else if (type === 'CHAT') {
-                condSelect.style.display = 'none';
-                activeSelect.style.display = 'none';
-                tickInput.style.display = 'none';
-                inputContainer.innerHTML = `<input type="text" class="cmd-input-field" placeholder="Enter command string..." value="${currentVal.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">`;
+                inputContainer.innerHTML = `<textarea class="cmd-input-field" placeholder="${type === 'NPC' ? 'Enter multi-line code execution sequences...' : 'Enter one or more chat lines...'}" oninput="compilerCoreEngine()">${escapeHtml(currentVal)}</textarea>`;
             } else {
                 condSelect.style.display = '';
                 activeSelect.style.display = '';
                 tickInput.style.display = '';
-                inputContainer.innerHTML = `<input type="text" class="cmd-input-field" placeholder="Enter command string..." value="${currentVal.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">`;
+                inputContainer.innerHTML = `<input type="text" class="cmd-input-field" placeholder="Enter command string..." value="${escapeHtml(currentVal)}" oninput="compilerCoreEngine()">`;
                 if (condSelect.value === 'C') rowNode.classList.add('cond-border');
             }
 
-            if (type === 'CHAT' || type === 'NPC') {
+            if (isMultiline) {
                 attachMcHighlight(inputContainer.querySelector('.cmd-input-field'));
             }
 
@@ -1130,13 +1130,13 @@
         function addHeaderBlock(presetValue = '', tierPreset = 'H1') {
             const type = presetValue ? tierPreset : document.getElementById('header-type-selector').value;
             const block = document.createElement('div');
-            block.className = 'group-block';
+            block.className = 'card group-block';
             block.dataset.itemType = 'header';
             block.dataset.headerTier = type;
 
             block.innerHTML = `
                 ${createStandardBlockHeader(`Header Block Element (${type})`, 'standard')}
-                <input type="text" class="header-input-val" placeholder="Enter layout header text label..." value="${presetValue.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
+                <input type="text" class="header-input-val" placeholder="Enter layout header text label..." value="${escapeHtml(presetValue)}" oninput="compilerCoreEngine()">
             `;
             canvas.appendChild(block);
             compilerCoreEngine();
@@ -1145,12 +1145,12 @@
 
         function addBodyTextBlock(presetValue = '') {
             const block = document.createElement('div');
-            block.className = 'group-block';
+            block.className = 'card group-block';
             block.dataset.itemType = 'text';
 
             block.innerHTML = `
                 ${createStandardBlockHeader('Plain Body Text Block (TEXT)', 'standard')}
-                <textarea style="height: 60px; font-size: 13px; font-family: inherit; resize: vertical;" class="text-input-val" placeholder="Enter standard descriptive paragraph text content..." oninput="compilerCoreEngine()">${presetValue}</textarea>
+                <textarea style="height: 60px; font-family: inherit; resize: vertical;" class="text-input-val" placeholder="Enter standard descriptive paragraph text content..." oninput="compilerCoreEngine()">${escapeHtml(presetValue)}</textarea>
             `;
             canvas.appendChild(block);
             attachMcHighlight(block.querySelector('.text-input-val'));
@@ -1160,7 +1160,7 @@
 
         function addNoteBlock(presetValue = '', presetColor = 'default') {
             const block = document.createElement('div');
-            block.className = 'group-block';
+            block.className = 'card group-block';
             block.dataset.itemType = 'note';
             block.dataset.noteColor = presetColor;
 
@@ -1168,8 +1168,8 @@
                 ${createStandardBlockHeader('User Note Box (NOTE)', 'standard')}
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Note Color</label>
-                        <select class="note-color-select" onchange="updateNoteColor(this)">
+                        <label class="field-label">Note Color</label>
+                        <select class="note-color-select select-inline" onchange="updateNoteColor(this)">
                             <option value="default" ${presetColor === 'default' ? 'selected' : ''}>Default</option>
                             <option value="green" ${presetColor === 'green' ? 'selected' : ''}>Green</option>
                             <option value="red" ${presetColor === 'red' ? 'selected' : ''}>Red</option>
@@ -1177,7 +1177,7 @@
                         </select>
                     </div>
                 </div>
-                <textarea class="note-input-val" style="height: 60px; font-size: 13px; font-family: inherit; resize: vertical;" placeholder="Enter gray dynamic italics info comment string... (supports multiple lines)" oninput="compilerCoreEngine()">${presetValue}</textarea>
+                <textarea class="note-input-val" style="height: 60px; font-family: inherit; resize: vertical;" placeholder="Enter gray dynamic italics info comment string... (supports multiple lines)" oninput="compilerCoreEngine()">${escapeHtml(presetValue)}</textarea>
             `;
             canvas.appendChild(block);
             attachMcHighlight(block.querySelector('.note-input-val'));
@@ -1193,7 +1193,7 @@
 
         function addBulletGroup() {
             const block = document.createElement('div');
-            block.className = 'group-block';
+            block.className = 'card group-block';
             block.dataset.itemType = 'bullet-group';
             block.dataset.bulletStyle = 'dot';
 
@@ -1201,8 +1201,8 @@
                 ${createStandardBlockHeader('Bullet List Block (BULLET)', 'bullet')}
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Bullet Style</label>
-                        <select class="bullet-style-select" onchange="updateBulletStyle(this)">
+                        <label class="field-label">Bullet Style</label>
+                        <select class="bullet-style-select select-inline" onchange="updateBulletStyle(this)">
                             <option value="dot">• Dot</option>
                             <option value="dash">- Dash</option>
                             <option value="num">1. Numeral</option>
@@ -1223,8 +1223,10 @@
             const row = document.createElement('div');
             row.className = 'bullet-item-row';
             row.innerHTML = `
-                <textarea class="bullet-item-val" placeholder="Enter bullet item text..." oninput="compilerCoreEngine()">${presetValue}</textarea>
-                <button class="btn btn-sm btn-danger" onclick="removeBulletItem(this)">X</button>
+                <textarea class="bullet-item-val" placeholder="Enter bullet item text..." oninput="compilerCoreEngine()">${escapeHtml(presetValue)}</textarea>
+                <button class="icon-button danger interactive" onclick="removeBulletItem(this)" aria-label="Remove item">
+                    <img class="icon icon-sm icon-on-brand" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/trash.png" alt="">
+                </button>
             `;
             stack.appendChild(row);
             attachMcHighlight(row.querySelector('.bullet-item-val'));
@@ -1237,7 +1239,6 @@
             const group = buttonEl.closest('.group-block');
             buttonEl.closest('.bullet-item-row').remove();
 
-            // Never let a bullet block go fully empty — nothing to render on the parser side.
             if (stack.children.length === 0) {
                 addBulletItem(group);
             } else {
@@ -1263,44 +1264,121 @@
         });
 
         function insertLineBreak() {
-            const count = parseInt(document.getElementById('linebreak-count-selector').value, 10) || 1;
             const field = lastFocusedField;
 
             if (!field || !document.body.contains(field)) {
-                displayModal({
-                    title: 'No Field Selected',
-                    message: 'Click into a Body Text, Note, or Bullet Item field first, then press this button again to insert a line break at your cursor.',
-                    actions: [{ label: 'OK' }]
-                });
+                showModal('No Field Selected', 'Click into a Body Text, Note, or Bullet Item field first, then press this button again to insert a line break at your cursor. You can press it multiple times for multiple breaks.');
                 return;
             }
 
-            const token = LINE_BREAK_TOKEN.repeat(count);
             const start = field.selectionStart ?? field.value.length;
             const end = field.selectionEnd ?? field.value.length;
-            field.value = field.value.slice(0, start) + token + field.value.slice(end);
-            const newPos = start + token.length;
+            field.value = field.value.slice(0, start) + LINE_BREAK_TOKEN + field.value.slice(end);
+            const newPos = start + LINE_BREAK_TOKEN.length;
             field.focus();
             field.setSelectionRange(newPos, newPos);
-            compilerCoreEngine();
+            field.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
-        function addLinkBlock(presetTitle = '', presetUrl = '') {
+        /* LINK BLOCK — plain clickable text, or a "social profile card" with
+           an optional avatar and any number of stats (followers, videos...). */
+        function addLinkBlock(presetTitle = '', presetUrl = '', socialConfig = null) {
             const block = document.createElement('div');
-            block.className = 'group-block';
+            block.className = 'card group-block';
             block.dataset.itemType = 'link-group';
+
+            const isSocial = !!socialConfig;
 
             block.innerHTML = `
                 ${createStandardBlockHeader('Link Element (LINK)', 'standard')}
+                <label class="tag-checkbox-label">
+                    <input type="checkbox" class="link-social-check" ${isSocial ? 'checked' : ''} onchange="toggleSocialFields(this)">
+                    Make this a Social Profile Card
+                </label>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Pressable Link Title</label>
-                        <input type="text" class="link-title-val" placeholder="Enter the text that users click..." value="${presetTitle.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
+                        <label class="field-label link-title-label">${isSocial ? 'Display Name' : 'Pressable Link Title'}</label>
+                        <input type="text" class="link-title-val" placeholder="Enter the text that users click..." value="${escapeHtml(presetTitle)}" oninput="compilerCoreEngine()">
                     </div>
                     <div class="form-group">
-                        <label>Actual Link URL</label>
-                        <input type="text" class="link-url-val" placeholder="https://..." value="${presetUrl.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
+                        <label class="field-label link-url-label">${isSocial ? 'Profile URL' : 'Actual Link URL'}</label>
+                        <input type="text" class="link-url-val" placeholder="https://..." value="${escapeHtml(presetUrl)}" oninput="compilerCoreEngine()">
                     </div>
+                </div>
+                <div class="social-extra-fields" style="${isSocial ? '' : 'display:none;'}">
+                    <div class="form-group">
+                        <label class="field-label">Avatar / Profile Picture URL (optional)</label>
+                        <input type="text" class="link-avatar-val" placeholder="https://..." value="${isSocial ? escapeHtml(socialConfig.avatar || '') : ''}" oninput="compilerCoreEngine()">
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">Stats (optional)</label>
+                        <div class="social-stat-stack"></div>
+                        <button class="secondary interactive" style="align-self: flex-start;" onclick="addSocialStat(this.closest('.group-block'))">
+                            <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/plus.png" alt=""> Add Stat
+                        </button>
+                    </div>
+                </div>
+            `;
+            canvas.appendChild(block);
+
+            if (isSocial && socialConfig.stats && socialConfig.stats.length > 0) {
+                socialConfig.stats.forEach(s => addSocialStat(block, s.label, s.value));
+            }
+
+            compilerCoreEngine();
+            return block;
+        }
+
+        function toggleSocialFields(checkboxEl) {
+            const block = checkboxEl.closest('.group-block');
+            const extra = block.querySelector('.social-extra-fields');
+            const isSocial = checkboxEl.checked;
+            extra.style.display = isSocial ? '' : 'none';
+            block.querySelector('.link-title-label').textContent = isSocial ? 'Display Name' : 'Pressable Link Title';
+            block.querySelector('.link-url-label').textContent = isSocial ? 'Profile URL' : 'Actual Link URL';
+            if (isSocial && block.querySelector('.social-stat-stack').children.length === 0) {
+                addSocialStat(block);
+            }
+            compilerCoreEngine();
+        }
+
+        function addSocialStat(block, presetLabel = '', presetValue = '') {
+            const stack = block.querySelector('.social-stat-stack');
+            const row = document.createElement('div');
+            row.className = 'social-stat-row';
+            row.innerHTML = `
+                <input type="text" class="stat-label-val" placeholder="Followers" value="${escapeHtml(presetLabel)}" oninput="compilerCoreEngine()">
+                <input type="text" class="stat-value-val" placeholder="1.2M" value="${escapeHtml(presetValue)}" oninput="compilerCoreEngine()">
+                <button class="icon-button danger interactive" onclick="removeSocialStat(this)" aria-label="Remove stat">
+                    <img class="icon icon-sm icon-on-brand" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/trash.png" alt="">
+                </button>
+            `;
+            stack.appendChild(row);
+            compilerCoreEngine();
+            return row;
+        }
+
+        function removeSocialStat(buttonEl) {
+            buttonEl.closest('.social-stat-row').remove();
+            compilerCoreEngine();
+        }
+
+        /* IMAGE BLOCK — optionally clickable, wrapping the image in a link. */
+        function addImageBlock(presetUrl = '', presetClickable = false, presetLinkUrl = '') {
+            const block = document.createElement('div');
+            block.className = 'card group-block';
+            block.dataset.itemType = 'img-group';
+
+            block.innerHTML = `
+                ${createStandardBlockHeader('Image Asset Link (IMG)', 'standard')}
+                <input type="text" class="img-url-val" placeholder="Enter image URL or raw GitHub asset string..." value="${escapeHtml(presetUrl)}" oninput="compilerCoreEngine()">
+                <label class="tag-checkbox-label">
+                    <input type="checkbox" class="img-clickable-check" ${presetClickable ? 'checked' : ''} onchange="toggleImgClickable(this)">
+                    Clickable (opens a link when tapped)
+                </label>
+                <div class="form-group img-link-field" style="${presetClickable ? '' : 'display:none;'}">
+                    <label class="field-label">Link URL</label>
+                    <input type="text" class="img-link-val" placeholder="https://..." value="${escapeHtml(presetLinkUrl)}" oninput="compilerCoreEngine()">
                 </div>
             `;
             canvas.appendChild(block);
@@ -1308,28 +1386,20 @@
             return block;
         }
 
-        function addImageBlock(presetUrl = '') {
-            const block = document.createElement('div');
-            block.className = 'group-block';
-            block.dataset.itemType = 'img-group';
-
-            block.innerHTML = `
-                ${createStandardBlockHeader('Image Asset Link (IMG)', 'standard')}
-                <input type="text" class="img-url-val" placeholder="Enter image URL or raw GitHub asset string..." value="${presetUrl.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
-            `;
-            canvas.appendChild(block);
+        function toggleImgClickable(checkboxEl) {
+            const block = checkboxEl.closest('.group-block');
+            block.querySelector('.img-link-field').style.display = checkboxEl.checked ? '' : 'none';
             compilerCoreEngine();
-            return block;
         }
 
         function addEmbedBlock(presetUrl = '') {
             const block = document.createElement('div');
-            block.className = 'group-block';
+            block.className = 'card group-block';
             block.dataset.itemType = 'embed-group';
 
             block.innerHTML = `
                 ${createStandardBlockHeader('Video Embed Resource (EMBED)', 'standard')}
-                <input type="text" class="embed-url-val" placeholder="Enter the source video file or hosting URL string..." value="${presetUrl.replace(/"/g, '&quot;')}" oninput="compilerCoreEngine()">
+                <input type="text" class="embed-url-val" placeholder="Enter the source video file or hosting URL string..." value="${escapeHtml(presetUrl)}" oninput="compilerCoreEngine()">
             `;
             canvas.appendChild(block);
             compilerCoreEngine();
@@ -1337,17 +1407,15 @@
         }
 
         function openEditImportModal() {
-            displayCustomModal({
-                title: 'Import Creation Payload',
-                htmlContent: `
-                    <label>Paste your raw string payload below:</label>
-                    <textarea id="edit-import-textarea" style="height: 140px; font-size: 12px;" placeholder="Paste output formatted raw string here..."></textarea>
-                `,
-                actions: [
-                    { label: 'Cancel', class: 'btn-secondary' },
+            showModalHtml('Import Creation Payload', `
+                <label class="field-label">Paste your raw string payload below:</label>
+                <textarea id="edit-import-textarea" style="height: 140px; font-size: var(--fs-xs);" placeholder="Paste output formatted raw string here..."></textarea>
+            `, {
+                buttons: [
+                    { label: 'Cancel', class: 'secondary' },
                     {
                         label: 'Process Raw String',
-                        class: 'btn',
+                        class: 'primary',
                         onClick: () => {
                             const raw = document.getElementById('edit-import-textarea').value;
                             if (!raw.trim()) return;
@@ -1359,26 +1427,32 @@
         }
 
         function confirmOverwriteExistingData(rawText) {
-            displayModal({
-                title: 'Overwrite Warning',
-                message: 'Continuing will completely overwrite your current work in progress. Are you sure you want to replace it?',
-                actions: [
-                    {
-                        label: 'Go Back',
-                        class: 'btn-secondary',
-                        onClick: () => {
-                            openEditImportModal();
-                        }
-                    },
-                    {
-                        label: 'Yes, Overwrite',
-                        class: 'btn-danger',
-                        onClick: () => {
-                            executeRawStringImport(rawText);
-                        }
-                    }
-                ]
+            showModal('Overwrite Warning', 'Continuing will completely overwrite your current work in progress. Are you sure you want to replace it?', {
+                danger: true,
+                confirmText: 'Yes, Overwrite',
+                cancelText: 'Go Back',
+                onConfirm: () => { executeRawStringImport(rawText); },
+                onCancel: () => { openEditImportModal(); }
             });
+        }
+
+        // Groups the raw lines of a CMD: block by header (everything up to
+        // the next CMD: line belongs to the previous one) instead of
+        // assuming a rigid "header, then exactly one payload line" pairing.
+        // Bug fix: the old i += 2 pairing silently dropped every line past
+        // the first for any multi-line NPC/CHAT payload on import.
+        function groupCmdLines(lines) {
+            let groups = [];
+            let cur = null;
+            lines.forEach(ln => {
+                if (ln.startsWith('CMD:')) {
+                    cur = { header: ln, payload: [] };
+                    groups.push(cur);
+                } else if (cur) {
+                    cur.payload.push(ln);
+                }
+            });
+            return groups;
         }
 
         function executeRawStringImport(rawText) {
@@ -1386,7 +1460,7 @@
             document.getElementById('meta-title').value = '';
             document.getElementById('meta-desc').value = '';
             document.getElementById('meta-credit').value = 'Nako Hikari';
-            
+
             const checkboxes = document.querySelectorAll('#tag-checkbox-list input[type="checkbox"]');
             checkboxes.forEach(cb => cb.checked = false);
 
@@ -1422,9 +1496,9 @@
                 });
                 if (isMetaBlock) return;
 
-                if (/^H[1-4]:/.test(trimmed)) {
+                if (/^H[1-5]:/.test(trimmed)) {
                     activeChainGroup = null;
-                    const tier = trimmed.match(/^H[1-4]/)[0];
+                    const tier = trimmed.match(/^H[1-5]/)[0];
                     addHeaderBlock(trimmed.replace(new RegExp('^' + tier + ':'), '').trim(), tier);
                 } else if (trimmed.startsWith('TEXT:')) {
                     activeChainGroup = null;
@@ -1447,6 +1521,22 @@
                     stack.innerHTML = '';
                     lines.slice(1).forEach(ln => { if (ln.trim()) addBulletItem(group, ln); });
                     if (stack.children.length === 0) addBulletItem(group);
+                } else if (/^SOCIAL\s*:/i.test(trimmed)) {
+                    activeChainGroup = null;
+                    const nameMatch = trimmed.match(/^SOCIAL\s*:\s*(.*)$/i);
+                    const name = nameMatch ? nameMatch[1].trim() : '';
+                    let url = '', avatar = '';
+                    const stats = [];
+                    lines.slice(1).forEach(ln => {
+                        let m;
+                        if ((m = ln.match(/^\s*URL\s*:\s*(.*)$/i))) url = m[1].trim();
+                        else if ((m = ln.match(/^\s*AVATAR\s*:\s*(.*)$/i))) avatar = m[1].trim();
+                        else if ((m = ln.match(/^\s*STAT\s*:\s*(.*)$/i))) {
+                            const parts = m[1].split('|');
+                            if (parts[0] && parts[0].trim()) stats.push({ label: parts[0].trim(), value: (parts[1] || '').trim() });
+                        }
+                    });
+                    addLinkBlock(name, url, { avatar, stats });
                 } else if (trimmed.startsWith('[link]')) {
                     activeChainGroup = null;
                     const match = trimmed.match(/\[link\]\[(.*?)\]\((.*?)\)/);
@@ -1454,7 +1544,15 @@
                 } else if (trimmed.startsWith('[img]')) {
                     activeChainGroup = null;
                     const match = trimmed.match(/\[img\]\((.*?)\)/);
-                    if (match) addImageBlock(match[1]);
+                    if (match) {
+                        const inner = match[1];
+                        const pipeIdx = inner.indexOf('|');
+                        if (pipeIdx !== -1) {
+                            addImageBlock(inner.slice(0, pipeIdx), true, inner.slice(pipeIdx + 1));
+                        } else {
+                            addImageBlock(inner);
+                        }
+                    }
                 } else if (trimmed.startsWith('[embed]')) {
                     activeChainGroup = null;
                     const match = trimmed.match(/\[embed\]\((.*?)\)/);
@@ -1463,23 +1561,20 @@
                     if (!activeChainGroup) {
                         activeChainGroup = addChainGroup();
                     }
-                    
-                    for (let i = 0; i < lines.length; i += 2) {
-                        if (lines[i] && lines[i].startsWith('CMD:')) {
-                            const headerParts = lines[i].split(':');
-                            const cmdVal = lines[i + 1] || '';
-                            const mode = headerParts[1] || 'C';
 
-                            if (mode === 'NPC' || mode === 'CHAT') {
-                                addCommandRowToGroup(activeChainGroup, cmdVal, { mode });
-                            } else {
-                                const active = headerParts[2] || 'AA';
-                                const cond = headerParts[3] || 'U';
-                                const tick = headerParts[4] || '0';
-                                addCommandRowToGroup(activeChainGroup, cmdVal, { mode, cond, active, tick });
-                            }
+                    groupCmdLines(lines).forEach(grp => {
+                        const headerParts = grp.header.split(':');
+                        const mode = headerParts[1] || 'C';
+
+                        if (mode === 'NPC' || mode === 'CHAT') {
+                            addCommandRowToGroup(activeChainGroup, grp.payload.join('\n'), { mode });
+                        } else {
+                            const active = headerParts[2] || 'AA';
+                            const cond = headerParts[3] || 'U';
+                            const tick = headerParts[4] || '0';
+                            addCommandRowToGroup(activeChainGroup, grp.payload[0] || '', { mode, cond, active, tick });
                         }
-                    }
+                    });
                 }
             });
 
@@ -1501,7 +1596,7 @@
             if (title) metaBlock += `TITLE: ${title}\n`;
             if (desc)  metaBlock += `DESC: ${desc}\n`;
             if (tagsArr.length > 0)  metaBlock += `TAG: ${tagsArr.join(',')}\n`;
-            
+
             if (metaBlock) sections.push(metaBlock.trim());
 
             const elements = canvas.children;
@@ -1513,7 +1608,7 @@
                     const tier = el.dataset.headerTier;
                     const val = el.querySelector('.header-input-val').value.trim();
                     if (val) sections.push(`${tier}: ${val}`);
-                } 
+                }
                 else if (type === 'text') {
                     const val = el.querySelector('.text-input-val').value.trim();
                     if (val) sections.push(`TEXT: ${val}`);
@@ -1535,13 +1630,30 @@
                     }
                 }
                 else if (type === 'link-group') {
+                    const isSocial = el.querySelector('.link-social-check').checked;
                     const textTitle = el.querySelector('.link-title-val').value.trim();
                     const targetUrl = el.querySelector('.link-url-val').value.trim();
-                    sections.push(`[link][${textTitle}](${targetUrl})`);
+
+                    if (isSocial) {
+                        const avatar = el.querySelector('.link-avatar-val').value.trim();
+                        const stats = Array.from(el.querySelectorAll('.social-stat-row')).map(row => ({
+                            label: row.querySelector('.stat-label-val').value.trim(),
+                            value: row.querySelector('.stat-value-val').value.trim()
+                        })).filter(s => s.label);
+
+                        let block = `SOCIAL: ${textTitle}\nURL: ${targetUrl}`;
+                        if (avatar) block += `\nAVATAR: ${avatar}`;
+                        stats.forEach(s => { block += `\nSTAT: ${s.label}|${s.value}`; });
+                        sections.push(block);
+                    } else {
+                        sections.push(`[link][${textTitle}](${targetUrl})`);
+                    }
                 }
                 else if (type === 'img-group') {
                     const targetUrl = el.querySelector('.img-url-val').value.trim();
-                    sections.push(`[img](${targetUrl})`);
+                    const clickable = el.querySelector('.img-clickable-check').checked;
+                    const linkUrl = clickable ? el.querySelector('.img-link-val').value.trim() : '';
+                    sections.push((clickable && linkUrl) ? `[img](${targetUrl}|${linkUrl})` : `[img](${targetUrl})`);
                 }
                 else if (type === 'embed-group') {
                     const targetUrl = el.querySelector('.embed-url-val').value.trim();
@@ -1568,60 +1680,49 @@
                 }
             }
 
-            document.getElementById('raw-string-output').innerText = sections.join('\n\n');
+            const output = sections.join('\n\n');
+            document.getElementById('raw-string-output').innerText = output;
+            saveDraftToLocalStorage(sections.length, output);
         }
 
-        /* Modal Helper Utility */
+        /* DRAFT AUTOSAVE — a lightweight safety net against a closed tab or
+           crashed browser. Doesn't replace the Preview round-trip's bfcache
+           reliance, just backstops it. */
+        function saveDraftToLocalStorage(sectionCount, output) {
+            try {
+                if (sectionCount > 1) {
+                    localStorage.setItem(DRAFT_KEY, output);
+                } else {
+                    localStorage.removeItem(DRAFT_KEY);
+                }
+            } catch (err) { /* storage unavailable (private mode etc.) — skip silently */ }
+        }
+
+        function checkForDraft() {
+            let draft = null;
+            try { draft = localStorage.getItem(DRAFT_KEY); } catch (err) { /* ignore */ }
+            if (draft && draft.trim()) {
+                showModal('Restore Draft?', 'We found an unsaved draft from your last session. Would you like to restore it, or start fresh?', {
+                    confirmText: 'Restore',
+                    cancelText: 'Start Fresh',
+                    onConfirm: () => { executeRawStringImport(draft); },
+                    onCancel: () => { try { localStorage.removeItem(DRAFT_KEY); } catch (err) {} }
+                });
+            }
+        }
+
         function displayModal({ title, message, actions }) {
-            const overlay = document.getElementById('app-modal-overlay');
-            const modalTitle = document.getElementById('modal-title');
-            const modalBody = document.getElementById('modal-body');
-            const modalActions = document.getElementById('modal-actions');
-
-            modalTitle.innerText = title;
-            modalBody.innerText = message;
-            modalActions.innerHTML = '';
-
-            actions.forEach(act => {
-                const btn = document.createElement('button');
-                btn.className = `btn ${act.class || ''}`;
-                btn.innerText = act.label;
-                btn.onclick = () => {
-                    hideModal();
-                    if (act.onClick) act.onClick();
-                };
-                modalActions.appendChild(btn);
-            });
-
-            overlay.classList.add('active');
-        }
-
-        function displayCustomModal({ title, htmlContent, actions }) {
-            const overlay = document.getElementById('app-modal-overlay');
-            const modalTitle = document.getElementById('modal-title');
-            const modalBody = document.getElementById('modal-body');
-            const modalActions = document.getElementById('modal-actions');
-
-            modalTitle.innerText = title;
-            modalBody.innerHTML = htmlContent;
-            modalActions.innerHTML = '';
-
-            actions.forEach(act => {
-                const btn = document.createElement('button');
-                btn.className = `btn ${act.class || ''}`;
-                btn.innerText = act.label;
-                btn.onclick = () => {
-                    hideModal();
-                    if (act.onClick) act.onClick();
-                };
-                modalActions.appendChild(btn);
-            });
-
-            overlay.classList.add('active');
-        }
-
-        function hideModal() {
-            document.getElementById('app-modal-overlay').classList.remove('active');
+            // Back-compat shim so any leftover legacy call sites keep working.
+            const opts = {};
+            const confirmAction = (actions || []).find(a => a.class !== 'btn-secondary' && a.label !== 'Cancel');
+            if (actions && actions.length > 1 && confirmAction) {
+                opts.onConfirm = confirmAction.onClick || (() => {});
+                opts.confirmText = confirmAction.label;
+                opts.danger = confirmAction.class === 'btn-danger';
+                const cancelAction = actions.find(a => a !== confirmAction);
+                if (cancelAction) opts.cancelText = cancelAction.label;
+            }
+            showModal(title, message, opts);
         }
 
         /* UPLOAD FLOW LOGIC */
@@ -1630,24 +1731,11 @@
             const currentCredit = creditField.value.trim();
 
             if (currentCredit === 'Nako Hikari') {
-                displayModal({
-                    title: 'Credit is still unchanged',
-                    message: 'Your credit is still set to Nako Hikari. Continuing will result in this creation being credited to Nako Hikari.',
-                    actions: [
-                        {
-                            label: 'Change credit',
-                            class: 'btn-secondary',
-                            onClick: () => {
-                                creditField.focus();
-                            }
-                        },
-                        {
-                            label: 'Proceed',
-                            onClick: () => {
-                                showGeneralConfirmation();
-                            }
-                        }
-                    ]
+                showModal('Credit is still unchanged', 'Your credit is still set to Nako Hikari. Continuing will result in this creation being credited to Nako Hikari.', {
+                    confirmText: 'Proceed',
+                    cancelText: 'Change credit',
+                    onConfirm: () => { showGeneralConfirmation(); },
+                    onCancel: () => { creditField.focus(); }
                 });
             } else {
                 showGeneralConfirmation();
@@ -1655,21 +1743,10 @@
         }
 
         function showGeneralConfirmation() {
-            displayModal({
-                title: 'Confirm Upload',
-                message: 'Make sure everything is correct before uploading. You will not be able to edit the submission after uploading.',
-                actions: [
-                    {
-                        label: 'Let me check',
-                        class: 'btn-secondary'
-                    },
-                    {
-                        label: 'Upload',
-                        onClick: () => {
-                            executeUploadRequest();
-                        }
-                    }
-                ]
+            showModal('Confirm Upload', 'Make sure everything is correct before uploading. You will not be able to edit the submission after uploading.', {
+                confirmText: 'Upload',
+                cancelText: 'Let me check',
+                onConfirm: () => { executeUploadRequest(); }
             });
         }
 
@@ -1680,57 +1757,32 @@
             try {
                 const response = await fetch("/api/upload", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        content: outputText,
-                        author: creditVal
-                    })
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ content: outputText, author: creditVal })
                 });
 
                 if (!response.ok) {
                     throw new Error(`Server returned HTTP status ${response.status}`);
                 }
 
-                const result = await response.json();
+                await response.json();
+                try { localStorage.removeItem(DRAFT_KEY); } catch (err) {}
 
-                displayModal({
-                    title: 'Upload Successful',
-                    message: 'Command creation is on review and will show on the main page after approval.',
-                    actions: [
-                        { label: 'OK' }
-                    ]
-                });
+                showModal('Upload Successful', 'Command creation is on review and will show on the main page after approval.');
             } catch (error) {
-                displayModal({
-                    title: 'Upload Failed',
-                    message: 'Upload failed: ' + error.message,
-                    actions: [
-                        { label: 'Close', class: 'btn-danger' }
-                    ]
-                });
+                showModal('Upload Failed', 'Upload failed: ' + error.message, { danger: false });
             }
         }
 
         function confirmBackToMain() {
-            displayModal({
-                title: 'Leave Formatter?',
-                message: 'Are you sure going back to main page? Your progress will be reset.',
-                actions: [
-                    { label: 'No, stay here', class: 'btn-secondary' },
-                    { label: 'Yes', class: 'btn-danger', onClick: () => { window.location.href = '../index.html'; } }
-                ]
+            showModal('Leave Formatter?', 'Are you sure going back to main page? Your progress will be reset.', {
+                danger: true,
+                confirmText: 'Yes',
+                cancelText: 'No, stay here',
+                onConfirm: () => { window.location.href = '../index.html'; }
             });
         }
 
-        // Best-effort interception of the phone's own back button/gesture:
-        // keep a dummy history entry on top so a back-press triggers popstate
-        // instead of actually navigating, then re-push it and show the same
-        // confirm dialog. Not airtight on every mobile browser (e.g. iOS
-        // Safari's edge-swipe can occasionally bypass this), but covers the
-        // common case. Skipped once when returning from a Preview trip,
-        // since that's an expected round-trip, not a "leave formatter" action.
         history.pushState({ nakoFormatterGuard: true }, '', location.href);
         window.addEventListener('popstate', () => {
             history.pushState({ nakoFormatterGuard: true }, '', location.href);
@@ -1748,11 +1800,7 @@
         function previewCreation() {
             const outputText = document.getElementById('raw-string-output').innerText;
             if (!outputText || outputText.startsWith('Your output')) {
-                displayModal({
-                    title: 'Nothing to Preview',
-                    message: 'Add some content first, then press Preview again.',
-                    actions: [{ label: 'OK' }]
-                });
+                showModal('Nothing to Preview', 'Add some content first, then press Preview again.');
                 return;
             }
             sessionStorage.setItem('nako_preview_payload', outputText);
@@ -1763,28 +1811,20 @@
         function copyOutputToClipboard() {
             const rawText = document.getElementById('raw-string-output').innerText;
             navigator.clipboard.writeText(rawText).then(() => {
-                displayModal({
-                    title: 'Copied!',
-                    message: 'Output string copied to clipboard successfully.',
-                    actions: [{ label: 'OK' }]
-                });
+                showModal('Copied!', 'Output string copied to clipboard successfully.');
             }).catch(err => {
-                displayModal({
-                    title: 'Copy Failed',
-                    message: 'Failed to copy output string: ' + err,
-                    actions: [{ label: 'Close', class: 'btn-danger' }]
-                });
+                showModal('Copy Failed', 'Failed to copy output string: ' + err);
             });
         }
 
         function exportAsTxtFile() {
             const rawText = document.getElementById('raw-string-output').innerText;
             const titleInput = document.getElementById('meta-title').value.trim();
-            
+
             const filename = titleInput ? titleInput.toLowerCase().replace(/[^a-z0-9]+/g, '_') + '_chain.txt' : 'command_chain_output.txt';
             const blob = new Blob([rawText], { type: 'text/plain;charset=utf-8;' });
             const link = document.createElement("a");
-            
+
             if (link.download !== undefined) {
                 const url = URL.createObjectURL(blob);
                 link.setAttribute("href", url);
@@ -1797,6 +1837,7 @@
         }
 
         addChainGroup();
+        checkForDraft();
     </script>
 </body>
 </html>
