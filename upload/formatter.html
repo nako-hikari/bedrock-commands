@@ -189,14 +189,23 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            row-gap: var(--space-xs);
             gap: var(--space-sm);
             width: 100%;
         }
 
+        .row-controls-line > .remove-row-btn {
+            flex-shrink: 0;
+        }
+
         .inline-selector-set {
             display: flex;
+            flex-wrap: wrap;
+            row-gap: 4px;
             gap: 4px;
-            flex-shrink: 0;
+            flex-shrink: 1;
+            min-width: 0;
             align-items: center;
         }
 
@@ -205,13 +214,19 @@
             font-size: var(--fs-xs);
             font-weight: var(--fw-bold, var(--fw-semibold));
             height: 28px;
-            width: auto;
+            width: auto !important;
+            min-width: 0;
+            flex-shrink: 0;
         }
 
-        .inline-selector-set input {
-            width: 32px;
+        .inline-selector-set input.row-tick {
+            width: 34px !important;
+            min-width: 0;
+            max-width: 34px;
+            flex-shrink: 0;
+            box-sizing: border-box;
             text-align: center;
-            padding: 4px var(--space-xs);
+            padding: 4px 2px;
             font-size: var(--fs-xs);
             height: 28px;
         }
@@ -286,20 +301,57 @@
             flex-wrap: wrap;
         }
 
+        .mode-picker-btn {
+            height: 28px;
+            padding: 0 10px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: var(--fs-xs);
+            font-weight: var(--fw-bold, var(--fw-semibold));
+            color: var(--text-on-brand);
+            cursor: pointer;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .mode-picker-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .mode-option-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-sm);
+            border: var(--border-width) solid var(--border-color);
+            background: var(--input-bg);
+            cursor: pointer;
+            font-size: var(--fs-md);
+            color: var(--text-bright);
+            text-align: left;
+            width: 100%;
+        }
+
+        .mode-option-row:hover { background: var(--accent-dark-50); }
+        .mode-option-row.is-current { border-color: var(--accent-light); }
+
+        .mode-swatch {
+            width: 16px;
+            height: 16px;
+            border-radius: var(--radius-full);
+            flex-shrink: 0;
+        }
+
+        /* Shares .theme-toggle's box (size/shape/border) from nako.css so
+           the two buttons are visually identical; only the fill differs. */
         .fs-trigger-btn {
-            position: fixed;
-            top: var(--space-lg);
-            right: calc(var(--space-lg) + 48px);
-            z-index: var(--z-sticky);
             display: none;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: var(--radius-full);
             background: var(--accent-dark);
-            border: var(--border-width) solid var(--border-color);
-            cursor: pointer;
             padding: 0;
         }
 
@@ -356,7 +408,7 @@
 
     <div class="wrapper">
         <div class="theme-toggle-row">
-            <button class="fs-trigger-btn interactive" id="fullscreen-edit-trigger" aria-label="Expand editor">
+            <button class="theme-toggle fs-trigger-btn interactive" id="fullscreen-edit-trigger" aria-label="Expand editor">
                 <img class="icon icon-on-brand" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/expand.png" alt="">
             </button>
             <button class="theme-toggle interactive" onclick="toggleTheme()" aria-label="Toggle theme">
@@ -634,96 +686,6 @@
             if (e.key === 'Escape') closeNakoModal();
         });
 
-        /* Live "§" highlighting: a non-interactive backdrop overlay behind a
-           text-transparent field, since inputs/textareas can't style runs. */
-        const MC_COLORS = {
-            '0': '#000000', '1': '#0000AA', '2': '#00AA00', '3': '#00AAAA',
-            '4': '#AA0000', '5': '#AA00AA', '6': '#FFAA00', '7': '#AAAAAA',
-            '8': '#555555', '9': '#5555FF', 'a': '#55FF55', 'b': '#55FFFF',
-            'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
-        };
-
-        function renderMcHighlightHtml(rawStr) {
-            if (!rawStr) return '';
-            const escaped = escapeHtml(rawStr);
-            let html = '', buffer = '', color = null, styles = [];
-            const flush = () => {
-                if (!buffer) return;
-                const styleAttr = (color ? `color:${color};` : '') + styles.join('');
-                html += styleAttr ? `<span style="${styleAttr}">${buffer}</span>` : buffer;
-                buffer = '';
-            };
-            for (let i = 0; i < escaped.length; i++) {
-                if (escaped[i] === '§' && i + 1 < escaped.length) {
-                    flush();
-                    const rawCode = escaped[i + 1];
-                    const code = rawCode.toLowerCase();
-
-                    let markerColor = null, markerStyles = [];
-                    if (MC_COLORS[code]) markerColor = MC_COLORS[code];
-                    else if (code === 'l') markerStyles.push('font-weight:bold;');
-                    else if (code === 'm') markerStyles.push('text-decoration:line-through;');
-                    else if (code === 'n') markerStyles.push('text-decoration:underline;');
-                    else if (code === 'o') markerStyles.push('font-style:italic;');
-                    const markerStyleAttr = 'opacity:0.5;' + (markerColor ? `color:${markerColor};` : '') + markerStyles.join('');
-                    html += `<span style="${markerStyleAttr}">§${rawCode}</span>`;
-
-                    if (MC_COLORS[code]) { color = MC_COLORS[code]; styles = []; }
-                    else if (code === 'r') { color = null; styles = []; }
-                    else if (code === 'l') styles.push('font-weight:bold;');
-                    else if (code === 'm') styles.push('text-decoration:line-through;');
-                    else if (code === 'n') styles.push('text-decoration:underline;');
-                    else if (code === 'o') styles.push('font-style:italic;');
-                    i++;
-                    continue;
-                }
-                buffer += escaped[i];
-            }
-            flush();
-            return html;
-        }
-
-        function attachMcHighlight(fieldEl) {
-            if (!fieldEl || fieldEl.dataset.mcHighlighted) return;
-            fieldEl.dataset.mcHighlighted = '1';
-
-            const cs = getComputedStyle(fieldEl);
-            const origColor = cs.color, origBg = cs.backgroundColor;
-            const fontFamily = cs.fontFamily, fontSize = cs.fontSize, lineHeight = cs.lineHeight;
-            const padding = cs.padding, borderRadius = cs.borderRadius, borderWidth = cs.borderWidth;
-            const origFlex = cs.flex;
-
-            const wrapper = document.createElement('div');
-            wrapper.style.cssText = `position: relative; width: 100%; min-width: 0; flex: ${origFlex};`;
-            fieldEl.parentNode.insertBefore(wrapper, fieldEl);
-            wrapper.appendChild(fieldEl);
-
-            const backdrop = document.createElement('div');
-            wrapper.insertBefore(backdrop, fieldEl);
-            backdrop.style.cssText = `
-                position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-                margin: 0; pointer-events: none; overflow: hidden; box-sizing: border-box;
-                font-family: ${fontFamily}; font-size: ${fontSize}; line-height: ${lineHeight};
-                padding: ${padding}; border: ${borderWidth} solid transparent;
-                white-space: ${fieldEl.tagName === 'TEXTAREA' ? 'pre-wrap' : 'pre'};
-                word-wrap: break-word; color: ${origColor}; background: ${origBg}; border-radius: ${borderRadius};
-            `;
-
-            fieldEl.style.position = 'relative';
-            fieldEl.style.setProperty('background', 'transparent', 'important');
-            fieldEl.style.setProperty('color', 'transparent', 'important');
-            fieldEl.style.caretColor = origColor;
-
-            const sync = () => {
-                backdrop.innerHTML = renderMcHighlightHtml(fieldEl.value);
-                backdrop.scrollTop = fieldEl.scrollTop;
-                backdrop.scrollLeft = fieldEl.scrollLeft;
-            };
-            fieldEl.addEventListener('input', sync);
-            fieldEl.addEventListener('scroll', sync);
-            sync();
-        }
-
         /* FULLSCREEN FIELD EDITOR — works for any input/textarea in the
            canvas so long text (chat lines, NPC scripts, notes) isn't
            cramped into a tiny box. Bug fix: CHAT rows used to be a
@@ -766,16 +728,6 @@
             if (activeEditField) openFullscreenEditor(activeEditField);
         };
 
-        if (window.visualViewport) {
-            const repositionFsBtn = () => {
-                const vv = window.visualViewport;
-                fsTriggerBtn.style.top = (vv.offsetTop + 20) + 'px';
-            };
-            window.visualViewport.addEventListener('resize', repositionFsBtn);
-            window.visualViewport.addEventListener('scroll', repositionFsBtn);
-            repositionFsBtn();
-        }
-
         function openFullscreenEditor(fieldEl) {
             fsBody.innerHTML = '';
 
@@ -787,10 +739,6 @@
                 fieldEl.value = ta.value;
                 fieldEl.dispatchEvent(new Event('input', { bubbles: true }));
             });
-
-            if (fieldEl.dataset.mcHighlighted) {
-                attachMcHighlight(ta);
-            }
 
             fsOverlay.style.display = 'flex';
             ta.focus();
@@ -908,30 +856,7 @@
         function duplicateBlock(buttonEl) {
             const block = buttonEl.closest('.group-block');
             const clone = block.cloneNode(true);
-
-            // The clone carries copies of the §-highlight backdrop divs, but
-            // attachMcHighlight() wraps a field the first time it's called —
-            // doing that again on an already-wrapped clone would double-wrap
-            // it. Unwind the highlight wrapper back to a plain field first,
-            // then let attachMcHighlight rebuild it cleanly with its own
-            // live listeners.
-            clone.querySelectorAll('[data-mc-highlighted]').forEach(field => {
-                const wrapper = field.closest('div');
-                delete field.dataset.mcHighlighted;
-                field.style.removeProperty('background');
-                field.style.removeProperty('color');
-                if (wrapper && wrapper.parentNode) {
-                    wrapper.parentNode.insertBefore(field, wrapper);
-                    wrapper.remove();
-                }
-            });
-
             block.after(clone);
-            clone.querySelectorAll('.text-input-val, .note-input-val, .bullet-item-val').forEach(f => attachMcHighlight(f));
-            clone.querySelectorAll('.cmd-row-node').forEach(row => {
-                const mode = row.querySelector('.row-mode').value;
-                if (mode === 'CHAT' || mode === 'NPC') attachMcHighlight(row.querySelector('.cmd-input-field'));
-            });
             applyVisualFlashFeedback(clone);
             compilerCoreEngine();
         }
@@ -998,6 +923,19 @@
             return group;
         }
 
+        const CMD_MODE_META = {
+            C:    { label: 'Chain',   color: 'var(--chain)' },
+            I:    { label: 'Impulse', color: 'var(--impulse)' },
+            R:    { label: 'Repeat',  color: 'var(--repeat)' },
+            CHAT: { label: 'Chat',    color: 'var(--accent-light)' },
+            NPC:  { label: 'NPC',     color: 'var(--accent-dark)' }
+        };
+
+        function modePickerBtnHtml(mode) {
+            const meta = CMD_MODE_META[mode];
+            return `<button type="button" class="mode-picker-btn interactive" data-mode="${mode}" style="background: ${meta.color};" onclick="openModePicker(this)">${meta.label}</button>`;
+        }
+
         function addCommandRowToGroup(groupElement, targetCommandValue = '', config = {}) {
             const stack = groupElement.querySelector('.connected-chain-stack');
             const bulkBox = groupElement.querySelector('.bulk-paste-zone');
@@ -1014,6 +952,7 @@
             const isMultiline = (mode === 'NPC' || mode === 'CHAT');
 
             rowNode.className = `cmd-row-node color-${mode.toLowerCase()}`;
+            rowNode.dataset.mode = mode;
             if (cond === 'C') rowNode.classList.add('cond-border');
 
             rowNode.innerHTML = `
@@ -1024,14 +963,8 @@
                 </div>
                 <div class="row-controls-line">
                     <div class="inline-selector-set">
-                        <select class="row-mode" onchange="updateRowColorTheme(this)">
-                            <option value="C" ${mode === 'C' ? 'selected' : ''}>C</option>
-                            <option value="I" ${mode === 'I' ? 'selected' : ''}>I</option>
-                            <option value="R" ${mode === 'R' ? 'selected' : ''}>R</option>
-                            <option value="CHAT" ${mode === 'CHAT' ? 'selected' : ''}>CHAT</option>
-                            <option value="NPC" ${mode === 'NPC' ? 'selected' : ''}>NPC</option>
-                        </select>
-                        <select class="row-cond" style="${isMultiline ? 'display:none;' : ''}" onchange="updateRowColorTheme(this)">
+                        ${modePickerBtnHtml(mode)}
+                        <select class="row-cond" style="${isMultiline ? 'display:none;' : ''}" onchange="updateRowColorTheme(this.closest('.cmd-row-node'))">
                             <option value="U" ${cond === 'U' ? 'selected' : ''}>UN</option>
                             <option value="C" ${cond === 'C' ? 'selected' : ''}>CN</option>
                         </select>
@@ -1041,7 +974,7 @@
                         </select>
                         <input type="text" class="row-tick" style="${isMultiline ? 'display:none;' : ''}" value="${escapeHtml(tick)}" oninput="compilerCoreEngine()">
                     </div>
-                    <button class="icon-button danger interactive" style="width: 28px; height: 28px;" onclick="confirmRemoveRowNode(this)" aria-label="Remove row">
+                    <button class="icon-button danger interactive remove-row-btn" style="width: 28px; height: 28px;" onclick="confirmRemoveRowNode(this)" aria-label="Remove row">
                         <img class="icon icon-sm icon-on-brand" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/trash.png" alt="">
                     </button>
                 </div>
@@ -1054,11 +987,43 @@
             `;
 
             stack.appendChild(rowNode);
-            if (isMultiline) {
-                attachMcHighlight(rowNode.querySelector('.cmd-input-field'));
-            }
             compilerCoreEngine();
             return rowNode;
+        }
+
+        let modePickerTargetRow = null;
+
+        function openModePicker(triggerBtn) {
+            modePickerTargetRow = triggerBtn.closest('.cmd-row-node');
+            const currentMode = modePickerTargetRow.dataset.mode;
+
+            const optionsHtml = Object.keys(CMD_MODE_META).map(key => {
+                const meta = CMD_MODE_META[key];
+                const isCurrent = key === currentMode;
+                return `
+                    <button type="button" class="mode-option-row interactive${isCurrent ? ' is-current' : ''}" onclick="applyModeChoice('${key}')">
+                        <span class="mode-swatch" style="background: ${meta.color};"></span>
+                        <span>${meta.label}</span>
+                        ${isCurrent ? `<img class="icon icon-sm" style="margin-left: auto;" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/checkmark.png" alt="Current">` : ''}
+                    </button>
+                `;
+            }).join('');
+
+            showModalHtml('Choose Command Block Type', `<div class="mode-picker-list">${optionsHtml}</div>`, {
+                buttons: [{ label: 'Cancel', class: 'secondary' }]
+            });
+        }
+
+        function applyModeChoice(key) {
+            closeNakoModal();
+            if (!modePickerTargetRow) return;
+            const btn = modePickerTargetRow.querySelector('.mode-picker-btn');
+            btn.dataset.mode = key;
+            btn.textContent = CMD_MODE_META[key].label;
+            btn.style.background = CMD_MODE_META[key].color;
+            modePickerTargetRow.dataset.mode = key;
+            updateRowColorTheme(modePickerTargetRow);
+            modePickerTargetRow = null;
         }
 
         function confirmRemoveRowNode(buttonEl) {
@@ -1093,9 +1058,8 @@
             });
         }
 
-        function updateRowColorTheme(selectEl) {
-            const rowNode = selectEl.closest('.cmd-row-node');
-            const type = rowNode.querySelector('.row-mode').value;
+        function updateRowColorTheme(rowNode) {
+            const type = rowNode.dataset.mode;
             const condSelect = rowNode.querySelector('.row-cond');
             const activeSelect = rowNode.querySelector('.row-active');
             const tickInput = rowNode.querySelector('.row-tick');
@@ -1118,10 +1082,6 @@
                 tickInput.style.display = '';
                 inputContainer.innerHTML = `<input type="text" class="cmd-input-field" placeholder="Enter command string..." value="${escapeHtml(currentVal)}" oninput="compilerCoreEngine()">`;
                 if (condSelect.value === 'C') rowNode.classList.add('cond-border');
-            }
-
-            if (isMultiline) {
-                attachMcHighlight(inputContainer.querySelector('.cmd-input-field'));
             }
 
             compilerCoreEngine();
@@ -1153,7 +1113,6 @@
                 <textarea style="height: 60px; font-family: inherit; resize: vertical;" class="text-input-val" placeholder="Enter standard descriptive paragraph text content..." oninput="compilerCoreEngine()">${escapeHtml(presetValue)}</textarea>
             `;
             canvas.appendChild(block);
-            attachMcHighlight(block.querySelector('.text-input-val'));
             compilerCoreEngine();
             return block;
         }
@@ -1180,7 +1139,6 @@
                 <textarea class="note-input-val" style="height: 60px; font-family: inherit; resize: vertical;" placeholder="Enter gray dynamic italics info comment string... (supports multiple lines)" oninput="compilerCoreEngine()">${escapeHtml(presetValue)}</textarea>
             `;
             canvas.appendChild(block);
-            attachMcHighlight(block.querySelector('.note-input-val'));
             compilerCoreEngine();
             return block;
         }
@@ -1229,7 +1187,6 @@
                 </button>
             `;
             stack.appendChild(row);
-            attachMcHighlight(row.querySelector('.bullet-item-val'));
             compilerCoreEngine();
             return row;
         }
@@ -1663,7 +1620,7 @@
                     let groupOutput = '';
                     const rows = el.querySelectorAll('.cmd-row-node');
                     rows.forEach(row => {
-                        const m = row.querySelector('.row-mode').value;
+                        const m = row.dataset.mode;
                         const cmd = row.querySelector('.cmd-input-field').value.trim();
 
                         if (m === 'NPC' || m === 'CHAT') {
