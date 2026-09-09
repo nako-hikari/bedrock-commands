@@ -141,6 +141,7 @@
         .cmd-row-node.color-r { background-color: color-mix(in srgb, var(--repeat) 6%, transparent); }
         .cmd-row-node.color-chat { background-color: color-mix(in srgb, var(--accent-light) 6%, transparent); }
         .cmd-row-node.color-npc { background-color: color-mix(in srgb, var(--accent-dark) 10%, transparent); }
+        .cmd-row-node.color-code { background-color: color-mix(in srgb, var(--accent-dark-700) 8%, transparent); }
         .cmd-row-node.cond-border { box-shadow: inset 0 0 0 var(--border-width) var(--text-bright); }
 
         .row-index-container {
@@ -184,6 +185,7 @@
         .cmd-row-node.color-r .row-index-container { background-color: var(--repeat); }
         .cmd-row-node.color-chat .row-index-container { background-color: var(--accent-light); }
         .cmd-row-node.color-npc .row-index-container { background-color: var(--accent-dark); }
+        .cmd-row-node.color-code .row-index-container { background-color: var(--accent-dark-700); }
 
         .row-controls-line {
             display: flex;
@@ -257,13 +259,13 @@
 
         .bulk-paste-zone textarea { height: 55px; font-size: var(--fs-xs); }
 
-        .bullet-item-stack, .social-stat-stack {
+        .bullet-item-stack {
             display: flex;
             flex-direction: column;
             gap: var(--space-sm);
         }
 
-        .bullet-item-row, .social-stat-row {
+        .bullet-item-row {
             display: flex;
             align-items: flex-start;
             gap: var(--space-sm);
@@ -276,7 +278,7 @@
             resize: vertical;
         }
 
-        .social-extra-fields {
+        .link-extra-fields {
             display: flex;
             flex-direction: column;
             gap: var(--space-sm);
@@ -285,9 +287,6 @@
             border: var(--border-width) solid var(--border-color);
             border-radius: var(--radius-sm);
         }
-
-        .social-stat-row .stat-label-val { max-width: 140px; }
-        .social-stat-row .stat-value-val { flex: 1; }
 
         .conditional-field-row {
             display: flex;
@@ -924,16 +923,23 @@
         }
 
         const CMD_MODE_META = {
-            C:    { label: 'Chain',   color: 'var(--chain)' },
-            I:    { label: 'Impulse', color: 'var(--impulse)' },
-            R:    { label: 'Repeat',  color: 'var(--repeat)' },
-            CHAT: { label: 'Chat',    color: 'var(--accent-light)' },
-            NPC:  { label: 'NPC',     color: 'var(--accent-dark)' }
+            C:    { label: 'Chain',     color: 'var(--chain)' },
+            I:    { label: 'Impulse',   color: 'var(--impulse)' },
+            R:    { label: 'Repeat',    color: 'var(--repeat)' },
+            CHAT: { label: 'Chat',      color: 'var(--accent-light)' },
+            NPC:  { label: 'NPC',       color: 'var(--accent-dark)' },
+            CODE: { label: 'Codeblock', color: 'var(--accent-dark-700)' }
         };
 
         function modePickerBtnHtml(mode) {
             const meta = CMD_MODE_META[mode];
             return `<button type="button" class="mode-picker-btn interactive" data-mode="${mode}" style="background: ${meta.color};" onclick="openModePicker(this)">${meta.label}</button>`;
+        }
+
+        function rowPlaceholder(mode) {
+            if (mode === 'NPC') return 'Enter multi-line code execution sequences...';
+            if (mode === 'CODE') return 'Enter code block content...';
+            return 'Enter one or more chat lines...';
         }
 
         function addCommandRowToGroup(groupElement, targetCommandValue = '', config = {}) {
@@ -949,7 +955,7 @@
             const cond = config.cond || 'U';
             const active = config.active || 'AA';
             const tick = config.tick !== undefined ? config.tick : '0';
-            const isMultiline = (mode === 'NPC' || mode === 'CHAT');
+            const isMultiline = (mode === 'NPC' || mode === 'CHAT' || mode === 'CODE');
 
             rowNode.className = `cmd-row-node color-${mode.toLowerCase()}`;
             rowNode.dataset.mode = mode;
@@ -980,7 +986,7 @@
                 </div>
                 <div class="cmd-input-container">
                     ${isMultiline
-                        ? `<textarea class="cmd-input-field" placeholder="${mode === 'NPC' ? 'Enter multi-line code execution sequences...' : 'Enter one or more chat lines...'}" oninput="compilerCoreEngine()">${escapeHtml(targetCommandValue)}</textarea>`
+                        ? `<textarea class="cmd-input-field" placeholder="${rowPlaceholder(mode)}" oninput="compilerCoreEngine()">${escapeHtml(targetCommandValue)}</textarea>`
                         : `<input type="text" class="cmd-input-field" placeholder="Enter command string..." value="${escapeHtml(targetCommandValue)}" oninput="compilerCoreEngine()">`
                     }
                 </div>
@@ -1064,7 +1070,7 @@
             const activeSelect = rowNode.querySelector('.row-active');
             const tickInput = rowNode.querySelector('.row-tick');
             const inputContainer = rowNode.querySelector('.cmd-input-container');
-            const isMultiline = (type === 'NPC' || type === 'CHAT');
+            const isMultiline = (type === 'NPC' || type === 'CHAT' || type === 'CODE');
 
             const currentVal = rowNode.querySelector('.cmd-input-field').value;
 
@@ -1075,7 +1081,7 @@
                 condSelect.style.display = 'none';
                 activeSelect.style.display = 'none';
                 tickInput.style.display = 'none';
-                inputContainer.innerHTML = `<textarea class="cmd-input-field" placeholder="${type === 'NPC' ? 'Enter multi-line code execution sequences...' : 'Enter one or more chat lines...'}" oninput="compilerCoreEngine()">${escapeHtml(currentVal)}</textarea>`;
+                inputContainer.innerHTML = `<textarea class="cmd-input-field" placeholder="${rowPlaceholder(type)}" oninput="compilerCoreEngine()">${escapeHtml(currentVal)}</textarea>`;
             } else {
                 condSelect.style.display = '';
                 activeSelect.style.display = '';
@@ -1237,86 +1243,205 @@
             field.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
-        /* LINK BLOCK — plain clickable text, or a "social profile card" with
-           an optional avatar and any number of stats (followers, videos...). */
-        function addLinkBlock(presetTitle = '', presetUrl = '', socialConfig = null) {
+        /* Platform detection — regex against the URL path, first match wins.
+           Used for BOTH social profiles and donation/support links. */
+        const SOCIAL_DETECT = [
+            { key: 'youtube',   re: /youtube\.com\/@([\w.-]+)/i },
+            { key: 'youtube',   re: /youtube\.com\/(?:channel|c|user)\/([\w.-]+)/i },
+            { key: 'tiktok',    re: /tiktok\.com\/@([\w.-]+)/i },
+            { key: 'instagram', re: /instagram\.com\/([\w.-]+)/i },
+            { key: 'twitter',   re: /(?:twitter|x)\.com\/([\w]+)/i },
+            { key: 'facebook',  re: /facebook\.com\/([\w.-]+)/i },
+            { key: 'twitch',    re: /twitch\.tv\/([\w]+)/i },
+            { key: 'reddit',    re: /reddit\.com\/(?:u|user)\/([\w-]+)/i },
+            { key: 'github',    re: /github\.com\/([\w-]+)/i },
+            { key: 'pinterest', re: /pinterest\.[\w.]+\/([\w-]+)/i },
+            { key: 'linkedin',  re: /linkedin\.com\/in\/([\w-]+)/i },
+            { key: 'threads',   re: /threads\.net\/@([\w.-]+)/i },
+            { key: 'bluesky',   re: /bsky\.app\/profile\/([\w.-]+)/i },
+            { key: 'telegram',  re: /t\.me\/([\w-]+)/i }
+        ];
+
+        const DONATE_DETECT = [
+            { key: 'trakteer',       re: /trakteer\.id\/([\w-]+)/i },
+            { key: 'saweria',        re: /saweria\.co\/([\w-]+)/i },
+            { key: 'kofi',           re: /ko-fi\.com\/([\w-]+)/i },
+            { key: 'buymeacoffee',   re: /buymeacoffee\.com\/([\w-]+)/i },
+            { key: 'patreon',        re: /patreon\.com\/([\w-]+)/i },
+            { key: 'paypal',         re: /paypal\.me\/([\w-]+)/i },
+            { key: 'streamlabs',     re: /streamlabs\.com\/([\w-]+)/i },
+            { key: 'streamelements', re: /streamelements\.com\/([\w-]+)/i },
+            { key: 'karyakarsa',     re: /karyakarsa\.com\/([\w-]+)/i },
+            { key: 'sociabuzz',      re: /sociabuzz\.com\/([\w-]+)/i }
+        ];
+
+        const PLATFORM_LABELS = {
+            youtube: 'YouTube', tiktok: 'TikTok', instagram: 'Instagram', twitter: 'X (Twitter)',
+            facebook: 'Facebook', twitch: 'Twitch', reddit: 'Reddit', github: 'GitHub',
+            pinterest: 'Pinterest', linkedin: 'LinkedIn', threads: 'Threads', bluesky: 'Bluesky',
+            telegram: 'Telegram', trakteer: 'Trakteer', saweria: 'Saweria', kofi: 'Ko-fi',
+            buymeacoffee: 'Buy Me a Coffee', patreon: 'Patreon', paypal: 'PayPal',
+            streamlabs: 'Streamlabs', streamelements: 'StreamElements', karyakarsa: 'Karyakarsa',
+            sociabuzz: 'Sociabuzz'
+        };
+
+        function detectPlatform(url, list) {
+            for (const p of list) {
+                const m = url.match(p.re);
+                if (m) return { platform: p.key, handle: m[1] };
+            }
+            return null;
+        }
+
+        /* LINK BLOCK — a plain clickable link, a social media profile card,
+           or a donation/support link card. Deliberately no manual "follower
+           count" field: numbers that can't be verified against a real API
+           aren't shown at all, to avoid inviting faked stats. Where a
+           platform's public API is genuinely reachable from the browser
+           (GitHub, Bluesky) the picture/name/handle are looked up for real;
+           everywhere else those fields are optional and left for the user
+           to fill in (or leave blank — the card just omits what's empty). */
+        function addLinkBlock(presetTitle = '', presetUrl = '', config = null) {
             const block = document.createElement('div');
             block.className = 'card group-block';
             block.dataset.itemType = 'link-group';
 
-            const isSocial = !!socialConfig;
+            const linkType = config ? config.type : 'plain';
+            const showExtra = linkType !== 'plain';
+            const showUsername = linkType === 'social';
 
             block.innerHTML = `
                 ${createStandardBlockHeader('Link Element (LINK)', 'standard')}
-                <label class="tag-checkbox-label">
-                    <input type="checkbox" class="link-social-check" ${isSocial ? 'checked' : ''} onchange="toggleSocialFields(this)">
-                    Make this a Social Profile Card
-                </label>
+                <div class="form-group">
+                    <label class="field-label">Link Type</label>
+                    <select class="link-type-select select-inline" onchange="onLinkTypeChange(this)">
+                        <option value="plain" ${linkType === 'plain' ? 'selected' : ''}>Plain Link</option>
+                        <option value="social" ${linkType === 'social' ? 'selected' : ''}>Social Media Profile</option>
+                        <option value="donate" ${linkType === 'donate' ? 'selected' : ''}>Donation / Support Link</option>
+                    </select>
+                </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="field-label link-title-label">${isSocial ? 'Display Name' : 'Pressable Link Title'}</label>
+                        <label class="field-label link-title-label">${linkType === 'social' ? 'Display Name (optional)' : (linkType === 'donate' ? 'Creator Name' : 'Pressable Link Title')}</label>
                         <input type="text" class="link-title-val" placeholder="Enter the text that users click..." value="${escapeHtml(presetTitle)}" oninput="compilerCoreEngine()">
                     </div>
                     <div class="form-group">
-                        <label class="field-label link-url-label">${isSocial ? 'Profile URL' : 'Actual Link URL'}</label>
-                        <input type="text" class="link-url-val" placeholder="https://..." value="${escapeHtml(presetUrl)}" oninput="compilerCoreEngine()">
+                        <label class="field-label link-url-label">${linkType === 'plain' ? 'Actual Link URL' : 'Profile / Page URL'}</label>
+                        <input type="text" class="link-url-val" placeholder="https://..." value="${escapeHtml(presetUrl)}" oninput="compilerCoreEngine()" onblur="onLinkUrlBlur(this)">
                     </div>
                 </div>
-                <div class="social-extra-fields" style="${isSocial ? '' : 'display:none;'}">
-                    <div class="form-group">
-                        <label class="field-label">Avatar / Profile Picture URL (optional)</label>
-                        <input type="text" class="link-avatar-val" placeholder="https://..." value="${isSocial ? escapeHtml(socialConfig.avatar || '') : ''}" oninput="compilerCoreEngine()">
-                    </div>
-                    <div class="form-group">
-                        <label class="field-label">Stats (optional)</label>
-                        <div class="social-stat-stack"></div>
-                        <button class="secondary interactive" style="align-self: flex-start;" onclick="addSocialStat(this.closest('.group-block'))">
-                            <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/plus.png" alt=""> Add Stat
-                        </button>
+                <div class="draft-restore-note link-detect-status" style="display:none;"></div>
+                <div class="link-extra-fields" style="${showExtra ? '' : 'display:none;'}">
+                    <input type="hidden" class="link-platform-val" value="${config ? escapeHtml(config.platform || '') : ''}">
+                    <div class="form-row">
+                        <div class="form-group social-only-field" style="${showUsername ? '' : 'display:none;'}">
+                            <label class="field-label">Username / Handle (optional)</label>
+                            <input type="text" class="link-username-val" placeholder="@handle" value="${config ? escapeHtml(config.username || '') : ''}" oninput="compilerCoreEngine()">
+                        </div>
+                        <div class="form-group">
+                            <label class="field-label">Avatar / Profile Picture URL (optional)</label>
+                            <input type="text" class="link-avatar-val" placeholder="https://... (auto-filled when possible)" value="${config ? escapeHtml(config.avatar || '') : ''}" oninput="compilerCoreEngine()">
+                        </div>
                     </div>
                 </div>
             `;
             canvas.appendChild(block);
-
-            if (isSocial && socialConfig.stats && socialConfig.stats.length > 0) {
-                socialConfig.stats.forEach(s => addSocialStat(block, s.label, s.value));
-            }
-
             compilerCoreEngine();
             return block;
         }
 
-        function toggleSocialFields(checkboxEl) {
-            const block = checkboxEl.closest('.group-block');
-            const extra = block.querySelector('.social-extra-fields');
-            const isSocial = checkboxEl.checked;
-            extra.style.display = isSocial ? '' : 'none';
-            block.querySelector('.link-title-label').textContent = isSocial ? 'Display Name' : 'Pressable Link Title';
-            block.querySelector('.link-url-label').textContent = isSocial ? 'Profile URL' : 'Actual Link URL';
-            if (isSocial && block.querySelector('.social-stat-stack').children.length === 0) {
-                addSocialStat(block);
+        function onLinkTypeChange(selectEl) {
+            const block = selectEl.closest('.group-block');
+            const type = selectEl.value;
+            const extra = block.querySelector('.link-extra-fields');
+            const usernameField = block.querySelector('.social-only-field');
+            const statusEl = block.querySelector('.link-detect-status');
+            const titleLabel = block.querySelector('.link-title-label');
+            const urlLabel = block.querySelector('.link-url-label');
+
+            extra.style.display = type === 'plain' ? 'none' : '';
+            usernameField.style.display = type === 'social' ? '' : 'none';
+            statusEl.style.display = 'none';
+            statusEl.textContent = '';
+
+            titleLabel.textContent = type === 'social' ? 'Display Name (optional)' : (type === 'donate' ? 'Creator Name' : 'Pressable Link Title');
+            urlLabel.textContent = type === 'plain' ? 'Actual Link URL' : 'Profile / Page URL';
+
+            compilerCoreEngine();
+        }
+
+        async function onLinkUrlBlur(urlInput) {
+            const block = urlInput.closest('.group-block');
+            const type = block.querySelector('.link-type-select').value;
+            const url = urlInput.value.trim();
+            if (!url || type === 'plain') return;
+
+            if (type === 'social') await autoDetectSocial(url, block);
+            else if (type === 'donate') autoDetectDonate(url, block);
+        }
+
+        async function autoDetectSocial(url, block) {
+            const detected = detectPlatform(url, SOCIAL_DETECT);
+            const statusEl = block.querySelector('.link-detect-status');
+            if (!detected) {
+                statusEl.style.display = 'none';
+                return;
+            }
+
+            const platformField = block.querySelector('.link-platform-val');
+            const usernameField = block.querySelector('.link-username-val');
+            const titleField = block.querySelector('.link-title-val');
+            const avatarField = block.querySelector('.link-avatar-val');
+            const label = PLATFORM_LABELS[detected.platform] || detected.platform;
+
+            platformField.value = detected.platform;
+            if (!usernameField.value.trim()) usernameField.value = '@' + detected.handle;
+            if (!titleField.value.trim()) titleField.value = detected.handle;
+
+            if (detected.platform === 'github' || detected.platform === 'bluesky') {
+                statusEl.style.display = '';
+                statusEl.textContent = `Looking up ${label} profile...`;
+                try {
+                    let data;
+                    if (detected.platform === 'github') {
+                        const res = await fetch(`https://api.github.com/users/${encodeURIComponent(detected.handle)}`);
+                        if (!res.ok) throw new Error();
+                        const json = await res.json();
+                        data = { name: json.name || json.login, avatar: json.avatar_url, username: '@' + json.login };
+                    } else {
+                        const res = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(detected.handle)}`);
+                        if (!res.ok) throw new Error();
+                        const json = await res.json();
+                        data = { name: json.displayName || json.handle, avatar: json.avatar || '', username: '@' + json.handle };
+                    }
+                    titleField.value = data.name;
+                    usernameField.value = data.username;
+                    if (data.avatar) avatarField.value = data.avatar;
+                    statusEl.textContent = `${label} profile found — name, username and picture filled in automatically.`;
+                } catch (e) {
+                    statusEl.textContent = `Couldn't reach ${label} right now — name/username were guessed from the URL. Picture can be added manually.`;
+                }
+            } else {
+                statusEl.style.display = '';
+                statusEl.textContent = `${label} detected. This platform doesn't allow automatic lookups from a browser, so add a picture manually if you'd like one — no follower counts are supported since they can't be verified.`;
             }
             compilerCoreEngine();
         }
 
-        function addSocialStat(block, presetLabel = '', presetValue = '') {
-            const stack = block.querySelector('.social-stat-stack');
-            const row = document.createElement('div');
-            row.className = 'social-stat-row';
-            row.innerHTML = `
-                <input type="text" class="stat-label-val" placeholder="Followers" value="${escapeHtml(presetLabel)}" oninput="compilerCoreEngine()">
-                <input type="text" class="stat-value-val" placeholder="1.2M" value="${escapeHtml(presetValue)}" oninput="compilerCoreEngine()">
-                <button class="icon-button danger interactive" onclick="removeSocialStat(this)" aria-label="Remove stat">
-                    <img class="icon icon-sm icon-on-brand" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/trash.png" alt="">
-                </button>
-            `;
-            stack.appendChild(row);
-            compilerCoreEngine();
-            return row;
-        }
+        function autoDetectDonate(url, block) {
+            const detected = detectPlatform(url, DONATE_DETECT);
+            const statusEl = block.querySelector('.link-detect-status');
+            if (!detected) {
+                statusEl.style.display = 'none';
+                return;
+            }
+            block.querySelector('.link-platform-val').value = detected.platform;
+            const titleField = block.querySelector('.link-title-val');
+            if (!titleField.value.trim()) titleField.value = detected.handle;
 
-        function removeSocialStat(buttonEl) {
-            buttonEl.closest('.social-stat-row').remove();
+            const label = PLATFORM_LABELS[detected.platform] || detected.platform;
+            statusEl.style.display = '';
+            statusEl.textContent = `${label} detected — a Donate button will be shown on the card automatically.`;
             compilerCoreEngine();
         }
 
@@ -1482,18 +1607,30 @@
                     activeChainGroup = null;
                     const nameMatch = trimmed.match(/^SOCIAL\s*:\s*(.*)$/i);
                     const name = nameMatch ? nameMatch[1].trim() : '';
-                    let url = '', avatar = '';
-                    const stats = [];
+                    let url = '', avatar = '', platform = '', username = '';
                     lines.slice(1).forEach(ln => {
                         let m;
                         if ((m = ln.match(/^\s*URL\s*:\s*(.*)$/i))) url = m[1].trim();
                         else if ((m = ln.match(/^\s*AVATAR\s*:\s*(.*)$/i))) avatar = m[1].trim();
-                        else if ((m = ln.match(/^\s*STAT\s*:\s*(.*)$/i))) {
-                            const parts = m[1].split('|');
-                            if (parts[0] && parts[0].trim()) stats.push({ label: parts[0].trim(), value: (parts[1] || '').trim() });
-                        }
+                        else if ((m = ln.match(/^\s*PLATFORM\s*:\s*(.*)$/i))) platform = m[1].trim();
+                        else if ((m = ln.match(/^\s*USERNAME\s*:\s*(.*)$/i))) username = m[1].trim();
+                        // Older exports may still carry STAT: lines — there's
+                        // no editable field for them anymore, so they're
+                        // intentionally not restored here.
                     });
-                    addLinkBlock(name, url, { avatar, stats });
+                    addLinkBlock(name, url, { type: 'social', platform, username, avatar });
+                } else if (/^DONATE\s*:/i.test(trimmed)) {
+                    activeChainGroup = null;
+                    const nameMatch = trimmed.match(/^DONATE\s*:\s*(.*)$/i);
+                    const name = nameMatch ? nameMatch[1].trim() : '';
+                    let url = '', avatar = '', platform = '';
+                    lines.slice(1).forEach(ln => {
+                        let m;
+                        if ((m = ln.match(/^\s*URL\s*:\s*(.*)$/i))) url = m[1].trim();
+                        else if ((m = ln.match(/^\s*AVATAR\s*:\s*(.*)$/i))) avatar = m[1].trim();
+                        else if ((m = ln.match(/^\s*PLATFORM\s*:\s*(.*)$/i))) platform = m[1].trim();
+                    });
+                    addLinkBlock(name, url, { type: 'donate', platform, avatar });
                 } else if (trimmed.startsWith('[link]')) {
                     activeChainGroup = null;
                     const match = trimmed.match(/\[link\]\[(.*?)\]\((.*?)\)/);
@@ -1523,7 +1660,7 @@
                         const headerParts = grp.header.split(':');
                         const mode = headerParts[1] || 'C';
 
-                        if (mode === 'NPC' || mode === 'CHAT') {
+                        if (mode === 'NPC' || mode === 'CHAT' || mode === 'CODE') {
                             addCommandRowToGroup(activeChainGroup, grp.payload.join('\n'), { mode });
                         } else {
                             const active = headerParts[2] || 'AA';
@@ -1587,20 +1724,27 @@
                     }
                 }
                 else if (type === 'link-group') {
-                    const isSocial = el.querySelector('.link-social-check').checked;
+                    const linkType = el.querySelector('.link-type-select').value;
                     const textTitle = el.querySelector('.link-title-val').value.trim();
                     const targetUrl = el.querySelector('.link-url-val').value.trim();
 
-                    if (isSocial) {
+                    if (linkType === 'social') {
+                        const platform = el.querySelector('.link-platform-val').value.trim();
+                        const username = el.querySelector('.link-username-val').value.trim();
                         const avatar = el.querySelector('.link-avatar-val').value.trim();
-                        const stats = Array.from(el.querySelectorAll('.social-stat-row')).map(row => ({
-                            label: row.querySelector('.stat-label-val').value.trim(),
-                            value: row.querySelector('.stat-value-val').value.trim()
-                        })).filter(s => s.label);
 
                         let block = `SOCIAL: ${textTitle}\nURL: ${targetUrl}`;
+                        if (platform) block += `\nPLATFORM: ${platform}`;
+                        if (username) block += `\nUSERNAME: ${username}`;
                         if (avatar) block += `\nAVATAR: ${avatar}`;
-                        stats.forEach(s => { block += `\nSTAT: ${s.label}|${s.value}`; });
+                        sections.push(block);
+                    } else if (linkType === 'donate') {
+                        const platform = el.querySelector('.link-platform-val').value.trim();
+                        const avatar = el.querySelector('.link-avatar-val').value.trim();
+
+                        let block = `DONATE: ${textTitle}\nURL: ${targetUrl}`;
+                        if (platform) block += `\nPLATFORM: ${platform}`;
+                        if (avatar) block += `\nAVATAR: ${avatar}`;
                         sections.push(block);
                     } else {
                         sections.push(`[link][${textTitle}](${targetUrl})`);
@@ -1623,7 +1767,7 @@
                         const m = row.dataset.mode;
                         const cmd = row.querySelector('.cmd-input-field').value.trim();
 
-                        if (m === 'NPC' || m === 'CHAT') {
+                        if (m === 'NPC' || m === 'CHAT' || m === 'CODE') {
                             groupOutput += `CMD:${m}\n${cmd}\n`;
                         } else {
                             const c = row.querySelector('.row-cond').value;
