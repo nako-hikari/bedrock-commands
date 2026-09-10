@@ -322,6 +322,7 @@
         .mode-option-row {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: var(--space-sm);
             padding: var(--space-sm) var(--space-md);
             border-radius: var(--radius-sm);
@@ -330,12 +331,20 @@
             cursor: pointer;
             font-size: var(--fs-md);
             color: var(--text-bright);
-            text-align: left;
+            text-align: center;
             width: 100%;
+            position: relative;
         }
 
         .mode-option-row:hover { background: var(--accent-dark-50); }
         .mode-option-row.is-current { border-color: var(--accent-light); }
+
+        .mode-check {
+            position: absolute;
+            right: var(--space-md);
+            top: 50%;
+            transform: translateY(-50%);
+        }
 
         .mode-swatch {
             width: 16px;
@@ -391,6 +400,20 @@
             font-size: var(--fs-lg);
             padding: var(--space-lg);
             line-height: var(--lh-relaxed);
+        }
+
+        .mc-color-preview {
+            display: none;
+            margin-top: 4px;
+            padding: 6px 8px;
+            background: var(--input-bg);
+            border: var(--border-width) dashed var(--border-color);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono, monospace);
+            font-size: var(--fs-xs);
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: var(--lh-normal);
         }
 
         .draft-restore-note {
@@ -474,13 +497,7 @@
             </button>
             <div class="toolbar-divider"></div>
 
-            <select id="header-type-selector" class="select-inline">
-                <option value="H1">H1</option>
-                <option value="H2">H2</option>
-                <option value="H3">H3</option>
-                <option value="H4">H4</option>
-                <option value="H5">H5</option>
-            </select>
+            <button type="button" id="header-tier-picker-btn" class="mode-picker-btn interactive" data-tier="H1" style="background: var(--accent-dark);" onclick="openHeaderTierPicker()">H1</button>
             <button class="secondary interactive" onclick="addHeaderBlock()">
                 <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/header_text.png" alt=""> Add Header
             </button>
@@ -591,6 +608,82 @@
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;');
+        }
+
+        /* LIVE §-CODE COLOR PREVIEW — shows how Minecraft "§" formatting
+           codes will render, right under the field, updated as you type.
+           This intentionally does NOT touch the real field itself (no
+           transparent-text/backdrop-overlay trick): that approach previously
+           caused a background rendering bug in light theme. A separate
+           read-only preview line is simpler and can't affect the field's
+           own theming. The §-code marker itself is kept visible (not
+           hidden), colored to match what it does, at 50% opacity so it
+           reads as a marker rather than content. */
+        const MC_COLORS = {
+            '0': '#000000', '1': '#0000AA', '2': '#00AA00', '3': '#00AAAA',
+            '4': '#AA0000', '5': '#AA00AA', '6': '#FFAA00', '7': '#AAAAAA',
+            '8': '#555555', '9': '#5555FF', 'a': '#55FF55', 'b': '#55FFFF',
+            'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
+        };
+
+        function renderMcPreviewHtml(rawStr) {
+            const escaped = escapeHtml(rawStr);
+            let html = '', buffer = '', color = null, styles = [];
+            const flush = () => {
+                if (!buffer) return;
+                const styleAttr = (color ? `color:${color};` : '') + styles.join('');
+                html += styleAttr ? `<span style="${styleAttr}">${buffer}</span>` : buffer;
+                buffer = '';
+            };
+            for (let i = 0; i < escaped.length; i++) {
+                if (escaped[i] === '§' && i + 1 < escaped.length) {
+                    flush();
+                    const rawCode = escaped[i + 1];
+                    const code = rawCode.toLowerCase();
+
+                    let markerColor = MC_COLORS[code] || null;
+                    let markerStyles = [];
+                    if (code === 'l') markerStyles.push('font-weight:bold;');
+                    else if (code === 'm') markerStyles.push('text-decoration:line-through;');
+                    else if (code === 'n') markerStyles.push('text-decoration:underline;');
+                    else if (code === 'o') markerStyles.push('font-style:italic;');
+                    const markerStyleAttr = 'opacity:0.5;' + (markerColor ? `color:${markerColor};` : '') + markerStyles.join('');
+                    html += `<span style="${markerStyleAttr}">§${rawCode}</span>`;
+
+                    if (MC_COLORS[code]) { color = MC_COLORS[code]; styles = []; }
+                    else if (code === 'r') { color = null; styles = []; }
+                    else if (code === 'l') styles.push('font-weight:bold;');
+                    else if (code === 'm') styles.push('text-decoration:line-through;');
+                    else if (code === 'n') styles.push('text-decoration:underline;');
+                    else if (code === 'o') styles.push('font-style:italic;');
+                    i++;
+                    continue;
+                }
+                buffer += escaped[i];
+            }
+            flush();
+            return html;
+        }
+
+        function attachMcPreview(fieldEl) {
+            if (!fieldEl || fieldEl.dataset.mcPreviewAttached) return;
+            fieldEl.dataset.mcPreviewAttached = '1';
+
+            const preview = document.createElement('div');
+            preview.className = 'mc-color-preview';
+            fieldEl.insertAdjacentElement('afterend', preview);
+
+            const sync = () => {
+                const val = fieldEl.value;
+                if (val.includes('§')) {
+                    preview.innerHTML = renderMcPreviewHtml(val);
+                    preview.style.display = 'block';
+                } else {
+                    preview.style.display = 'none';
+                }
+            };
+            fieldEl.addEventListener('input', sync);
+            sync();
         }
 
         /* THEME TOGGLE */
@@ -708,6 +801,22 @@
                 fsTriggerBtn.style.display = 'flex';
             }
         });
+
+        // On mobile, opening the keyboard shrinks the visual viewport
+        // without moving the layout viewport, which can push
+        // position:fixed elements (like this row) out of the visible area —
+        // that's why the expand button used to disappear once a field was
+        // focused and the keyboard came up. Re-anchor to the visual
+        // viewport's live offset so it stays reachable.
+        if (window.visualViewport) {
+            const repositionToggleRow = () => {
+                const vv = window.visualViewport;
+                const toggleRow = document.querySelector('.theme-toggle-row');
+                if (toggleRow) toggleRow.style.top = (vv.offsetTop + 20) + 'px';
+            };
+            window.visualViewport.addEventListener('resize', repositionToggleRow);
+            window.visualViewport.addEventListener('scroll', repositionToggleRow);
+        }
 
         canvas.addEventListener('focusout', () => {
             setTimeout(() => {
@@ -993,6 +1102,7 @@
             `;
 
             stack.appendChild(rowNode);
+            if (isMultiline) attachMcPreview(rowNode.querySelector('.cmd-input-field'));
             compilerCoreEngine();
             return rowNode;
         }
@@ -1010,7 +1120,7 @@
                     <button type="button" class="mode-option-row interactive${isCurrent ? ' is-current' : ''}" onclick="applyModeChoice('${key}')">
                         <span class="mode-swatch" style="background: ${meta.color};"></span>
                         <span>${meta.label}</span>
-                        ${isCurrent ? `<img class="icon icon-sm" style="margin-left: auto;" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/checkmark.png" alt="Current">` : ''}
+                        ${isCurrent ? `<span class="mode-check"><img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/checkmark.png" alt="Current"></span>` : ''}
                     </button>
                 `;
             }).join('');
@@ -1030,6 +1140,33 @@
             modePickerTargetRow.dataset.mode = key;
             updateRowColorTheme(modePickerTargetRow);
             modePickerTargetRow = null;
+        }
+
+        function openHeaderTierPicker() {
+            const btn = document.getElementById('header-tier-picker-btn');
+            const currentTier = btn.dataset.tier;
+            const tiers = ['H1', 'H2', 'H3', 'H4', 'H5'];
+
+            const optionsHtml = tiers.map(tier => {
+                const isCurrent = tier === currentTier;
+                return `
+                    <button type="button" class="mode-option-row interactive${isCurrent ? ' is-current' : ''}" onclick="applyHeaderTierChoice('${tier}')">
+                        <span>${tier}</span>
+                        ${isCurrent ? `<span class="mode-check"><img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/checkmark.png" alt="Current"></span>` : ''}
+                    </button>
+                `;
+            }).join('');
+
+            showModalHtml('Choose Header Size', `<div class="mode-picker-list">${optionsHtml}</div>`, {
+                buttons: [{ label: 'Cancel', class: 'secondary' }]
+            });
+        }
+
+        function applyHeaderTierChoice(tier) {
+            closeNakoModal();
+            const btn = document.getElementById('header-tier-picker-btn');
+            btn.dataset.tier = tier;
+            btn.textContent = tier;
         }
 
         function confirmRemoveRowNode(buttonEl) {
@@ -1082,6 +1219,7 @@
                 activeSelect.style.display = 'none';
                 tickInput.style.display = 'none';
                 inputContainer.innerHTML = `<textarea class="cmd-input-field" placeholder="${rowPlaceholder(type)}" oninput="compilerCoreEngine()">${escapeHtml(currentVal)}</textarea>`;
+                attachMcPreview(inputContainer.querySelector('.cmd-input-field'));
             } else {
                 condSelect.style.display = '';
                 activeSelect.style.display = '';
@@ -1094,7 +1232,7 @@
         }
 
         function addHeaderBlock(presetValue = '', tierPreset = 'H1') {
-            const type = presetValue ? tierPreset : document.getElementById('header-type-selector').value;
+            const type = presetValue ? tierPreset : document.getElementById('header-tier-picker-btn').dataset.tier;
             const block = document.createElement('div');
             block.className = 'card group-block';
             block.dataset.itemType = 'header';
@@ -1119,6 +1257,7 @@
                 <textarea style="height: 60px; font-family: inherit; resize: vertical;" class="text-input-val" placeholder="Enter standard descriptive paragraph text content..." oninput="compilerCoreEngine()">${escapeHtml(presetValue)}</textarea>
             `;
             canvas.appendChild(block);
+            attachMcPreview(block.querySelector('.text-input-val'));
             compilerCoreEngine();
             return block;
         }
@@ -1145,6 +1284,7 @@
                 <textarea class="note-input-val" style="height: 60px; font-family: inherit; resize: vertical;" placeholder="Enter gray dynamic italics info comment string... (supports multiple lines)" oninput="compilerCoreEngine()">${escapeHtml(presetValue)}</textarea>
             `;
             canvas.appendChild(block);
+            attachMcPreview(block.querySelector('.note-input-val'));
             compilerCoreEngine();
             return block;
         }
@@ -1193,6 +1333,7 @@
                 </button>
             `;
             stack.appendChild(row);
+            attachMcPreview(row.querySelector('.bullet-item-val'));
             compilerCoreEngine();
             return row;
         }
@@ -1343,6 +1484,16 @@
                             <input type="text" class="link-avatar-val" placeholder="https://... (auto-filled when possible)" value="${config ? escapeHtml(config.avatar || '') : ''}" oninput="compilerCoreEngine()">
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label class="field-label">Logo (optional)</label>
+                        <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                            <img class="link-logo-preview" src="${config ? escapeHtml(config.logo || '') : ''}" alt="" style="width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; ${config && config.logo ? '' : 'display:none;'}">
+                            <button type="button" class="secondary interactive" onclick="openLogoPicker(this)">
+                                <img class="icon icon-sm" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/image.png" alt=""> Choose Logo
+                            </button>
+                            <input type="hidden" class="link-logo-val" value="${config ? escapeHtml(config.logo || '') : ''}">
+                        </div>
+                    </div>
                 </div>
             `;
             canvas.appendChild(block);
@@ -1442,6 +1593,73 @@
             const label = PLATFORM_LABELS[detected.platform] || detected.platform;
             statusEl.style.display = '';
             statusEl.textContent = `${label} detected — a Donate button will be shown on the card automatically.`;
+            compilerCoreEngine();
+        }
+
+        /* LOGO PICKER — lists whatever .png files currently exist in
+           nako-hikari/assets under ui/social/ or ui/donation/ (chosen by
+           this link's type), fetched live via the GitHub API so new icons
+           the user adds to that repo show up automatically without any
+           code changes here. Filenames are prettified for display by
+           stripping the .png extension and swapping "_"/"-" for spaces. */
+        let logoPickerTargetBlock = null;
+
+        async function openLogoPicker(triggerBtn) {
+            const block = triggerBtn.closest('.group-block');
+            logoPickerTargetBlock = block;
+            const linkType = block.querySelector('.link-type-select').value;
+            const folder = linkType === 'donate' ? 'donation' : 'social';
+
+            showModalHtml('Choose Logo', `<div class="mode-picker-list" id="logo-picker-list"><div class="draft-restore-note">Loading available logos...</div></div>`, {
+                buttons: [
+                    { label: 'No Logo', class: 'secondary', onClick: () => applyLogoChoice('') },
+                    { label: 'Cancel', class: 'secondary' }
+                ]
+            });
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/nako-hikari/assets/contents/ui/${folder}`);
+                if (!res.ok) throw new Error();
+                const items = await res.json();
+                const files = items.filter(i => i.type === 'file' && /\.png$/i.test(i.name));
+
+                const listEl = document.getElementById('logo-picker-list');
+                if (!listEl) return; // modal was already closed/replaced before this resolved
+
+                if (files.length === 0) {
+                    listEl.innerHTML = `<div class="draft-restore-note">No logos found in that folder yet.</div>`;
+                    return;
+                }
+
+                listEl.innerHTML = files.map(f => {
+                    const rawUrl = `https://raw.githubusercontent.com/nako-hikari/assets/main/ui/${folder}/${f.name}`;
+                    const label = f.name.replace(/\.png$/i, '').replace(/[_-]/g, ' ');
+                    return `
+                        <button type="button" class="mode-option-row interactive" onclick="applyLogoChoice('${escapeHtml(rawUrl)}')">
+                            <img src="${rawUrl}" alt="" style="width: 24px; height: 24px; object-fit: contain; flex-shrink: 0;">
+                            <span style="text-transform: capitalize;">${escapeHtml(label)}</span>
+                        </button>
+                    `;
+                }).join('');
+            } catch (e) {
+                const listEl = document.getElementById('logo-picker-list');
+                if (listEl) listEl.innerHTML = `<div class="draft-restore-note">Couldn't load the logo list right now — try again in a moment.</div>`;
+            }
+        }
+
+        function applyLogoChoice(url) {
+            closeNakoModal();
+            if (!logoPickerTargetBlock) return;
+            const block = logoPickerTargetBlock;
+            block.querySelector('.link-logo-val').value = url;
+            const preview = block.querySelector('.link-logo-preview');
+            if (url) {
+                preview.src = url;
+                preview.style.display = '';
+            } else {
+                preview.style.display = 'none';
+            }
+            logoPickerTargetBlock = null;
             compilerCoreEngine();
         }
 
@@ -1607,30 +1825,32 @@
                     activeChainGroup = null;
                     const nameMatch = trimmed.match(/^SOCIAL\s*:\s*(.*)$/i);
                     const name = nameMatch ? nameMatch[1].trim() : '';
-                    let url = '', avatar = '', platform = '', username = '';
+                    let url = '', avatar = '', platform = '', username = '', logo = '';
                     lines.slice(1).forEach(ln => {
                         let m;
                         if ((m = ln.match(/^\s*URL\s*:\s*(.*)$/i))) url = m[1].trim();
                         else if ((m = ln.match(/^\s*AVATAR\s*:\s*(.*)$/i))) avatar = m[1].trim();
                         else if ((m = ln.match(/^\s*PLATFORM\s*:\s*(.*)$/i))) platform = m[1].trim();
                         else if ((m = ln.match(/^\s*USERNAME\s*:\s*(.*)$/i))) username = m[1].trim();
+                        else if ((m = ln.match(/^\s*LOGO\s*:\s*(.*)$/i))) logo = m[1].trim();
                         // Older exports may still carry STAT: lines — there's
                         // no editable field for them anymore, so they're
                         // intentionally not restored here.
                     });
-                    addLinkBlock(name, url, { type: 'social', platform, username, avatar });
+                    addLinkBlock(name, url, { type: 'social', platform, username, avatar, logo });
                 } else if (/^DONATE\s*:/i.test(trimmed)) {
                     activeChainGroup = null;
                     const nameMatch = trimmed.match(/^DONATE\s*:\s*(.*)$/i);
                     const name = nameMatch ? nameMatch[1].trim() : '';
-                    let url = '', avatar = '', platform = '';
+                    let url = '', avatar = '', platform = '', logo = '';
                     lines.slice(1).forEach(ln => {
                         let m;
                         if ((m = ln.match(/^\s*URL\s*:\s*(.*)$/i))) url = m[1].trim();
                         else if ((m = ln.match(/^\s*AVATAR\s*:\s*(.*)$/i))) avatar = m[1].trim();
                         else if ((m = ln.match(/^\s*PLATFORM\s*:\s*(.*)$/i))) platform = m[1].trim();
+                        else if ((m = ln.match(/^\s*LOGO\s*:\s*(.*)$/i))) logo = m[1].trim();
                     });
-                    addLinkBlock(name, url, { type: 'donate', platform, avatar });
+                    addLinkBlock(name, url, { type: 'donate', platform, avatar, logo });
                 } else if (trimmed.startsWith('[link]')) {
                     activeChainGroup = null;
                     const match = trimmed.match(/\[link\]\[(.*?)\]\((.*?)\)/);
@@ -1732,19 +1952,23 @@
                         const platform = el.querySelector('.link-platform-val').value.trim();
                         const username = el.querySelector('.link-username-val').value.trim();
                         const avatar = el.querySelector('.link-avatar-val').value.trim();
+                        const logo = el.querySelector('.link-logo-val').value.trim();
 
                         let block = `SOCIAL: ${textTitle}\nURL: ${targetUrl}`;
                         if (platform) block += `\nPLATFORM: ${platform}`;
                         if (username) block += `\nUSERNAME: ${username}`;
                         if (avatar) block += `\nAVATAR: ${avatar}`;
+                        if (logo) block += `\nLOGO: ${logo}`;
                         sections.push(block);
                     } else if (linkType === 'donate') {
                         const platform = el.querySelector('.link-platform-val').value.trim();
                         const avatar = el.querySelector('.link-avatar-val').value.trim();
+                        const logo = el.querySelector('.link-logo-val').value.trim();
 
                         let block = `DONATE: ${textTitle}\nURL: ${targetUrl}`;
                         if (platform) block += `\nPLATFORM: ${platform}`;
                         if (avatar) block += `\nAVATAR: ${avatar}`;
+                        if (logo) block += `\nLOGO: ${logo}`;
                         sections.push(block);
                     } else {
                         sections.push(`[link][${textTitle}](${targetUrl})`);
