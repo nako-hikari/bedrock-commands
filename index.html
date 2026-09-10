@@ -50,6 +50,11 @@
             color: var(--accent-light);
             font-weight: var(--fw-bold, var(--fw-semibold));
         }
+        /* Creation name/title — a fixed brand-blue, deliberately the same in
+           both themes rather than a flipping token. */
+        .creation-name-color {
+            color: #00B9FF;
+        }
         .inline-code {
             background: rgba(255, 255, 255, 0.1);
             padding: 1px 6px;
@@ -72,14 +77,26 @@
             justify-content: flex-start !important;
             align-items: stretch !important;
         }
-        /* Header scrolls away normally now — it's no longer sticky. */
+        /* Header scrolls away normally now — it's no longer sticky. Only the
+           three nav buttons (back / theme / upload) stay fixed at the top,
+           forming one consistent bar; everything else scrolls beneath it.
+           padding-top gives the title room so it doesn't render underneath
+           the fixed bar on first paint. */
         .wrapper header {
             border-bottom: var(--border-width) solid var(--border-color);
+            padding-top: 52px;
         }
-        /* Theme toggle + Upload share one fixed, non-scrolling anchor point
-           (same pattern as the formatter's expand/theme pair) so they can't
-           overlap or drift apart, and both stay put while the page scrolls. */
+        #back-btn {
+            position: fixed;
+            top: var(--space-lg);
+            left: var(--space-lg);
+            z-index: var(--z-sticky, 50);
+        }
         .theme-toggle-row {
+            position: fixed;
+            top: var(--space-lg);
+            right: var(--space-lg);
+            z-index: var(--z-sticky, 50);
             display: flex;
             align-items: center;
             gap: var(--space-sm);
@@ -124,18 +141,13 @@
         </div>
 
         <header style="padding-bottom: var(--space-md); margin-bottom: var(--space-lg);">
-            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; position: relative;">
-                <div style="display: flex; align-items: center; gap: var(--space-sm);">
-                    <button id="back-btn" class="icon-button interactive" onclick="handleBack()" aria-label="Back">
-                        <img class="icon icon-lg" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/back_arrow.png" alt="Back">
-                    </button>
-                </div>
-                <h1 id="app-display-header" style="font-size: 1.5rem; margin: 0 auto; text-align: center; cursor: pointer;" onclick="goHome()">Command Block Creation</h1>
-                <div style="width: 40px;"></div>
-            </div>
+            <button id="back-btn" class="theme-toggle interactive" onclick="handleBack()" aria-label="Back">
+                <img class="icon icon-lg" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/back_arrow.png" alt="Back">
+            </button>
+            <h1 id="app-display-header" style="font-size: 1.5rem; text-align: center; cursor: pointer;" onclick="goHome()">Command Block Creation</h1>
         </header>
 
-        <div class="hero-banner-wrap">
+        <div class="hero-banner-wrap" id="hero-banner-wrap">
             <img class="content-image" src="https://raw.githubusercontent.com/nako-hikari/assets/main/ui/bedrock-commands.png" alt="Bedrock Commands">
         </div>
 
@@ -147,7 +159,7 @@
         <div class="footer">
             <div id="bottom-author-credit"></div>
             <div id="footer-brand">
-                <div class="footer-title">By Nako Hikari</div>
+                <div class="footer-title">Nako Hikari</div>
                 <div class="footer-links">
                     <a href="https://github.com/nako-hikari/" target="_blank" class="social">
                         <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
@@ -230,6 +242,23 @@
 
         window.addEventListener('DOMContentLoaded', initApp);
         window.addEventListener('hashchange', route);
+
+        // On mobile, opening the on-screen keyboard shrinks the visual
+        // viewport without moving the layout viewport, which can push
+        // position:fixed elements out of the visible area. Re-anchor to the
+        // visual viewport's current offset so the nav bar stays reachable.
+        if (window.visualViewport) {
+            const repositionFixedNav = () => {
+                const vv = window.visualViewport;
+                const backBtn = document.getElementById('back-btn');
+                const toggleRow = document.querySelector('.theme-toggle-row');
+                const top = (vv.offsetTop + 20) + 'px';
+                if (backBtn) backBtn.style.top = top;
+                if (toggleRow) toggleRow.style.top = top;
+            };
+            window.visualViewport.addEventListener('resize', repositionFixedNav);
+            window.visualViewport.addEventListener('scroll', repositionFixedNav);
+        }
 
         function handleBack() {
             const currentHash = window.location.hash.replace('#', '').toLowerCase();
@@ -337,18 +366,34 @@
             route();
         }
 
+        function setBannerVisible(visible) {
+            const banner = document.getElementById('hero-banner-wrap');
+            if (banner) banner.style.display = visible ? '' : 'none';
+        }
+
+        // Applies the fixed brand-blue + slightly larger size only when the
+        // header is showing an actual creation's name — the generic "Command
+        // Block Creation" home title stays in its normal color/size.
+        function setHeaderTitle(text, isCreationName) {
+            const headerEl = document.getElementById('app-display-header');
+            if (!headerEl) return;
+            headerEl.innerText = text;
+            headerEl.classList.toggle('creation-name-color', !!isCreationName);
+            headerEl.style.fontSize = isCreationName ? '1.65rem' : '1.5rem';
+        }
+
         function route() {
             const hash = decodeURIComponent(window.location.hash.replace('#', '')).trim().toLowerCase();
-            const headerTitle = document.getElementById('app-display-header');
             const backBtn = document.getElementById('back-btn');
 
             if (hash === 'preview') {
                 const stored = sessionStorage.getItem('nako_preview_payload');
                 if (stored) {
                     if (backBtn) backBtn.style.display = 'flex';
+                    setBannerVisible(false);
                     let entry = { file: null, title: 'Preview', desc: '', tags: [], credit: null, payload: stored };
                     extractMeta(stored, entry);
-                    headerTitle.innerText = entry.title;
+                    setHeaderTitle(entry.title, true);
                     renderView(entry);
                     return;
                 }
@@ -358,14 +403,16 @@
                 const match = db.find(item => item.file.toLowerCase() === hash || item.file.toLowerCase() === hash + '.txt');
                 if (match) {
                     if (backBtn) backBtn.style.display = 'flex';
-                    headerTitle.innerText = match.title;
+                    setBannerVisible(false);
+                    setHeaderTitle(match.title, true);
                     if (match.payload) renderView(match);
                     else recoverAsset(match);
                     return;
                 }
             }
             if (backBtn) backBtn.style.display = 'flex';
-            headerTitle.innerText = "Command Block Creation";
+            setBannerVisible(true);
+            setHeaderTitle("Command Block Creation", false);
             renderGrid();
         }
 
@@ -378,7 +425,7 @@
                 item.payload = await res.text();
                 
                 extractMeta(item.payload, item);
-                document.getElementById('app-display-header').innerText = item.title;
+                setHeaderTitle(item.title, true);
                 renderView(item);
             } catch {
                 view.innerHTML = `
@@ -517,7 +564,7 @@
                 const creditName = item.credit ? item.credit : 'Nako Hikari';
 
                 card.innerHTML = `
-                    <div style="font-size: 15px; font-weight: bold; color: var(--text-bright);">${escape(item.title)}</div>
+                    <div class="creation-name-color" style="font-size: 16.5px; font-weight: bold;">${escape(item.title)}</div>
                     <div class="grid-card-credit">By ${escape(creditName)}</div>
                     <div style="font-size: 13px; color: var(--text-main); flex: 1; ${item.payload ? '' : 'color: var(--accent-light);'}">${escape(item.desc)}</div>
                     <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">${pills}</div>
@@ -921,8 +968,7 @@
                 let v;
 
                 if ((v = matchMeta(head, 'TITLE')) !== null) {
-                    const headerEl = document.getElementById('app-display-header');
-                    if (headerEl) headerEl.innerText = v;
+                    setHeaderTitle(v, true);
                 } 
                 else if ((v = matchMeta(head, 'DESC')) !== null) {
                     let d = document.createElement('div');
@@ -1012,7 +1058,7 @@
                 }
                 else if ((v = matchMeta(head, 'SOCIAL')) !== null) {
                     currentChain = null;
-                    let url = '', avatar = '', platform = '', username = '';
+                    let url = '', avatar = '', platform = '', username = '', logo = '';
                     const stats = [];
                     lines.slice(1).forEach(ln => {
                         let m2;
@@ -1020,24 +1066,26 @@
                         else if ((m2 = matchMeta(ln, 'AVATAR')) !== null) avatar = m2;
                         else if ((m2 = matchMeta(ln, 'PLATFORM')) !== null) platform = m2;
                         else if ((m2 = matchMeta(ln, 'USERNAME')) !== null) username = m2;
+                        else if ((m2 = matchMeta(ln, 'LOGO')) !== null) logo = m2;
                         else if ((m2 = matchMeta(ln, 'STAT')) !== null) {
                             const parts = m2.split('|');
                             const label = (parts[0] || '').trim();
                             if (label) stats.push({ label, value: (parts[1] || '').trim() });
                         }
                     });
-                    contentFlow.appendChild(buildSocialCard(v, url, avatar, stats, platform, username));
+                    contentFlow.appendChild(buildSocialCard(v, url, avatar, stats, platform, username, logo));
                 }
                 else if ((v = matchMeta(head, 'DONATE')) !== null) {
                     currentChain = null;
-                    let url = '', avatar = '', platform = '';
+                    let url = '', avatar = '', platform = '', logo = '';
                     lines.slice(1).forEach(ln => {
                         let m2;
                         if ((m2 = matchMeta(ln, 'URL')) !== null) url = m2;
                         else if ((m2 = matchMeta(ln, 'AVATAR')) !== null) avatar = m2;
                         else if ((m2 = matchMeta(ln, 'PLATFORM')) !== null) platform = m2;
+                        else if ((m2 = matchMeta(ln, 'LOGO')) !== null) logo = m2;
                     });
-                    contentFlow.appendChild(buildDonationCard(v, url, avatar, platform));
+                    contentFlow.appendChild(buildDonationCard(v, url, avatar, platform, logo));
                 }
                 else if (headIs(head, 'CMD:')) {
                     // Group by each CMD: header so mixed chat/chain content renders in order.
@@ -1154,7 +1202,7 @@
         // Renders a SOCIAL: block as a clickable profile card: PFP (or a
         // platform-branded fallback) on the left, display name / @username /
         // stat lines stacked on the right.
-        function buildSocialCard(name, url, avatar, stats, platform, username) {
+        function buildSocialCard(name, url, avatar, stats, platform, username, logo) {
             const card = document.createElement(url ? 'a' : 'div');
             if (url) {
                 card.href = url;
@@ -1203,6 +1251,18 @@
 
             card.appendChild(body);
 
+            // Platform/brand logo — a colored brand mark, distinct from the
+            // PFP on the left. Sits rightmost, just before the chevron.
+            // It's real color content, so it must never be inverted by theme.
+            if (logo) {
+                const logoImg = document.createElement('img');
+                logoImg.className = 'content-image';
+                logoImg.src = logo;
+                logoImg.alt = '';
+                logoImg.style.cssText = 'width: 22px; height: 22px; object-fit: contain; flex-shrink: 0;';
+                card.appendChild(logoImg);
+            }
+
             if (url) {
                 const chevron = document.createElement('span');
                 chevron.style.cssText = 'color: var(--text-main); font-size: 18px; flex-shrink: 0;';
@@ -1214,9 +1274,10 @@
         }
 
         // Renders a DONATE: block: PFP (or platform fallback) + creator name
-        // on the left, a purely-visual "Donate" pill on the right. The whole
-        // card is the click target — the pill itself has no separate handler.
-        function buildDonationCard(name, url, avatar, platform) {
+        // on the left, an optional brand logo, then a purely-visual "Donate"
+        // pill on the right. The whole card is the click target — the pill
+        // itself has no separate handler.
+        function buildDonationCard(name, url, avatar, platform, logo) {
             const card = document.createElement(url ? 'a' : 'div');
             if (url) {
                 card.href = url;
@@ -1241,6 +1302,15 @@
             nameEl.innerText = name;
             card.appendChild(nameEl);
 
+            if (logo) {
+                const logoImg = document.createElement('img');
+                logoImg.className = 'content-image';
+                logoImg.src = logo;
+                logoImg.alt = '';
+                logoImg.style.cssText = 'width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;';
+                card.appendChild(logoImg);
+            }
+
             const donateBtn = document.createElement('span');
             donateBtn.style.cssText = 'flex-shrink: 0; background: var(--accent-dark); color: var(--text-on-brand, #fff); font-size: 12.5px; font-weight: bold; padding: 6px 14px; border-radius: var(--radius-full, 999px);';
             donateBtn.innerText = 'Donate';
@@ -1253,7 +1323,7 @@
             window.location.hash = '';
             const backBtn = document.getElementById('back-btn');
             if (backBtn) backBtn.style.display = 'flex';
-            document.getElementById('app-display-header').innerText = "Command Block Creation";
+            setHeaderTitle("Command Block Creation", false);
             renderGrid();
         }
 
